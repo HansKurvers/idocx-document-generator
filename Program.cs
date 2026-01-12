@@ -8,6 +8,7 @@ using scheidingsdesk_document_generator.Services.DocumentGeneration;
 using scheidingsdesk_document_generator.Services.DocumentGeneration.Processors;
 using scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers;
 using scheidingsdesk_document_generator.Services.DocumentGeneration.Generators;
+using scheidingsdesk_document_generator.Services.DocumentGeneration.Processors.PlaceholderBuilders;
 using scheidingsdesk_document_generator.Services.Artikel;
 
 var host = new HostBuilder()
@@ -37,6 +38,16 @@ var host = new HostBuilder()
         // Register document generation services
         services.AddScoped<IDocumentGenerationService, DocumentGenerationService>();
         services.AddScoped<ITemplateProvider, TemplateProvider>();
+
+        // Register placeholder builders (Strategy Pattern - executed in Order sequence)
+        services.AddScoped<IPlaceholderBuilder, DossierPlaceholderBuilder>();
+        services.AddScoped<IPlaceholderBuilder, PartijPlaceholderBuilder>();
+        services.AddScoped<IPlaceholderBuilder, KindPlaceholderBuilder>();
+        services.AddScoped<IPlaceholderBuilder, RelatiePlaceholderBuilder>();
+        services.AddScoped<IPlaceholderBuilder, FinancieelPlaceholderBuilder>();
+        services.AddScoped<IPlaceholderBuilder, CommunicatiePlaceholderBuilder>();
+
+        // Register placeholder processor (orchestrator for builders)
         services.AddScoped<IPlaceholderProcessor, PlaceholderProcessor>();
         services.AddScoped<IContentControlProcessor, ContentControlProcessor>();
         services.AddScoped<IConditionalSectionProcessor, ConditionalSectionProcessor>();

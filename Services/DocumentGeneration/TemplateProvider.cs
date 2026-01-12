@@ -58,14 +58,14 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration
                     _logger.LogInformation("Using v2 template (OPscheidingsdeskundige.docx)");
                     return v2Url;
 
-                case "mfam":
-                    var mfamUrl = Environment.GetEnvironmentVariable("TemplateStorageUrlMfam");
-                    if (string.IsNullOrWhiteSpace(mfamUrl))
+                case "custom":
+                    var customUrl = Environment.GetEnvironmentVariable("TemplateStorageUrlMfam");
+                    if (string.IsNullOrWhiteSpace(customUrl))
                     {
                         throw new InvalidOperationException("TemplateStorageUrlMfam environment variable is not set.");
                     }
-                    _logger.LogInformation("Using MFAM template (OPMfam.docx)");
-                    return mfamUrl;
+                    _logger.LogInformation("Using custom template (OPMfam.docx)");
+                    return customUrl;
 
                 case "artikelen":
                     var artikelenUrl = Environment.GetEnvironmentVariable("TemplateStorageUrlArtikelen");

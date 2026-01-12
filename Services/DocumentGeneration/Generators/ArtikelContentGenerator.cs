@@ -92,9 +92,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 return elements;
             }
 
-            // Artikel kop: "Artikel X: Titel" - process title for placeholders too
+            // Artikel kop: Use [[ARTIKEL]] for automatic Word numbering
             var effectieveTitel = _artikelService.VervangPlaceholders(artikel.EffectieveTitel, replacements);
-            var kopTekst = $"Artikel {nummer}: {effectieveTitel}";
+            var kopTekst = $"[[ARTIKEL]]: {effectieveTitel}";
 
             // Maak heading paragraph
             var heading = CreateArtikelHeading(kopTekst);

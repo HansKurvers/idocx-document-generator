@@ -54,6 +54,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                     {
                         _logger.LogInformation($"[{correlationId}] Found placeholder: {generator.PlaceholderTag}");
 
+                        var elementsGenerated = 0;
                         try
                         {
                             // Set replacements on ArtikelContentGenerator if applicable
@@ -67,6 +68,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
                             // Generate the table/list elements
                             var elements = generator.Generate(data, correlationId);
+                            elementsGenerated = elements.Count;
 
                             // Apply original paragraph properties to generated paragraphs
                             if (originalProps != null)
@@ -100,14 +102,18 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                                 paragraph.Parent?.InsertAfter(element, paragraph);
                             }
 
-                            // Remove the placeholder paragraph
-                            paragraph.Remove();
-
                             _logger.LogInformation($"[{correlationId}] Replaced {generator.PlaceholderTag} with {elements.Count} elements");
                         }
                         catch (System.Exception ex)
                         {
                             _logger.LogError(ex, $"[{correlationId}] Error generating table for {generator.PlaceholderTag}");
+                        }
+                        finally
+                        {
+                            // Always remove the placeholder paragraph, even if generation failed
+                            // This prevents placeholders from staying in the final document
+                            paragraph.Remove();
+                            _logger.LogInformation($"[{correlationId}] Removed placeholder paragraph for {generator.PlaceholderTag} (generated {elementsGenerated} elements)");
                         }
 
                         break; // Only process one placeholder per paragraph

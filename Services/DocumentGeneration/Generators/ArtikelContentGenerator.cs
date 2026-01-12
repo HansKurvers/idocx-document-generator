@@ -92,8 +92,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 return elements;
             }
 
-            // Artikel kop: "Artikel X: Titel"
-            var effectieveTitel = artikel.EffectieveTitel;
+            // Artikel kop: "Artikel X: Titel" - process title for placeholders too
+            var effectieveTitel = _artikelService.VervangPlaceholders(artikel.EffectieveTitel, replacements);
             var kopTekst = $"Artikel {nummer}: {effectieveTitel}";
 
             // Maak heading paragraph

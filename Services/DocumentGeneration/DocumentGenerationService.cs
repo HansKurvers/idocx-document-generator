@@ -152,6 +152,10 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration
                     _logger.LogInformation($"[{correlationId}] Step 4: Processing table placeholders");
                     _contentControlProcessor.ProcessTablePlaceholders(body, dossierData, replacements, correlationId);
 
+                    // Step 4b: Re-process table placeholders to catch TABEL placeholders in generated artikelen
+                    _logger.LogInformation($"[{correlationId}] Step 4b: Re-processing table placeholders for nested content");
+                    _contentControlProcessor.ProcessTablePlaceholders(body, dossierData, replacements, correlationId);
+
                     // Step 5: Remove content controls
                     _logger.LogInformation($"[{correlationId}] Step 5: Removing content controls");
                     _contentControlProcessor.RemoveContentControls(mainPart.Document, correlationId);

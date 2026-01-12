@@ -21,7 +21,7 @@ namespace scheidingsdesk_document_generator.Services.Artikel
             RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
         private static readonly Regex PlaceholderPattern = new Regex(
-            @"\[\[(\w+)\]\]",
+            @"\[\[([^\]]+)\]\]",
             RegexOptions.IgnoreCase);
 
         public ArtikelService(ILogger<ArtikelService> logger)

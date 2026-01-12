@@ -92,9 +92,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 return elements;
             }
 
-            // Artikel kop: Use [[ARTIKEL]] for automatic Word numbering
+            // Artikel kop met hardcoded nummering
             var effectieveTitel = _artikelService.VervangPlaceholders(artikel.EffectieveTitel, replacements);
-            var kopTekst = $"[[ARTIKEL]]: {effectieveTitel}";
+            var kopTekst = $"Artikel {nummer}: {effectieveTitel}";
 
             // Maak heading paragraph
             var heading = CreateArtikelHeading(kopTekst);

@@ -32,9 +32,9 @@ De Ouderschapsplan Document Generator is een serverless applicatie gebouwd met A
 
 | Frontend | API | Doc Generator | Status |
 |----------|-----|---------------|--------|
-| 1.4.x | 1.3.x | 2.4.x | ✅ Actueel |
-| 1.3.x | 1.2.x | 2.3.x | ⚠️ Legacy |
-| 1.2.x | 1.1.x | 2.2.x | ❌ Niet ondersteund |
+| 1.4.x | 1.3.x | 2.5.x | ✅ Actueel |
+| 1.4.x | 1.3.x | 2.4.x | ⚠️ Legacy |
+| 1.3.x | 1.2.x | 2.3.x | ❌ Niet ondersteund |
 
 > **Let op**: Zorg dat alle componenten compatibele versies draaien om onverwacht gedrag te voorkomen.
 
@@ -1692,7 +1692,32 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.4.0 (Current) - Custom Placeholders & Conditionele Evaluatie
+### v2.5.0 (Current) - Grammar Placeholders & Partij Benaming
+
+**Nieuwe features en fixes:**
+- 🔤 **Grammar placeholders fix** - Placeholders met spaties en slashes werken nu correct:
+  - Regex patroon aangepast van `\w+` naar `[^\]]+` in ArtikelService
+  - `[[ons kind/onze kinderen]]`, `[[is/zijn]]`, `[[heeft/hebben]]` etc. worden nu correct vervangen
+- 📝 **Artikel titels verwerking** - Grammar placeholders in artikel titels worden nu ook vervangen
+- 👨‍👩‍👧 **Partij benaming consistent** - Overal wordt nu "de vader"/"de moeder" gebruikt in plaats van roepnaam:
+  - `GetPartijBenaming()` methode aangepast in BasePlaceholderBuilder
+  - Alle placeholder builders bijgewerkt voor consistente partij benaming
+  - Tabellen (Omgang, Alimentatie) gebruiken nu ook partij benaming
+- 🔄 **Geneste TABEL placeholders** - TABEL placeholders in gegenereerde artikelen werken nu:
+  - Tweede `ProcessTablePlaceholders()` aanroep toegevoegd voor geneste content
+
+**Technische wijzigingen:**
+- `Services/Artikel/ArtikelService.cs` - Regex fix voor grammar placeholders
+- `Services/DocumentGeneration/DocumentGenerationService.cs` - Dubbele ProcessTablePlaceholders
+- `Services/DocumentGeneration/Generators/ArtikelContentGenerator.cs` - Titel placeholder verwerking
+- `Services/DocumentGeneration/Generators/OmgangTableGenerator.cs` - Partij benaming
+- `Services/DocumentGeneration/Generators/AlimentatieTableGenerator.cs` - Partij benaming
+- `Services/DocumentGeneration/Processors/PlaceholderBuilders/*` - Consistente partij benaming
+
+**Breaking Changes:**
+- Geen! Alle wijzigingen zijn backwards compatible.
+
+### v2.4.0 - Custom Placeholders & Conditionele Evaluatie
 
 **Nieuwe features:**
 - 🔧 **Custom Placeholders Integratie** - Placeholders uit `placeholder_catalogus` tabel:

@@ -57,10 +57,18 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                         var elementsGenerated = 0;
                         try
                         {
-                            // Set replacements on ArtikelContentGenerator if applicable
+                            // Set replacements on generators that need access to Partij1Benaming/Partij2Benaming
                             if (generator is Generators.ArtikelContentGenerator artikelGenerator)
                             {
                                 artikelGenerator.Replacements = replacements;
+                            }
+                            else if (generator is Generators.OmgangTableGenerator omgangGenerator)
+                            {
+                                omgangGenerator.Replacements = replacements;
+                            }
+                            else if (generator is Generators.AlimentatieTableGenerator alimentatieGenerator)
+                            {
+                                alimentatieGenerator.Replacements = replacements;
                             }
 
                             // Get original paragraph properties to preserve formatting (indentation, etc.)

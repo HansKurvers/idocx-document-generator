@@ -16,6 +16,11 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
 
         public string PlaceholderTag => "[[TABEL_ALIMENTATIE]]";
 
+        /// <summary>
+        /// Placeholder replacements for accessing party designations (Partij1Benaming, Partij2Benaming)
+        /// </summary>
+        public Dictionary<string, string>? Replacements { get; set; }
+
         public AlimentatieTableGenerator(ILogger<AlimentatieTableGenerator> logger)
         {
             _logger = logger;
@@ -159,12 +164,14 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
 
                 if (alimentatie.StortingOuder1Kinderrekening.HasValue && partij1 != null)
                 {
-                    elements.Add(OpenXmlHelper.CreateSimpleParagraph($"- {partij1.Roepnaam ?? partij1.Voornamen}: {DataFormatter.FormatCurrency(alimentatie.StortingOuder1Kinderrekening)} per maand"));
+                    var benaming1 = GetPartijBenaming(1, partij1, partij2);
+                    elements.Add(OpenXmlHelper.CreateSimpleParagraph($"- {benaming1}: {DataFormatter.FormatCurrency(alimentatie.StortingOuder1Kinderrekening)} per maand"));
                 }
 
                 if (alimentatie.StortingOuder2Kinderrekening.HasValue && partij2 != null)
                 {
-                    elements.Add(OpenXmlHelper.CreateSimpleParagraph($"- {partij2.Roepnaam ?? partij2.Voornamen}: {DataFormatter.FormatCurrency(alimentatie.StortingOuder2Kinderrekening)} per maand"));
+                    var benaming2 = GetPartijBenaming(2, partij1, partij2);
+                    elements.Add(OpenXmlHelper.CreateSimpleParagraph($"- {benaming2}: {DataFormatter.FormatCurrency(alimentatie.StortingOuder2Kinderrekening)} per maand"));
                 }
 
                 elements.Add(OpenXmlHelper.CreateEmptyParagraph());
@@ -312,22 +319,44 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
 
         private string GetPartijNaam(int? partijNummer, PersonData? partij1, PersonData? partij2)
         {
-            return partijNummer switch
-            {
-                1 => partij1?.Roepnaam ?? partij1?.Voornamen ?? "Partij 1",
-                2 => partij2?.Roepnaam ?? partij2?.Voornamen ?? "Partij 2",
-                _ => ""
-            };
+            return GetPartijBenaming(partijNummer ?? 0, partij1, partij2);
         }
 
         private string GetKinderbijslagOntvanger(int? partijNummer, PersonData? partij1, PersonData? partij2)
         {
             return partijNummer switch
             {
-                1 => partij1?.Roepnaam ?? partij1?.Voornamen ?? "Partij 1",
-                2 => partij2?.Roepnaam ?? partij2?.Voornamen ?? "Partij 2",
+                1 => GetPartijBenaming(1, partij1, partij2),
+                2 => GetPartijBenaming(2, partij1, partij2),
                 3 => "Kinderrekening",
                 _ => ""
+            };
+        }
+
+        /// <summary>
+        /// Gets the party designation (de vader/de moeder) for a party number
+        /// </summary>
+        private string GetPartijBenaming(int partijNummer, PersonData? partij1, PersonData? partij2)
+        {
+            // Use Partij1Benaming/Partij2Benaming from replacements if available
+            if (Replacements != null)
+            {
+                if (partijNummer == 1 && Replacements.TryGetValue("Partij1Benaming", out var benaming1))
+                    return benaming1;
+                if (partijNummer == 2 && Replacements.TryGetValue("Partij2Benaming", out var benaming2))
+                    return benaming2;
+            }
+
+            // Fallback: determine benaming from gender
+            var persoon = partijNummer == 1 ? partij1 : partij2;
+            if (persoon == null) return partijNummer == 1 ? "Partij 1" : "Partij 2";
+
+            var geslacht = persoon.Geslacht?.Trim().ToLowerInvariant();
+            return geslacht switch
+            {
+                "m" or "man" => "de vader",
+                "v" or "vrouw" => "de moeder",
+                _ => persoon.Roepnaam ?? persoon.Voornamen ?? $"Partij {partijNummer}"
             };
         }
     }

@@ -17,6 +17,11 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
 
         public string PlaceholderTag => "[[TABEL_OMGANG]]";
 
+        /// <summary>
+        /// Placeholder replacements for accessing party designations (Partij1Benaming, Partij2Benaming)
+        /// </summary>
+        public Dictionary<string, string>? Replacements { get; set; }
+
         public OmgangTableGenerator(ILogger<OmgangTableGenerator> logger)
         {
             _logger = logger;
@@ -84,9 +89,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                     var omgang = weekData.FirstOrDefault(o => o.DagId == dagId && o.DagdeelId == dagdeelId);
                     if (omgang != null)
                     {
-                        // Get person's roepnaam or voornamen
-                        var persoon = partijen.FirstOrDefault(p => p.Id == omgang.VerzorgerId);
-                        var naam = persoon?.Roepnaam ?? persoon?.Voornamen ?? "";
+                        // Get party designation (de vader/de moeder) based on verzorger
+                        var naam = GetPartijBenaming(omgang.VerzorgerId, partijen);
                         row.Append(OpenXmlHelper.CreateStyledCell(naam));
 
                         // Capture wisseltijd if present
@@ -108,6 +112,37 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             }
 
             return table;
+        }
+
+        /// <summary>
+        /// Gets the party designation (de vader/de moeder) for a person ID
+        /// </summary>
+        private string GetPartijBenaming(int verzorgerId, List<PersonData> partijen)
+        {
+            // Find which party this person is
+            var partij1 = partijen.FirstOrDefault(p => p.RolId == 1);
+            var partij2 = partijen.FirstOrDefault(p => p.RolId == 2);
+
+            // Use Partij1Benaming/Partij2Benaming from replacements if available
+            if (Replacements != null)
+            {
+                if (partij1?.Id == verzorgerId && Replacements.TryGetValue("Partij1Benaming", out var benaming1))
+                    return benaming1;
+                if (partij2?.Id == verzorgerId && Replacements.TryGetValue("Partij2Benaming", out var benaming2))
+                    return benaming2;
+            }
+
+            // Fallback: determine benaming from gender
+            var persoon = partijen.FirstOrDefault(p => p.Id == verzorgerId);
+            if (persoon == null) return "";
+
+            var geslacht = persoon.Geslacht?.Trim().ToLowerInvariant();
+            return geslacht switch
+            {
+                "m" or "man" => "de vader",
+                "v" or "vrouw" => "de moeder",
+                _ => persoon.Roepnaam ?? persoon.Voornamen ?? ""
+            };
         }
     }
 }

@@ -234,8 +234,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 return $"De ouders hebben gezamenlijk gezag over {defaultKinderenTekst}.";
             }
 
-            var partij1Naam = partij1?.Roepnaam ?? partij1?.Voornamen ?? "Partij 1";
-            var partij2Naam = partij2?.Roepnaam ?? partij2?.Voornamen ?? "Partij 2";
+            var partij1Naam = GetPartijBenaming(partij1, false);
+            var partij2Naam = GetPartijBenaming(partij2, false);
 
             var kinderenTekst = kinderen.Count == 1
                 ? kinderen[0].Roepnaam ?? kinderen[0].Voornamen ?? "het kind"
@@ -293,8 +293,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             PersonData? partij2,
             string? soortRelatie = null)
         {
-            var partij1Naam = partij1?.Roepnaam ?? partij1?.Voornamen ?? "Partij 1";
-            var partij2Naam = partij2?.Roepnaam ?? partij2?.Voornamen ?? "Partij 2";
+            var partij1Naam = GetPartijBenaming(partij1, false);
+            var partij2Naam = GetPartijBenaming(partij2, false);
             var huidigeWoonplaatsPartij1 = partij1?.Plaats ?? "onbekend";
             var huidigeWoonplaatsPartij2 = partij2?.Plaats ?? "onbekend";
 
@@ -320,8 +320,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
         {
             return partijNummer switch
             {
-                1 => partij1?.Roepnaam ?? partij1?.Voornamen ?? "Partij 1",
-                2 => partij2?.Roepnaam ?? partij2?.Voornamen ?? "Partij 2",
+                1 => GetPartijBenaming(partij1, false),
+                2 => GetPartijBenaming(partij2, false),
                 3 => "Kinderrekening",
                 _ => ""
             };
@@ -338,14 +338,14 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 // Check if it matches partij1
                 if (partij1 != null && partij1.Id == personId)
                 {
-                    var partij1Benaming = GetPartijBenaming(partij1, isAnoniem);
+                    var partij1Benaming = GetPartijBenaming(partij1, false);
                     var kinderenTekst = GetKinderenTekst(kinderen);
                     return $"{kinderenTekst} {(kinderen.Count == 1 ? "heeft" : "hebben")} {(kinderen.Count == 1 ? "het" : "hun")} hoofdverblijf bij {partij1Benaming}.";
                 }
                 // Check if it matches partij2
                 else if (partij2 != null && partij2.Id == personId)
                 {
-                    var partij2Benaming = GetPartijBenaming(partij2, isAnoniem);
+                    var partij2Benaming = GetPartijBenaming(partij2, false);
                     var kinderenTekst = GetKinderenTekst(kinderen);
                     return $"{kinderenTekst} {(kinderen.Count == 1 ? "heeft" : "hebben")} {(kinderen.Count == 1 ? "het" : "hun")} hoofdverblijf bij {partij2Benaming}.";
                 }

@@ -417,8 +417,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             var kinderenTekst = GetKinderenTekst(kinderen);
             var keuze = idBewijzen.Trim().ToLowerInvariant();
-            var partij1Naam = partij1?.Roepnaam ?? partij1?.Voornamen ?? "Ouder 1";
-            var partij2Naam = partij2?.Roepnaam ?? partij2?.Voornamen ?? "Ouder 2";
+            var partij1Naam = GetPartijBenaming(partij1, false);
+            var partij2Naam = GetPartijBenaming(partij2, false);
 
             return keuze switch
             {
@@ -438,8 +438,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             var kinderenTekst = GetKinderenTekst(kinderen);
             var keuze = aansprakelijkheidsverzekering.Trim().ToLowerInvariant();
-            var partij1Naam = partij1?.Roepnaam ?? partij1?.Voornamen ?? "Ouder 1";
-            var partij2Naam = partij2?.Roepnaam ?? partij2?.Voornamen ?? "Ouder 2";
+            var partij1Naam = GetPartijBenaming(partij1, false);
+            var partij2Naam = GetPartijBenaming(partij2, false);
 
             return keuze switch
             {
@@ -458,8 +458,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             var kinderenTekst = GetKinderenTekst(kinderen);
             var keuze = ziektekostenverzekering.Trim().ToLowerInvariant();
-            var partij1Naam = partij1?.Roepnaam ?? partij1?.Voornamen ?? "Ouder 1";
-            var partij2Naam = partij2?.Roepnaam ?? partij2?.Voornamen ?? "Ouder 2";
+            var partij1Naam = GetPartijBenaming(partij1, false);
+            var partij2Naam = GetPartijBenaming(partij2, false);
             var isZijn = kinderen.Count == 1 ? "is" : "zijn";
             var zijHun = kinderen.Count == 1
                 ? (kinderen[0].Geslacht?.ToLowerInvariant() == "m" ? "hij zijn" : "zij haar")
@@ -498,8 +498,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             if (string.IsNullOrEmpty(jongmeerderjarige))
                 return "";
 
-            var ouder1Naam = partij1?.Roepnaam ?? partij1?.Voornamen ?? "de vader";
-            var ouder2Naam = partij2?.Roepnaam ?? partij2?.Voornamen ?? "de moeder";
+            var ouder1Naam = GetPartijBenaming(partij1, false);
+            var ouder2Naam = GetPartijBenaming(partij2, false);
             var keuze = jongmeerderjarige.Trim().ToLowerInvariant();
 
             return keuze switch
@@ -520,8 +520,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             if (string.IsNullOrEmpty(studiekosten))
                 return "";
 
-            var ouder1Naam = partij1?.Roepnaam ?? partij1?.Voornamen ?? "de vader";
-            var ouder2Naam = partij2?.Roepnaam ?? partij2?.Voornamen ?? "de moeder";
+            var ouder1Naam = GetPartijBenaming(partij1, false);
+            var ouder2Naam = GetPartijBenaming(partij2, false);
             var keuze = studiekosten.Trim().ToLowerInvariant();
 
             return keuze switch
@@ -596,15 +596,15 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 return "";
 
             if (code == "ouder_1" && partij1 != null)
-                return $"Op naam van {partij1.Roepnaam ?? partij1.Voornamen ?? "Partij 1"}";
+                return $"Op naam van {GetPartijBenaming(partij1, false)}";
 
             if (code == "ouder_2" && partij2 != null)
-                return $"Op naam van {partij2.Roepnaam ?? partij2.Voornamen ?? "Partij 2"}";
+                return $"Op naam van {GetPartijBenaming(partij2, false)}";
 
             if (code == "ouders_gezamenlijk" && partij1 != null && partij2 != null)
             {
-                var naam1 = partij1.Roepnaam ?? partij1.Voornamen ?? "Partij 1";
-                var naam2 = partij2.Roepnaam ?? partij2.Voornamen ?? "Partij 2";
+                var naam1 = GetPartijBenaming(partij1, false);
+                var naam2 = GetPartijBenaming(partij2, false);
                 return $"Op gezamenlijke naam van {naam1} en {naam2}";
             }
 

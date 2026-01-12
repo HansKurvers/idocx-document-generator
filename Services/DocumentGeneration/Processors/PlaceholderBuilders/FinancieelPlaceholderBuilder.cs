@@ -178,8 +178,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
         private string GetBetaalwijzeBeschrijving(AlimentatieData alimentatie, PersonData? partij1, PersonData? partij2, bool? isAnoniem)
         {
-            var ouder1Naam = GetPartijBenaming(partij1, isAnoniem);
-            var ouder2Naam = GetPartijBenaming(partij2, isAnoniem);
+            var ouder1Naam = GetPartijBenaming(partij1, false);
+            var ouder2Naam = GetPartijBenaming(partij2, false);
 
             if (string.IsNullOrEmpty(ouder1Naam)) ouder1Naam = "Ouder 1";
             if (string.IsNullOrEmpty(ouder2Naam)) ouder2Naam = "Ouder 2";
@@ -391,7 +391,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 var zijnHaarHun = kinderenBijPartij1.Count == 1
                     ? (kinderenBijPartij1[0].Geslacht?.ToLower() == "m" ? "zijn" : "haar")
                     : "hun";
-                var partij1Benaming = GetPartijBenaming(partij1, isAnoniem);
+                var partij1Benaming = GetPartijBenaming(partij1, false);
 
                 zinnen.Add($"{namenTekst} {heeftHebben} {zijnHaarHun} hoofdverblijf bij {partij1Benaming}.");
             }
@@ -404,7 +404,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 var zijnHaarHun = kinderenBijPartij2.Count == 1
                     ? (kinderenBijPartij2[0].Geslacht?.ToLower() == "m" ? "zijn" : "haar")
                     : "hun";
-                var partij2Benaming = GetPartijBenaming(partij2, isAnoniem);
+                var partij2Benaming = GetPartijBenaming(partij2, false);
 
                 zinnen.Add($"{namenTekst} {heeftHebben} {zijnHaarHun} hoofdverblijf bij {partij2Benaming}.");
             }
@@ -482,7 +482,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 var namen = kinderenBijPartij1.Select(k => k.Naam).ToList();
                 var namenTekst = DutchLanguageHelper.FormatList(namen);
                 var zalZullen = kinderenBijPartij1.Count == 1 ? "zal" : "zullen";
-                var partij1Benaming = GetPartijBenaming(partij1, isAnoniem);
+                var partij1Benaming = GetPartijBenaming(partij1, false);
                 var plaats1 = partij1?.Plaats ?? "onbekend";
 
                 zinnen.Add($"{namenTekst} {zalZullen} ingeschreven staan in de Basisregistratie Personen aan het adres van {partij1Benaming} in {plaats1}.");
@@ -493,7 +493,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 var namen = kinderenBijPartij2.Select(k => k.Naam).ToList();
                 var namenTekst = DutchLanguageHelper.FormatList(namen);
                 var zalZullen = kinderenBijPartij2.Count == 1 ? "zal" : "zullen";
-                var partij2Benaming = GetPartijBenaming(partij2, isAnoniem);
+                var partij2Benaming = GetPartijBenaming(partij2, false);
                 var plaats2 = partij2?.Plaats ?? "onbekend";
 
                 zinnen.Add($"{namenTekst} {zalZullen} ingeschreven staan in de Basisregistratie Personen aan het adres van {partij2Benaming} in {plaats2}.");

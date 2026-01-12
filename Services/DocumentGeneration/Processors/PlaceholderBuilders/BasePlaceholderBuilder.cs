@@ -73,26 +73,28 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
         }
 
         /// <summary>
-        /// Gets the appropriate designation for a party based on anonymity and gender
+        /// Gets the appropriate designation for a party based on gender.
+        /// Always returns "de vader" or "de moeder" based on gender.
+        /// If useRoepnaam is true, returns roepnaam instead.
         /// </summary>
-        protected string GetPartijBenaming(PersonData? person, bool? isAnoniem)
+        protected string GetPartijBenaming(PersonData? person, bool? useRoepnaam)
         {
             if (person == null) return "";
 
-            // If anonymous, use parental role-based designation
-            if (isAnoniem == true)
+            // If explicitly requested to use roepnaam
+            if (useRoepnaam == true)
             {
-                var geslacht = person.Geslacht?.Trim().ToLowerInvariant();
-                return geslacht switch
-                {
-                    "m" or "man" => "de vader",
-                    "v" or "vrouw" => "de moeder",
-                    _ => "de persoon" // Fallback for unknown gender
-                };
+                return person.Naam; // Uses existing property that handles roepnaam fallback
             }
 
-            // If not anonymous, use roepnaam (or first name as fallback)
-            return person.Naam; // Uses existing property that handles roepnaam fallback
+            // Default: use parental role-based designation (de vader/de moeder)
+            var geslacht = person.Geslacht?.Trim().ToLowerInvariant();
+            return geslacht switch
+            {
+                "m" or "man" => "de vader",
+                "v" or "vrouw" => "de moeder",
+                _ => person.Naam // Fallback to roepnaam for unknown gender
+            };
         }
 
         /// <summary>
@@ -222,49 +224,54 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
         }
 
         /// <summary>
-        /// Get party name based on party number
+        /// Get party designation (de vader/de moeder) based on party number
         /// </summary>
         protected string GetPartijNaam(int? partijNummer, PersonData? partij1, PersonData? partij2)
         {
-            return partijNummer switch
+            var persoon = partijNummer switch
             {
-                1 => partij1?.Roepnaam ?? partij1?.Voornamen ?? "Partij 1",
-                2 => partij2?.Roepnaam ?? partij2?.Voornamen ?? "Partij 2",
-                _ => ""
+                1 => partij1,
+                2 => partij2,
+                _ => null
             };
+            return GetPartijBenaming(persoon, false); // Always use benaming, not roepnaam
         }
 
         /// <summary>
-        /// Gets the party name (roepnaam) based on the party identifier
+        /// Gets the party designation (de vader/de moeder) based on the party identifier
         /// </summary>
         protected string GetPartyName(string? partyIdentifier, PersonData? partij1, PersonData? partij2)
         {
             if (string.IsNullOrEmpty(partyIdentifier))
                 return "";
 
-            return partyIdentifier.ToLower() switch
+            var persoon = partyIdentifier.ToLower() switch
             {
-                "partij1" => partij1?.Roepnaam ?? "",
-                "partij2" => partij2?.Roepnaam ?? "",
-                _ => ""
+                "partij1" => partij1,
+                "partij2" => partij2,
+                _ => null
             };
+            return GetPartijBenaming(persoon, false);
         }
 
         /// <summary>
-        /// Gets the party name (roepnaam) or "Kinderrekening" based on the party identifier
+        /// Gets the party designation (de vader/de moeder) or "Kinderrekening" based on the party identifier
         /// </summary>
         protected string GetPartyNameOrKinderrekening(string? partyIdentifier, PersonData? partij1, PersonData? partij2)
         {
             if (string.IsNullOrEmpty(partyIdentifier))
                 return "";
 
-            return partyIdentifier.ToLower() switch
+            if (partyIdentifier.ToLower() == "kinderrekening")
+                return "Kinderrekening";
+
+            var persoon = partyIdentifier.ToLower() switch
             {
-                "partij1" => partij1?.Roepnaam ?? "",
-                "partij2" => partij2?.Roepnaam ?? "",
-                "kinderrekening" => "Kinderrekening",
-                _ => ""
+                "partij1" => partij1,
+                "partij2" => partij2,
+                _ => null
             };
+            return GetPartijBenaming(persoon, false);
         }
 
         /// <summary>

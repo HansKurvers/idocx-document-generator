@@ -80,9 +80,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, $"{prefix}VolledigeAchternaam",
                 GetVolledigeAchternaam(person));
 
-            // Benaming placeholder (contextual party designation)
+            // Benaming placeholder (contextual party designation - always de vader/de moeder)
             AddPlaceholder(replacements, $"{prefix}Benaming",
-                GetPartijBenaming(person, isAnoniem));
+                GetPartijBenaming(person, false));
 
             // Voorletters + tussenvoegsel + achternaam
             AddPlaceholder(replacements, $"{prefix}VoorlettersAchternaam",

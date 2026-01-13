@@ -144,8 +144,7 @@ Deze applicatie is gebouwd met de volgende principes in gedachten:
 │           ├── ChildrenListGenerator.cs        # 👶 Kinderen lijst generatie
 │           └── ArtikelContentGenerator.cs      # 📚 Artikelen uit bibliotheek (v2.3.0)
 │
-├── OuderschapsplanFunction.cs                   # ✨ HTTP Endpoint (142 regels, was 1669)
-├── OuderschapsplanFunction.cs.OLD               # 📦 Backup van originele versie
+├── OuderschapsplanFunction.cs                   # ✨ HTTP Endpoint (142 regels)
 ├── ProcessDocumentFunction.cs                   # Document processing endpoint
 ├── HealthCheckFunction.cs                       # Health check endpoint
 ├── Program.cs                                   # 🔧 DI configuratie en host setup

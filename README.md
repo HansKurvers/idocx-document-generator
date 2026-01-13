@@ -34,9 +34,9 @@ De Ouderschapsplan Document Generator is een serverless applicatie gebouwd met A
 
 | Frontend | API | Doc Generator | Status |
 |----------|-----|---------------|--------|
-| 1.4.x | 1.3.x | 2.5.x | ✅ Actueel |
-| 1.4.x | 1.3.x | 2.4.x | ⚠️ Legacy |
-| 1.3.x | 1.2.x | 2.3.x | ❌ Niet ondersteund |
+| 1.4.x | 1.3.x | 2.6.x | ✅ Actueel |
+| 1.4.x | 1.3.x | 2.5.x | ⚠️ Legacy |
+| 1.3.x | 1.2.x | 2.4.x | ❌ Niet ondersteund |
 
 > **Let op**: Zorg dat alle componenten compatibele versies draaien om onverwacht gedrag te voorkomen.
 
@@ -1721,27 +1721,43 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.5.1 (Current) - Unit Test Suite
+### v2.6.0 (Current) - Testing, CI/CD & Code Quality
 
 **Nieuwe features:**
-- 🧪 **Unit Test Project** - Volledige test suite toegevoegd met xUnit en Moq:
-  - `Tests/Helpers/DutchLanguageHelperTests.cs` - 40 tests voor Nederlandse grammatica
-  - `Tests/Helpers/DataFormatterTests.cs` - 30 tests voor data formatting
-  - `Tests/Helpers/GrammarRulesBuilderTests.cs` - 20 tests voor grammar rules
-  - `Tests/Processors/ConditieEvaluatorTests.cs` - 43 tests voor conditie logica
-  - `Tests/Helpers/LegalNumberingHelperTests.cs` - 12 tests voor artikel nummering
-- 📊 **145 tests** dekken de kernfunctionaliteit van het systeem
-- ✅ Alle tests slagen (0 failures)
+- 🧪 **Unit Test Suite** - 145 tests met xUnit en Moq:
+  - `DutchLanguageHelperTests` - 40 tests voor Nederlandse grammatica
+  - `DataFormatterTests` - 30 tests voor data formatting
+  - `GrammarRulesBuilderTests` - 20 tests voor grammar rules
+  - `ConditieEvaluatorTests` - 43 tests voor conditie logica
+  - `LegalNumberingHelperTests` - 12 tests voor artikel nummering
+- 🔄 **GitHub Actions CI/CD** - Automatische tests bij elke push/PR:
+  - Test workflow met status badge in README
+  - Test results als artifacts (30 dagen retention)
+  - Automatische test reports in PRs
+
+**Security fixes:**
+- 🔒 Verwijderd: logging van gevoelige financiële data (alimentatie bedragen)
+- ✅ Toegevoegd: template validatie (fail fast bij lege/null templates)
+
+**Bug fixes:**
+- 🐛 Fix: silent failure in ContentControlProcessor - placeholder blijft nu in document bij fout
+- 🐛 Fix: unclosed IF blocks geëscaleerd van warning naar error
+- 🐛 Fix: null-safe handling voor artikelen retrieval
+
+**Refactoring:**
+- ♻️ `DocumentProcessor.cs` verwijderd (-230 regels duplicate code)
+- ♻️ `ProcessDocumentFunction` gebruikt nu DI met `IContentControlProcessor`
+- ♻️ `RemoveProblematicContentControls` toegevoegd aan `IContentControlProcessor`
+- 🗑️ `OuderschapsplanFunction.cs.OLD` verwijderd (-1669 regels)
+- 📝 Magic number in `OpenXmlHelper` gedocumenteerd
+- 🧹 Excessive logging opgeruimd in `PlaceholderProcessor` en `LocalTest`
 
 **Technische wijzigingen:**
-- `Tests/scheidingsdesk-document-generator.Tests.csproj` - Nieuw xUnit test project
-- `scheidingsdesk-document-generator.sln` - Test project toegevoegd aan solution
-- `scheidingsdesk-document-generator.csproj` - Tests folder uitgesloten van main build
+- `Tests/` - Nieuw xUnit test project
+- `.github/workflows/test.yml` - CI/CD workflow
+- Packages: xUnit 2.9.2, Moq 4.20.72, Microsoft.NET.Test.Sdk 17.12.0
 
-**Packages:**
-- xUnit 2.9.2
-- Moq 4.20.72
-- Microsoft.NET.Test.Sdk 17.12.0
+**Code reductie:** ~2000 regels verwijderd door cleanup en refactoring
 
 ### v2.5.0 - Grammar Placeholders & Partij Benaming
 

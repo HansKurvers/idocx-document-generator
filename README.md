@@ -149,7 +149,17 @@ Deze applicatie is gebouwd met de volgende principes in gedachten:
 ├── Program.cs                                   # 🔧 DI configuratie en host setup
 ├── host.json                                    # Azure Functions configuratie
 ├── local.settings.json                          # Lokale development settings
-└── idocx-document-generator.csproj              # Project file
+├── idocx-document-generator.csproj              # Project file
+│
+└── Tests/                                       # 🧪 Unit tests (xUnit)
+    ├── Helpers/
+    │   ├── DutchLanguageHelperTests.cs          # Nederlandse grammatica tests
+    │   ├── DataFormatterTests.cs                # Data formatting tests
+    │   ├── GrammarRulesBuilderTests.cs          # Grammar rules tests
+    │   └── LegalNumberingHelperTests.cs         # Artikel nummering tests
+    ├── Processors/
+    │   └── ConditieEvaluatorTests.cs            # Conditie logica tests
+    └── scheidingsdesk-document-generator.Tests.csproj
 ```
 
 ### Technologie Stack
@@ -1369,45 +1379,63 @@ jobs:
 
 ### Unit Tests
 
-Het project is ontworpen voor testbaarheid door dependency injection en scheiding van concerns.
+Het project bevat een uitgebreide test suite gebouwd met **xUnit** en **Moq**. De tests bevinden zich in het `Tests/` project.
 
-**Voorbeeld test voor PlaceholderProcessor:**
+**Tests uitvoeren:**
+
+```bash
+# Alle tests uitvoeren
+dotnet test
+
+# Met verbose output
+dotnet test --verbosity normal
+
+# Specifieke test class
+dotnet test --filter "FullyQualifiedName~DutchLanguageHelperTests"
+```
+
+**Test coverage overzicht:**
+
+| Test Class | Tests | Beschrijving |
+|------------|-------|--------------|
+| `DutchLanguageHelperTests` | 40 | Nederlandse grammatica, lijstformattering, voornaamwoorden |
+| `DataFormatterTests` | 30 | Datums, namen, adressen, valuta, telefoonnummers |
+| `GrammarRulesBuilderTests` | 20 | Enkelvoud/meervoud regels, gender-specifieke pronouns |
+| `ConditieEvaluatorTests` | 43 | Conditie logica (=, !=, >, <, AND, OR, in, bevat) |
+| `LegalNumberingHelperTests` | 12 | Word document artikel nummering |
+| **Totaal** | **145** | |
+
+**Voorbeeld test - Nederlandse lijst formattering:**
 
 ```csharp
 [Fact]
-public void BuildReplacements_WithValidData_ReturnsAllPlaceholders()
+public void FormatList_WithThreeItems_ReturnsCommaAndEn()
 {
-    // Arrange
-    var processor = new PlaceholderProcessor(mockLogger.Object);
-    var dossierData = CreateTestDossierData();
-    var grammarRules = new Dictionary<string, string>();
-
-    // Act
-    var result = processor.BuildReplacements(dossierData, grammarRules);
-
-    // Assert
-    Assert.NotEmpty(result);
-    Assert.True(result.ContainsKey("DossierNummer"));
-    Assert.True(result.ContainsKey("Partij1Naam"));
+    var result = DutchLanguageHelper.FormatList(new List<string> { "Bart", "Kees", "Emma" });
+    Assert.Equal("Bart, Kees en Emma", result);
 }
 ```
 
-**Voorbeeld test voor TableGenerator:**
+**Voorbeeld test - Conditie evaluatie:**
 
 ```csharp
 [Fact]
-public void Generate_WithValidOmgangData_CreatesTable()
+public void Evaluate_AndCondition_MatchesWhenAllTrue()
 {
-    // Arrange
-    var generator = new OmgangTableGenerator(mockLogger.Object);
-    var dossierData = CreateTestDossierData();
+    var andCondition = CreateGroupCondition("AND",
+        CreateSimpleCondition("IsAnoniem", "=", false),
+        CreateSimpleCondition("AantalKinderen", ">", 0)
+    );
+    var config = CreateConfig("default", (andCondition, "Niet anoniem met kinderen"));
+    var context = new Dictionary<string, object>
+    {
+        { "IsAnoniem", false },
+        { "AantalKinderen", 2 }
+    };
 
-    // Act
-    var elements = generator.Generate(dossierData, "test-correlation-id");
+    var result = _evaluator.Evaluate(config, context);
 
-    // Assert
-    Assert.NotEmpty(elements);
-    Assert.Contains(elements, e => e is Table);
+    Assert.Equal(1, result.MatchedRule);
 }
 ```
 
@@ -1692,7 +1720,29 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.5.0 (Current) - Grammar Placeholders & Partij Benaming
+### v2.5.1 (Current) - Unit Test Suite
+
+**Nieuwe features:**
+- 🧪 **Unit Test Project** - Volledige test suite toegevoegd met xUnit en Moq:
+  - `Tests/Helpers/DutchLanguageHelperTests.cs` - 40 tests voor Nederlandse grammatica
+  - `Tests/Helpers/DataFormatterTests.cs` - 30 tests voor data formatting
+  - `Tests/Helpers/GrammarRulesBuilderTests.cs` - 20 tests voor grammar rules
+  - `Tests/Processors/ConditieEvaluatorTests.cs` - 43 tests voor conditie logica
+  - `Tests/Helpers/LegalNumberingHelperTests.cs` - 12 tests voor artikel nummering
+- 📊 **145 tests** dekken de kernfunctionaliteit van het systeem
+- ✅ Alle tests slagen (0 failures)
+
+**Technische wijzigingen:**
+- `Tests/scheidingsdesk-document-generator.Tests.csproj` - Nieuw xUnit test project
+- `scheidingsdesk-document-generator.sln` - Test project toegevoegd aan solution
+- `scheidingsdesk-document-generator.csproj` - Tests folder uitgesloten van main build
+
+**Packages:**
+- xUnit 2.9.2
+- Moq 4.20.72
+- Microsoft.NET.Test.Sdk 17.12.0
+
+### v2.5.0 - Grammar Placeholders & Partij Benaming
 
 **Nieuwe features en fixes:**
 - 🔤 **Grammar placeholders fix** - Placeholders met spaties en slashes werken nu correct:

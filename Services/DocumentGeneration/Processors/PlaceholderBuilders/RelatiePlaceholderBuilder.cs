@@ -245,11 +245,11 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             return gezagPartij.Value switch
             {
-                1 => $"{partij1Naam} en {partij2Naam} hebben samen het ouderlijk gezag over {kinderenTekst}. Na de scheiding blijft dit zo.",
-                2 => $"{partij1Naam} heeft alleen het ouderlijk gezag over {kinderenTekst}. Dit blijft zo.",
-                3 => $"{partij2Naam} heeft alleen het ouderlijk gezag over {kinderenTekst}. Dit blijft zo.",
-                4 => $"{partij1Naam} heeft alleen het ouderlijk gezag over {kinderenTekst}. Partijen spreken af dat zij binnen {weken} weken na ondertekening van dit ouderschapsplan gezamenlijk gezag zullen regelen.",
-                5 => $"{partij2Naam} heeft alleen het ouderlijk gezag over {kinderenTekst}. Partijen spreken af dat zij binnen {weken} weken na ondertekening van dit ouderschapsplan gezamenlijk gezag zullen regelen.",
+                1 => $"{Capitalize(partij1Naam)} en {partij2Naam} hebben samen het ouderlijk gezag over {kinderenTekst}. Na de scheiding blijft dit zo.",
+                2 => $"{Capitalize(partij1Naam)} heeft alleen het ouderlijk gezag over {kinderenTekst}. Dit blijft zo.",
+                3 => $"{Capitalize(partij2Naam)} heeft alleen het ouderlijk gezag over {kinderenTekst}. Dit blijft zo.",
+                4 => $"{Capitalize(partij1Naam)} heeft alleen het ouderlijk gezag over {kinderenTekst}. Partijen spreken af dat zij binnen {weken} weken na ondertekening van dit ouderschapsplan gezamenlijk gezag zullen regelen.",
+                5 => $"{Capitalize(partij2Naam)} heeft alleen het ouderlijk gezag over {kinderenTekst}. Partijen spreken af dat zij binnen {weken} weken na ondertekening van dit ouderschapsplan gezamenlijk gezag zullen regelen.",
                 _ => ""
             };
         }
@@ -353,6 +353,12 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             // If not a valid person ID or doesn't match, return the raw value
             return hoofdverblijf;
+        }
+
+        private static string Capitalize(string? text)
+        {
+            if (string.IsNullOrEmpty(text)) return text ?? "";
+            return char.ToUpper(text[0]) + text[1..];
         }
 
         #endregion

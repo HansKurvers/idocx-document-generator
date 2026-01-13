@@ -63,6 +63,7 @@ var host = new HostBuilder()
         services.AddScoped<ITableGenerator, ChildrenListGenerator>();
         services.AddScoped<ITableGenerator, AlimentatieTableGenerator>();
         services.AddScoped<ITableGenerator, ArtikelContentGenerator>(); // Generates artikelen from bibliotheek
+        services.AddScoped<ITableGenerator, InhoudsopgaveGenerator>(); // Generates table of contents with hyperlinks
     })
 
     .Build();

@@ -63,6 +63,10 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                             {
                                 artikelGenerator.Replacements = replacements;
                             }
+                            else if (generator is Generators.InhoudsopgaveGenerator inhoudsopgaveGenerator)
+                            {
+                                inhoudsopgaveGenerator.Replacements = replacements;
+                            }
                             else if (generator is Generators.OmgangTableGenerator omgangGenerator)
                             {
                                 omgangGenerator.Replacements = replacements;

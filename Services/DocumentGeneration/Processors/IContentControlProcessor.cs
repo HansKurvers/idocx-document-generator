@@ -16,6 +16,14 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
         void RemoveContentControls(Document document, string correlationId);
 
         /// <summary>
+        /// Removes problematic content controls (empty or containing '#' placeholders).
+        /// Paragraphs containing '#' are removed entirely, empty controls are cleared.
+        /// </summary>
+        /// <param name="document">Document to process</param>
+        /// <param name="correlationId">Correlation ID for logging</param>
+        void RemoveProblematicContentControls(Document document, string correlationId);
+
+        /// <summary>
         /// Processes table and list placeholders in document body
         /// </summary>
         /// <param name="body">Document body to process</param>

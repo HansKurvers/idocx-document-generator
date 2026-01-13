@@ -149,7 +149,59 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             _logger.LogInformation($"[{correlationId}] Content controls removal completed");
         }
 
+        /// <summary>
+        /// Removes problematic content controls (empty or containing '#' placeholders).
+        /// Paragraphs containing '#' are removed entirely, empty controls are cleared.
+        /// </summary>
+        public void RemoveProblematicContentControls(Document document, string correlationId)
+        {
+            var sdtElements = document.Descendants<SdtElement>().ToList();
+            _logger.LogInformation($"[{correlationId}] Scanning {sdtElements.Count} content controls for problematic content");
+
+            foreach (var sdt in sdtElements)
+            {
+                var contentText = GetSdtContentText(sdt);
+
+                // Check if content control contains "#" or is empty/whitespace
+                if (string.IsNullOrWhiteSpace(contentText) || contentText.Contains('#'))
+                {
+                    if (contentText.Contains('#'))
+                    {
+                        // Remove entire paragraph containing '#' placeholder
+                        var paragraph = sdt.Ancestors<Paragraph>().FirstOrDefault();
+                        if (paragraph != null)
+                        {
+                            paragraph.Remove();
+                        }
+                        else
+                        {
+                            sdt.Remove();
+                        }
+                    }
+                    else
+                    {
+                        // Clear empty content controls
+                        var contentElement = sdt.Elements().FirstOrDefault(e => e.LocalName == "sdtContent");
+                        contentElement?.RemoveAllChildren();
+                    }
+                }
+            }
+
+            _logger.LogInformation($"[{correlationId}] Problematic content controls processed");
+        }
+
         #region Private Helper Methods
+
+        /// <summary>
+        /// Gets all text content from a content control
+        /// </summary>
+        private string GetSdtContentText(SdtElement sdt)
+        {
+            var contentElements = sdt.Elements().FirstOrDefault(e => e.LocalName == "sdtContent");
+            if (contentElements == null) return "";
+
+            return string.Join("", contentElements.Descendants<Text>().Select(t => t.Text));
+        }
 
         /// <summary>
         /// Gets all text from a paragraph

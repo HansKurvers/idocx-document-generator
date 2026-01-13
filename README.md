@@ -1724,10 +1724,10 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 ### v2.6.0 (Current) - Testing, CI/CD & Code Quality
 
 **Nieuwe features:**
-- 📑 **Inhoudsopgave met Hyperlinks** - Nieuwe `[[INHOUDSOPGAVE]]` placeholder:
-  - Genereert klikbare links naar alle artikelen
-  - Automatisch gesynchroniseerd met artikelen (zelfde filtering)
-  - Bookmarks op artikel headings voor navigatie
+- 📑 **Word Inhoudsopgave (TOC)** - Nieuwe `[[INHOUDSOPGAVE]]` placeholder:
+  - Echte Word TOC field met paginanummers
+  - Artikel headings krijgen `Heading1` style
+  - Update in Word met F9 of rechtermuisklik → "Veld bijwerken"
 - 🔢 **Dynamische Artikelnummering** - Artikelen gebruiken nu `[[ARTIKEL]]` placeholders:
   - Automatische hernummering als artikelen worden overgeslagen (lege tekst)
   - Subartikelen via `[[SUBARTIKEL]]` in database templates (1.1, 1.2, etc.)

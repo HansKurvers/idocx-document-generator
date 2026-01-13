@@ -1,5 +1,7 @@
 # i-docx Document Generator
 
+[![Tests](https://github.com/HansKurvers/idocx-document-generator/actions/workflows/test.yml/badge.svg)](https://github.com/HansKurvers/idocx-document-generator/actions/workflows/test.yml)
+
 Een Azure Functions applicatie voor het automatisch genereren van juridische documenten voor scheidingszaken, specifiek gericht op ouderschapsplannen. Dit systeem integreert met een SQL database en Azure Blob Storage om op maat gemaakte Word documenten te genereren op basis van dossiergegevens.
 
 ## Inhoudsopgave

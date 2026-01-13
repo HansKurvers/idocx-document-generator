@@ -140,17 +140,17 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration
                     _logger.LogInformation($"[{correlationId}] Step 2: Processing conditional sections");
                     _conditionalSectionProcessor.ProcessConditionalSections(doc, replacements, correlationId);
 
-                    // Step 3: Process article numbering
-                    _logger.LogInformation($"[{correlationId}] Step 3: Processing article numbering");
+                    // Step 3: Process table placeholders (generates dynamic tables and artikelen with [[ARTIKEL]] placeholders)
+                    _logger.LogInformation($"[{correlationId}] Step 3: Processing table placeholders");
+                    _contentControlProcessor.ProcessTablePlaceholders(body, dossierData, replacements, correlationId);
+
+                    // Step 3b: Re-process table placeholders to catch TABEL placeholders in generated artikelen
+                    _logger.LogInformation($"[{correlationId}] Step 3b: Re-processing table placeholders for nested content");
+                    _contentControlProcessor.ProcessTablePlaceholders(body, dossierData, replacements, correlationId);
+
+                    // Step 4: Process article numbering (now [[ARTIKEL]] placeholders exist from Step 3)
+                    _logger.LogInformation($"[{correlationId}] Step 4: Processing article numbering");
                     ArticleNumberingHelper.ProcessArticlePlaceholders(doc, _logger, correlationId);
-
-                    // Step 4: Process table placeholders (generates dynamic tables and artikelen)
-                    _logger.LogInformation($"[{correlationId}] Step 4: Processing table placeholders");
-                    _contentControlProcessor.ProcessTablePlaceholders(body, dossierData, replacements, correlationId);
-
-                    // Step 4b: Re-process table placeholders to catch TABEL placeholders in generated artikelen
-                    _logger.LogInformation($"[{correlationId}] Step 4b: Re-processing table placeholders for nested content");
-                    _contentControlProcessor.ProcessTablePlaceholders(body, dossierData, replacements, correlationId);
 
                     // Step 5: Remove content controls
                     _logger.LogInformation($"[{correlationId}] Step 5: Removing content controls");

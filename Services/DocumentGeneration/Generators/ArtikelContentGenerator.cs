@@ -56,27 +56,30 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             // Sorteer op volgorde
             artikelen = artikelen.OrderBy(a => a.Volgorde).ToList();
 
-            int artikelNummer = 1;
+            int artikelCount = 0;
 
             foreach (var artikel in artikelen)
             {
-                // Genereer artikel elementen
-                var artikelElements = GenerateArtikelContent(artikel, artikelNummer, replacements, correlationId);
-                elements.AddRange(artikelElements);
+                // Genereer artikel elementen (nummering wordt later toegepast door ArticleNumberingHelper)
+                var artikelElements = GenerateArtikelContent(artikel, replacements, correlationId);
 
-                artikelNummer++;
+                if (artikelElements.Count > 0)
+                {
+                    elements.AddRange(artikelElements);
+                    artikelCount++;
+                }
             }
 
-            _logger.LogInformation($"[{correlationId}] {artikelNummer - 1} artikelen gegenereerd");
+            _logger.LogInformation($"[{correlationId}] {artikelCount} artikelen gegenereerd (nummering via [[ARTIKEL]] placeholders)");
             return elements;
         }
 
         /// <summary>
-        /// Genereert de content voor een enkel artikel
+        /// Genereert de content voor een enkel artikel.
+        /// Gebruikt [[ARTIKEL]] placeholder voor dynamische nummering via ArticleNumberingHelper.
         /// </summary>
         private List<OpenXmlElement> GenerateArtikelContent(
             ArtikelData artikel,
-            int nummer,
             Dictionary<string, string> replacements,
             string correlationId)
         {
@@ -92,9 +95,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 return elements;
             }
 
-            // Artikel kop met hardcoded nummering
+            // Artikel kop met [[ARTIKEL]] placeholder (nummering via ArticleNumberingHelper)
             var effectieveTitel = _artikelService.VervangPlaceholders(artikel.EffectieveTitel, replacements);
-            var kopTekst = $"Artikel {nummer}: {effectieveTitel}";
+            var kopTekst = $"[[ARTIKEL]] {effectieveTitel}";
 
             // Maak heading paragraph
             var heading = CreateArtikelHeading(kopTekst);

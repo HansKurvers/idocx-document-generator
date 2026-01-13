@@ -307,10 +307,10 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             return woonplaatsOptie.Value switch
             {
-                1 => $"De woonplaatsen van partijen blijven hetzelfde. {partij1Naam} blijft wonen in {huidigeWoonplaatsPartij1} en {partij2Naam} blijft wonen in {huidigeWoonplaatsPartij2}.",
-                2 => $"{partij1Naam} gaat verhuizen naar {woonplaatsPartij1 ?? "een nieuwe woonplaats"}. {partij2Naam} blijft wonen in {huidigeWoonplaatsPartij2}.",
-                3 => $"{partij1Naam} blijft wonen in {huidigeWoonplaatsPartij1}. {partij2Naam} gaat verhuizen naar {woonplaatsPartij2 ?? "een nieuwe woonplaats"}.",
-                4 => $"{partij1Naam} gaat verhuizen naar {woonplaatsPartij1 ?? "een nieuwe woonplaats"} en {partij2Naam} gaat verhuizen naar {woonplaatsPartij2 ?? "een nieuwe woonplaats"}.",
+                1 => $"De woonplaatsen van partijen blijven hetzelfde. {Capitalize(partij1Naam)} blijft wonen in {huidigeWoonplaatsPartij1} en {partij2Naam} blijft wonen in {huidigeWoonplaatsPartij2}.",
+                2 => $"{Capitalize(partij1Naam)} gaat verhuizen naar {woonplaatsPartij1 ?? "een nieuwe woonplaats"}. {Capitalize(partij2Naam)} blijft wonen in {huidigeWoonplaatsPartij2}.",
+                3 => $"{Capitalize(partij1Naam)} blijft wonen in {huidigeWoonplaatsPartij1}. {Capitalize(partij2Naam)} gaat verhuizen naar {woonplaatsPartij2 ?? "een nieuwe woonplaats"}.",
+                4 => $"{Capitalize(partij1Naam)} gaat verhuizen naar {woonplaatsPartij1 ?? "een nieuwe woonplaats"} en {partij2Naam} gaat verhuizen naar {woonplaatsPartij2 ?? "een nieuwe woonplaats"}.",
                 5 => $"Het is nog onduidelijk waar de ouders zullen gaan wonen nadat zij {relatieVerbreking}.",
                 _ => $"Het is nog onduidelijk waar de ouders zullen gaan wonen nadat zij {relatieVerbreking}."
             };

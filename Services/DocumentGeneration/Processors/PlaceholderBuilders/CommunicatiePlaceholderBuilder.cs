@@ -444,8 +444,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             return keuze switch
             {
                 "beiden" or "beide_ouders" => $"Wij zorgen ervoor dat {kinderenTekst} bij ons beiden tegen wettelijke aansprakelijkheid {(kinderen.Count == 1 ? "is" : "zijn")} verzekerd.",
-                "ouder_1" or "partij1" => $"{partij1Naam} zorgt ervoor dat {kinderenTekst} tegen wettelijke aansprakelijkheid {(kinderen.Count == 1 ? "is" : "zijn")} verzekerd.",
-                "ouder_2" or "partij2" => $"{partij2Naam} zorgt ervoor dat {kinderenTekst} tegen wettelijke aansprakelijkheid {(kinderen.Count == 1 ? "is" : "zijn")} verzekerd.",
+                "ouder_1" or "partij1" => $"{Capitalize(partij1Naam)} zorgt ervoor dat {kinderenTekst} tegen wettelijke aansprakelijkheid {(kinderen.Count == 1 ? "is" : "zijn")} verzekerd.",
+                "ouder_2" or "partij2" => $"{Capitalize(partij2Naam)} zorgt ervoor dat {kinderenTekst} tegen wettelijke aansprakelijkheid {(kinderen.Count == 1 ? "is" : "zijn")} verzekerd.",
                 "nvt" or "niet_van_toepassing" => "Niet van toepassing.",
                 _ => ""
             };
@@ -507,8 +507,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 "bijdrage_rechtstreeks_kind" => "De ouders betalen een bijdrage rechtstreeks aan het kind.",
                 "bijdrage_rechtstreeks_uitwonend" => "De ouders betalen een bijdrage rechtstreeks aan het kind als het kind niet meer thuiswoont.",
                 "bijdrage_beiden" => "Beide ouders blijven bijdragen aan de kosten voor het jongmeerderjarige kind.",
-                "ouder1" => $"{ouder1Naam} blijft bijdragen aan de kosten voor het jongmeerderjarige kind.",
-                "ouder2" => $"{ouder2Naam} blijft bijdragen aan de kosten voor het jongmeerderjarige kind.",
+                "ouder1" => $"{Capitalize(ouder1Naam)} blijft bijdragen aan de kosten voor het jongmeerderjarige kind.",
+                "ouder2" => $"{Capitalize(ouder2Naam)} blijft bijdragen aan de kosten voor het jongmeerderjarige kind.",
                 "geen_bijdrage" => "Er is geen bijdrage meer verschuldigd als het kind voldoende eigen inkomen heeft.",
                 "nvt" => "",
                 _ => ""
@@ -530,8 +530,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 "netto_inkomen_rato" => "De ouders dragen naar rato van hun netto inkomen bij aan de studiekosten.",
                 "beide_helft" => "Beide ouders dragen voor de helft bij aan de studiekosten.",
                 "evenredig" => "De ouders dragen evenredig naar inkomen bij aan de studiekosten.",
-                "ouder1" => $"{ouder1Naam} betaalt de studiekosten.",
-                "ouder2" => $"{ouder2Naam} betaalt de studiekosten.",
+                "ouder1" => $"{Capitalize(ouder1Naam)} betaalt de studiekosten.",
+                "ouder2" => $"{Capitalize(ouder2Naam)} betaalt de studiekosten.",
                 "kind_zelf" => "Het kind betaalt de studiekosten zelf (via lening en/of werk).",
                 "nvt" => "",
                 _ => ""
@@ -648,6 +648,12 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 age--;
 
             return age;
+        }
+
+        private static string Capitalize(string? text)
+        {
+            if (string.IsNullOrEmpty(text)) return text ?? "";
+            return char.ToUpper(text[0]) + text[1..];
         }
 
         #endregion

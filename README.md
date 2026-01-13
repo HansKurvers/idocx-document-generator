@@ -1724,6 +1724,11 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 ### v2.6.0 (Current) - Testing, CI/CD & Code Quality
 
 **Nieuwe features:**
+- 🔢 **Dynamische Artikelnummering** - Artikelen gebruiken nu `[[ARTIKEL]]` placeholders:
+  - Automatische hernummering als artikelen worden overgeslagen (lege tekst)
+  - Subartikelen via `[[SUBARTIKEL]]` in database templates (1.1, 1.2, etc.)
+  - DRY: enkele nummeringslogica via `ArticleNumberingHelper`
+  - Processing volgorde: artikelen genereren → dan nummeren
 - 🧪 **Unit Test Suite** - 169 tests met xUnit en Moq:
   - `DutchLanguageHelperTests` - 40 tests voor Nederlandse grammatica
   - `DataFormatterTests` - 30 tests voor data formatting

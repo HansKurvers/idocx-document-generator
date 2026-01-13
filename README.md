@@ -1724,12 +1724,13 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 ### v2.6.0 (Current) - Testing, CI/CD & Code Quality
 
 **Nieuwe features:**
-- 🧪 **Unit Test Suite** - 145 tests met xUnit en Moq:
+- 🧪 **Unit Test Suite** - 169 tests met xUnit en Moq:
   - `DutchLanguageHelperTests` - 40 tests voor Nederlandse grammatica
   - `DataFormatterTests` - 30 tests voor data formatting
   - `GrammarRulesBuilderTests` - 20 tests voor grammar rules
   - `ConditieEvaluatorTests` - 43 tests voor conditie logica
   - `LegalNumberingHelperTests` - 12 tests voor artikel nummering
+  - `ContentControlProcessorTests` - 24 tests voor content control verwerking
 - 🔄 **GitHub Actions CI/CD** - Automatische tests bij elke push/PR:
   - Test workflow met status badge in README
   - Test results als artifacts (30 dagen retention)
@@ -1743,6 +1744,7 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 - 🐛 Fix: silent failure in ContentControlProcessor - placeholder blijft nu in document bij fout
 - 🐛 Fix: unclosed IF blocks geëscaleerd van warning naar error
 - 🐛 Fix: null-safe handling voor artikelen retrieval
+- 🐛 Fix: GezagRegeling zinnen beginnen nu met hoofdletter ("de man" → "De man")
 
 **Refactoring:**
 - ♻️ `DocumentProcessor.cs` verwijderd (-230 regels duplicate code)

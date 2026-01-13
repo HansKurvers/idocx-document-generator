@@ -18,9 +18,6 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
         private readonly ILogger<ArtikelContentGenerator> _logger;
         private readonly IArtikelService _artikelService;
 
-        // Static counter voor unieke bookmark IDs (reset per document via ResetBookmarkCounter)
-        private static int _bookmarkIdCounter = 1000;
-
         /// <summary>
         /// Placeholder replacements die worden ingesteld voor processing
         /// </summary>
@@ -39,9 +36,6 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
         public List<OpenXmlElement> Generate(DossierData data, string correlationId)
         {
             var elements = new List<OpenXmlElement>();
-
-            // Reset bookmark counter voor nieuw document
-            _bookmarkIdCounter = 1000;
 
             if (data.Artikelen == null || data.Artikelen.Count == 0)
             {
@@ -102,12 +96,12 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             }
 
             // Artikel kop met [[ARTIKEL]] placeholder (nummering via ArticleNumberingHelper)
+            // Heading style wordt gebruikt voor Word TOC
             var effectieveTitel = _artikelService.VervangPlaceholders(artikel.EffectieveTitel, replacements);
             var kopTekst = $"[[ARTIKEL]] {effectieveTitel}";
 
-            // Maak heading paragraph met bookmark voor inhoudsopgave hyperlinks
-            var bookmarkName = $"artikel_{artikel.ArtikelCode}";
-            var heading = CreateArtikelHeadingWithBookmark(kopTekst, bookmarkName);
+            // Maak heading paragraph met Heading1 style voor Word inhoudsopgave
+            var heading = CreateArtikelHeading(kopTekst);
             elements.Add(heading);
 
             // Maak body paragraphs (split op newlines)
@@ -121,14 +115,17 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
         }
 
         /// <summary>
-        /// Maakt een artikel heading met juiste styling en bookmark voor hyperlinks
+        /// Maakt een artikel heading met Heading1 style voor Word inhoudsopgave
         /// </summary>
-        private Paragraph CreateArtikelHeadingWithBookmark(string text, string bookmarkName)
+        private Paragraph CreateArtikelHeading(string text)
         {
             var paragraph = new Paragraph();
 
             // Paragraph properties
             var paragraphProps = new ParagraphProperties();
+
+            // Heading1 style voor Word TOC (inhoudsopgave)
+            paragraphProps.Append(new ParagraphStyleId() { Val = "Heading1" });
 
             // Spacing voor heading (ruimte boven)
             paragraphProps.Append(new SpacingBetweenLines()
@@ -139,10 +136,6 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
 
             paragraph.Append(paragraphProps);
 
-            // Bookmark start (voor inhoudsopgave hyperlinks)
-            var bookmarkId = (_bookmarkIdCounter++).ToString();
-            paragraph.Append(new BookmarkStart { Id = bookmarkId, Name = bookmarkName });
-
             // Run met bold text
             var run = new Run();
             var runProps = new RunProperties();
@@ -150,11 +143,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             runProps.Append(new FontSize() { Val = "24" }); // 12pt
             run.Append(runProps);
             run.Append(new Text(text));
+
             paragraph.Append(run);
-
-            // Bookmark end
-            paragraph.Append(new BookmarkEnd { Id = bookmarkId });
-
             return paragraph;
         }
 

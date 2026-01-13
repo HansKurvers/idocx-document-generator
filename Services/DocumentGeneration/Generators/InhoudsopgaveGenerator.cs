@@ -2,91 +2,48 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.Extensions.Logging;
 using scheidingsdesk_document_generator.Models;
-using scheidingsdesk_document_generator.Services.Artikel;
 using scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generators
 {
     /// <summary>
-    /// Genereert een inhoudsopgave met hyperlinks naar artikelen.
+    /// Genereert een Word inhoudsopgave (TOC) die automatisch wordt gevuld
+    /// op basis van Heading1 styles in het document.
     /// Vervangt de [[INHOUDSOPGAVE]] placeholder.
     /// </summary>
     public class InhoudsopgaveGenerator : ITableGenerator
     {
         private readonly ILogger<InhoudsopgaveGenerator> _logger;
-        private readonly IArtikelService _artikelService;
 
         /// <summary>
-        /// Placeholder replacements die worden ingesteld voor processing
+        /// Placeholder replacements (niet gebruikt voor TOC, maar vereist door interface patroon)
         /// </summary>
         public Dictionary<string, string>? Replacements { get; set; }
 
         public string PlaceholderTag => "[[INHOUDSOPGAVE]]";
 
-        public InhoudsopgaveGenerator(
-            ILogger<InhoudsopgaveGenerator> logger,
-            IArtikelService artikelService)
+        public InhoudsopgaveGenerator(ILogger<InhoudsopgaveGenerator> logger)
         {
             _logger = logger;
-            _artikelService = artikelService;
         }
 
         public List<OpenXmlElement> Generate(DossierData data, string correlationId)
         {
             var elements = new List<OpenXmlElement>();
 
-            if (data.Artikelen == null || data.Artikelen.Count == 0)
-            {
-                _logger.LogWarning($"[{correlationId}] Geen artikelen beschikbaar voor inhoudsopgave");
-                return elements;
-            }
-
-            _logger.LogInformation($"[{correlationId}] Genereren inhoudsopgave voor {data.Artikelen.Count} artikelen");
-
-            // Gebruik de replacements voor conditionele filtering (zelfde logica als ArtikelContentGenerator)
-            var replacements = Replacements ?? new Dictionary<string, string>();
-
-            // Filter conditionele artikelen
-            var artikelen = _artikelService.FilterConditioneleArtikelen(data.Artikelen, replacements);
-
-            // Sorteer op volgorde
-            artikelen = artikelen.OrderBy(a => a.Volgorde).ToList();
+            _logger.LogInformation($"[{correlationId}] Genereren Word inhoudsopgave (TOC field)");
 
             // Heading voor inhoudsopgave
             elements.Add(CreateTocHeading("Inhoudsopgave"));
 
-            int artikelNummer = 1;
-            int tocEntries = 0;
-
-            foreach (var artikel in artikelen)
-            {
-                // Verwerk artikel tekst om te checken of het artikel content heeft
-                var verwerkteTekst = _artikelService.VerwerkArtikelTekst(artikel, replacements);
-
-                // Skip artikelen zonder tekst (zelfde logica als ArtikelContentGenerator)
-                if (string.IsNullOrWhiteSpace(verwerkteTekst))
-                {
-                    continue;
-                }
-
-                // Haal effectieve titel op
-                var effectieveTitel = _artikelService.VervangPlaceholders(artikel.EffectieveTitel, replacements);
-                var bookmarkName = $"artikel_{artikel.ArtikelCode}";
-                var displayText = $"Artikel {artikelNummer}: {effectieveTitel}";
-
-                // Maak TOC entry met hyperlink
-                elements.Add(CreateTocEntry(displayText, bookmarkName));
-
-                artikelNummer++;
-                tocEntries++;
-            }
+            // TOC Field - Word herkent dit en vult het automatisch met Heading1 entries
+            elements.Add(CreateTocField());
 
             // Lege regel na inhoudsopgave
             elements.Add(OpenXmlHelper.CreateEmptyParagraph());
 
-            _logger.LogInformation($"[{correlationId}] Inhoudsopgave gegenereerd met {tocEntries} entries");
+            _logger.LogInformation($"[{correlationId}] Word TOC field gegenereerd (update in Word met F9 of rechtermuisklik)");
 
             return elements;
         }
@@ -119,33 +76,33 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
         }
 
         /// <summary>
-        /// Maakt een TOC entry met hyperlink naar artikel bookmark
+        /// Maakt een Word TOC field dat automatisch wordt gevuld op basis van Heading styles.
+        /// De gebruiker kan dit updaten in Word met F9 of rechtermuisklik → "Veld bijwerken".
         /// </summary>
-        private Paragraph CreateTocEntry(string text, string bookmarkAnchor)
+        private Paragraph CreateTocField()
         {
             var paragraph = new Paragraph();
 
-            var paragraphProps = new ParagraphProperties();
-            paragraphProps.Append(new SpacingBetweenLines()
+            // SimpleField met TOC instructie
+            // \o "1-1" = include heading levels 1-1 (alleen Heading1)
+            // \h = hyperlinks
+            // \z = hide page numbers in web view
+            // \u = use outline levels
+            var field = new SimpleField()
             {
-                After = "60"  // 3pt ruimte onder elke entry
-            });
+                Instruction = " TOC \\o \"1-1\" \\h \\z \\u "
+            };
 
-            paragraph.Append(paragraphProps);
-
-            // Hyperlink naar bookmark
-            var hyperlink = new Hyperlink() { Anchor = bookmarkAnchor };
-
+            // Placeholder tekst (wordt vervangen wanneer TOC wordt bijgewerkt in Word)
             var run = new Run();
             var runProps = new RunProperties();
-            runProps.Append(new Color() { Val = "0563C1" }); // Standaard hyperlink blauw
-            runProps.Append(new Underline() { Val = UnderlineValues.Single });
-            runProps.Append(new FontSize() { Val = "22" }); // 11pt
+            runProps.Append(new Color() { Val = "808080" }); // Grijs
+            runProps.Append(new Italic());
             run.Append(runProps);
-            run.Append(new Text(text));
+            run.Append(new Text("Klik met rechtermuisknop en kies 'Veld bijwerken' om de inhoudsopgave te genereren"));
 
-            hyperlink.Append(run);
-            paragraph.Append(hyperlink);
+            field.Append(run);
+            paragraph.Append(field);
 
             return paragraph;
         }

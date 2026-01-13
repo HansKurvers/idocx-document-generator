@@ -1744,7 +1744,12 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 - 🐛 Fix: silent failure in ContentControlProcessor - placeholder blijft nu in document bij fout
 - 🐛 Fix: unclosed IF blocks geëscaleerd van warning naar error
 - 🐛 Fix: null-safe handling voor artikelen retrieval
-- 🐛 Fix: GezagRegeling zinnen beginnen nu met hoofdletter ("de man" → "De man")
+- 🐛 Fix: alle placeholder zinnen beginnen nu met hoofdletter ("de man" → "De man"):
+  - `GezagRegeling` / `GezagZin`
+  - `WoonplaatsRegeling`
+  - `AansprakelijkheidsverzekeringZin`
+  - `JongmeerderjarigeBijdrageZin`
+  - `StudiekostenZin`
 
 **Refactoring:**
 - ♻️ `DocumentProcessor.cs` verwijderd (-230 regels duplicate code)

@@ -206,17 +206,6 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             if (newText != fullText)
             {
-                // Log which placeholders were replaced for debugging
-                var replacedKeys = replacements.Keys.Where(key =>
-                    fullText.Contains($"[[{key}]]") || fullText.Contains($"{{{key}}}") ||
-                    fullText.Contains($"<<{key}>>") || fullText.Contains($"[{key}]")).ToList();
-
-                // Log replaced placeholders for debugging (only alimentatie-related)
-                if (replacedKeys.Any(k => k.Contains("Alimentatie") || k.Contains("Eigen") || k.Contains("Kosten") || k.Contains("Gezins")))
-                {
-                    _logger.LogInformation("Replaced alimentatie placeholders: {Keys}", string.Join(", ", replacedKeys));
-                }
-
                 // Check if the new text contains line breaks
                 if (newText.Contains("\n"))
                 {

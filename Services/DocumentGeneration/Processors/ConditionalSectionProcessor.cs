@@ -200,7 +200,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             if (ifStarts.Count > 0)
             {
-                _logger.LogWarning($"[{correlationId}] Unclosed IF blocks found: {string.Join(", ", ifStarts.Select(s => s.FieldName))}");
+                var unclosedFields = string.Join(", ", ifStarts.Select(s => s.FieldName));
+                _logger.LogError($"[{correlationId}] Malformed template: unclosed [[IF:]] blocks without matching [[ENDIF:]]: {unclosedFields}. These sections will not be processed correctly.");
             }
 
             return blocks;

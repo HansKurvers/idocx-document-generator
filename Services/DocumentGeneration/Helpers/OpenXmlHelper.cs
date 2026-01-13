@@ -127,8 +127,10 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             // Add table properties
             var tblProp = new TableProperties();
 
-            // Set table width to 100%
-            var tblWidth = new TableWidth() { Width = "5000", Type = TableWidthUnitValues.Pct };
+            // Set table width to 100% of container
+            // Note: Open XML uses fiftieths of a percent, so 5000 = 100%
+            const string FullWidthPercent = "5000";
+            var tblWidth = new TableWidth() { Width = FullWidthPercent, Type = TableWidthUnitValues.Pct };
             tblProp.Append(tblWidth);
 
             // Add modern borders

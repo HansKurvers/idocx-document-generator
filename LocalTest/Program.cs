@@ -7,6 +7,10 @@ using System.Linq;
 
 namespace LocalTest
 {
+    /// <summary>
+    /// Local test utility for processing Word documents.
+    /// Removes content controls and fixes text formatting.
+    /// </summary>
     class Program
     {
         static void Main(string[] args)
@@ -45,11 +49,10 @@ namespace LocalTest
                 Path.GetFileNameWithoutExtension(inputFilePath) + "_processed" + Path.GetExtension(inputFilePath)
             );
 
-            Console.WriteLine($"Processing document: {inputFilePath}");
-            Console.WriteLine($"Output will be saved to: {outputFilePath}");
+            Console.WriteLine($"Processing: {inputFilePath} -> {outputFilePath}");
 
             byte[] fileContent = File.ReadAllBytes(inputFilePath);
-            
+
             if (fileContent.Length == 0)
             {
                 throw new InvalidOperationException("File is empty or could not be read.");
@@ -57,132 +60,118 @@ namespace LocalTest
 
             using var inputStream = new MemoryStream(fileContent);
             using var outputStream = new MemoryStream();
-            
+
             using (WordprocessingDocument doc = WordprocessingDocument.Open(inputStream, false))
             {
-                Console.WriteLine("Document opened successfully.");
-                
                 using (WordprocessingDocument outputDoc = WordprocessingDocument.Create(outputStream, doc.DocumentType))
                 {
                     foreach (var part in doc.Parts)
                     {
                         outputDoc.AddPart(part.OpenXmlPart, part.RelationshipId);
                     }
-                    
+
                     var mainPart = outputDoc.MainDocumentPart;
                     if (mainPart != null)
                     {
                         RemoveProblematicContentControls(mainPart.Document);
                         ProcessContentControls(mainPart.Document);
                         mainPart.Document.Save();
-                        Console.WriteLine("Content controls processed successfully.");
                     }
                 }
             }
-            
+
             outputStream.Position = 0;
             File.WriteAllBytes(outputFilePath, outputStream.ToArray());
-            Console.WriteLine($"Document saved successfully to: {outputFilePath}");
         }
 
         static void RemoveProblematicContentControls(Document document)
         {
-            Console.WriteLine("Scanning for empty or placeholder content controls to remove...");
-            
             var sdtElements = document.Descendants<SdtElement>().ToList();
-            
-            Console.WriteLine($"Found {sdtElements.Count} content controls to analyze.");
-            
+
             foreach (var sdt in sdtElements)
             {
                 var contentText = GetSdtContentText(sdt);
-                
+
                 // Check if content control contains "#" or is empty/whitespace
                 if (string.IsNullOrWhiteSpace(contentText) || contentText.Contains('#'))
                 {
-                    Console.WriteLine($"Found problematic content control: '{contentText}'");
-                    
-                    // Clear the content control content safely
                     ReplaceContentControlWithEmpty(sdt);
                 }
             }
-            
-            Console.WriteLine($"Processed problematic content controls by clearing their content.");
         }
-        
+
         static void ReplaceContentControlWithEmpty(SdtElement sdt)
         {
             try
             {
-                // Find the content element within the SDT
                 var contentElement = sdt.Elements().FirstOrDefault(e => e.LocalName == "sdtContent");
-                if (contentElement != null)
-                {
-                    // Clear all content from the SDT but keep the structure
-                    contentElement.RemoveAllChildren();
-                    Console.WriteLine("Cleared content control content");
-                }
+                contentElement?.RemoveAllChildren();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to clear content control: {ex.Message}");
+                Console.WriteLine($"Warning: Failed to clear content control: {ex.Message}");
             }
         }
-        
+
         static string GetSdtContentText(SdtElement sdt)
         {
             var contentElements = sdt.Elements().FirstOrDefault(e => e.LocalName == "sdtContent");
             if (contentElements == null) return "";
-            
+
             return contentElements.Descendants<Text>().Aggregate("", (current, text) => current + text.Text);
         }
-        
+
         static void ProcessContentControls(Document document)
         {
             var sdtElements = document.Descendants<SdtElement>().ToList();
-            Console.WriteLine($"Found {sdtElements.Count} content controls to process.");
-            
+
             for (int i = sdtElements.Count - 1; i >= 0; i--)
             {
                 var sdt = sdtElements[i];
                 var parent = sdt.Parent;
                 if (parent == null) continue;
-                
+
                 var contentElements = sdt.Elements().FirstOrDefault(e => e.LocalName == "sdtContent");
                 if (contentElements == null) continue;
-                
+
                 var contentToPreserve = contentElements.ChildElements.ToList();
-                
+
                 if (contentToPreserve.Count > 0)
                 {
                     foreach (var child in contentToPreserve)
                     {
                         var clonedChild = child.CloneNode(true);
-                        
-                        foreach (var run in clonedChild.Descendants<Run>())
-                        {
-                            var runProps = run.RunProperties ?? run.AppendChild(new RunProperties());
-                            
-                            var colorElements = runProps.Elements<Color>().ToList();
-                            foreach (var color in colorElements)
-                            {
-                                runProps.RemoveChild(color);
-                            }
-                            
-                            runProps.AppendChild(new Color() { Val = "000000" });
-                            
-                            var shadingElements = runProps.Elements<Shading>().ToList();
-                            foreach (var shading in shadingElements)
-                            {
-                                runProps.RemoveChild(shading);
-                            }
-                        }
-                        
+                        FixTextFormatting(clonedChild);
                         parent.InsertBefore(clonedChild, sdt);
                     }
                 }
-                
+
                 parent.RemoveChild(sdt);
+            }
+        }
+
+        static void FixTextFormatting(OpenXmlElement element)
+        {
+            foreach (var run in element.Descendants<Run>())
+            {
+                var runProps = run.RunProperties ?? run.AppendChild(new RunProperties());
+
+                // Remove existing colors
+                var colorElements = runProps.Elements<Color>().ToList();
+                foreach (var color in colorElements)
+                {
+                    runProps.RemoveChild(color);
+                }
+
+                // Set text color to black
+                runProps.AppendChild(new Color() { Val = "000000" });
+
+                // Remove shading
+                var shadingElements = runProps.Elements<Shading>().ToList();
+                foreach (var shading in shadingElements)
+                {
+                    runProps.RemoveChild(shading);
+                }
             }
         }
     }

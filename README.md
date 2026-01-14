@@ -992,6 +992,38 @@ Dit is een automatisch gegenereerde beschrijving die alle financiële afspraken 
 - Maximum opname bedragen
 - Indexeringsafspraken
 
+### Fiscale Regeling (Artikel 6 Convenant)
+
+**FiscaalPlaceholderBuilder** genereert alle teksten voor het fiscale artikel in het convenant.
+
+```
+[[FiscaleToetsingTekst]]            - Paragraaf 6.1: Hoe partijen zijn geïnformeerd over fiscale gevolgen
+[[FiscaalPartnerschapTekst]]        - Paragraaf 6.2.1-6.2.3: Fiscaal partnerschap en afstemming aangiften
+[[EigenWoningTekst]]                - Paragraaf 6.2.4: Eigen woning fiscale behandeling (optioneel)
+[[IbOndernemingTekst]]              - Paragraaf 6.2.5: IB-onderneming geruisloze doorschuiving (optioneel)
+[[AanmerkelijkBelangTekst]]         - Paragraaf 6.2.6: Aanmerkelijk belang afrekening (optioneel)
+[[TerbeschikkingstellingTekst]]     - Paragraaf 6.2.7: Terbeschikkingstelling vermogen (optioneel)
+[[SchenkbelastingTekst]]            - Paragraaf 6.2.8: Aangifte schenkbelasting (optioneel)
+[[DraagplichtHeffingenTekst]]       - Paragraaf 6.3.1-6.3.5: Draagplicht heffingen tot en na beëindiging
+[[VerrekeningLijfrentenTekst]]      - Paragraaf 6.3.6: Verrekening lijfrenten en pensioen (optioneel)
+[[AfkoopVerrekeningTekst]]          - Paragraaf 6.3.7: Afkoop alimentatie met verrekening (optioneel)
+[[OptimalisatieAangiftenTekst]]     - Paragraaf 6.4.1: Optimalisatie aangiften (optioneel)
+[[OverigeFiscaleBepalingenTekst]]   - Paragraaf 6.4.2-6.4.4: Standaard bepalingen (altijd)
+```
+
+**Fiscale toetsing opties (6.1):**
+- `door_adviseur` → "door [naam adviseur] aan partijen"
+- `buiten_mediation` → "buiten de mediation om"
+- `geen_advies` → "ervoor kiezen geen advies in te winnen"
+
+**Draagplicht heffingen opties (6.3):**
+- `partij1` / `partij2` → "komen toe aan de man/de vrouw"
+- `gelijkelijk` → "worden gelijkelijk gedeeld"
+- `verhouding` → "worden in de verhouding X:Y gedeeld"
+
+**Anonimiteit:**
+Bij convenant wordt "de man" / "de vrouw" gebruikt in plaats van roepnamen.
+
 ### Communicatie Afspraken
 
 Dit is een uitgebreid model voor alle communicatie- en praktische afspraken rondom de kinderen.

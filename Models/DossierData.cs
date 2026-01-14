@@ -51,6 +51,11 @@ namespace scheidingsdesk_document_generator.Models
         public CommunicatieAfsprakenData? CommunicatieAfspraken { get; set; }
 
         /// <summary>
+        /// Convenant fiscal information
+        /// </summary>
+        public ConvenantFiscaalData? ConvenantFiscaal { get; set; }
+
+        /// <summary>
         /// Artikel templates with user/dossier customizations for document generation
         /// </summary>
         public List<ArtikelData> Artikelen { get; set; } = new List<ArtikelData>();
@@ -231,5 +236,50 @@ namespace scheidingsdesk_document_generator.Models
         public string TemplateTekst { get; set; } = string.Empty;
         public bool MeervoudKinderen { get; set; }
         public string Type { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Convenant fiscal data for Article 6 - FISCALE REGELING
+    /// </summary>
+    public class ConvenantFiscaalData
+    {
+        // 6.1 Fiscale toetsing
+        public string? FiscaalAdviesKeuze { get; set; }
+        public string? FiscaalAdviseurNaam { get; set; }
+
+        // 6.2.1 Einde fiscaal partnerschap
+        public bool? EigenWoningEinddatumBewust { get; set; }
+
+        // 6.2.2 Fiscaal partnerschap
+        public string? FiscaalPartnerschapKeuze { get; set; }
+        public string? FiscaalPartnerschapAdviseur { get; set; }
+
+        // 6.2.4-6.2.8 Optionele secties
+        public bool? EigenWoningSectieOpnemen { get; set; }
+        public bool? IbOndernemingSectieOpnemen { get; set; }
+        public bool? AanmerkelijkBelangOpnemen { get; set; }
+        public string? AanmerkelijkBelangVanToepassing { get; set; }
+        public string? AanmerkelijkBelangAfrekening { get; set; }
+        public bool? TerbeschikkingstellingOpnemen { get; set; }
+        public string? TerbeschikkingstellingKeuze { get; set; }
+        public bool? SchenkbelastingOpnemen { get; set; }
+
+        // 6.3 Draagplicht heffingen
+        public string? DraagplichtHeffingenTot { get; set; }
+        public int? DraagplichtHeffingenTotVerhouding1 { get; set; }
+        public int? DraagplichtHeffingenTotVerhouding2 { get; set; }
+        public string? DraagplichtHeffingenJaar { get; set; }
+        public int? DraagplichtHeffingenJaarVerhouding1 { get; set; }
+        public int? DraagplichtHeffingenJaarVerhouding2 { get; set; }
+
+        // 6.3.6-6.3.7 Optionele secties
+        public bool? VerrekeningLijfrentenPensioenOpnemen { get; set; }
+        public int? VerrekeningLijfrentenPensioenJaar { get; set; }
+        public bool? AfkoopAlimentatieVerrekeningOpnemen { get; set; }
+        public int? AfkoopAlimentatieVerrekeningJaar { get; set; }
+
+        // 6.4 Overige bepalingen
+        public bool? OptimalisatieAangiftenOpnemen { get; set; }
+        public string? OptimalisatieVoordeelVerdeling { get; set; }
     }
 }

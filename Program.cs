@@ -46,6 +46,7 @@ var host = new HostBuilder()
         services.AddScoped<IPlaceholderBuilder, RelatiePlaceholderBuilder>();
         services.AddScoped<IPlaceholderBuilder, FinancieelPlaceholderBuilder>();
         services.AddScoped<IPlaceholderBuilder, CommunicatiePlaceholderBuilder>();
+        services.AddScoped<IPlaceholderBuilder, FiscaalPlaceholderBuilder>();
 
         // Register placeholder processor (orchestrator for builders)
         services.AddScoped<IPlaceholderProcessor, PlaceholderProcessor>();

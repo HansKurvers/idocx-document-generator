@@ -263,6 +263,44 @@ namespace scheidingsdesk_document_generator.Services
                     ELSE
                     BEGIN
                         SELECT NULL WHERE 1=0; -- Empty result set
+                    END
+
+                    -- Result set 15: Convenant fiscal data - Optional
+                    IF EXISTS (SELECT * FROM sys.tables WHERE name = 'convenant_info' AND schema_id = SCHEMA_ID('dbo'))
+                       AND EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('dbo.convenant_info') AND name = 'fiscaal_advies_keuze')
+                    BEGIN
+                        SELECT
+                            fiscaal_advies_keuze,
+                            fiscaal_adviseur_naam,
+                            eigen_woning_einddatum_bewust,
+                            fiscaal_partnerschap_keuze,
+                            fiscaal_partnerschap_adviseur,
+                            eigen_woning_sectie_opnemen,
+                            ib_onderneming_sectie_opnemen,
+                            aanmerkelijk_belang_opnemen,
+                            aanmerkelijk_belang_van_toepassing,
+                            aanmerkelijk_belang_afrekening,
+                            terbeschikkingstelling_opnemen,
+                            terbeschikkingstelling_keuze,
+                            schenkbelasting_opnemen,
+                            draagplicht_heffingen_tot,
+                            draagplicht_heffingen_tot_verhouding1,
+                            draagplicht_heffingen_tot_verhouding2,
+                            draagplicht_heffingen_jaar,
+                            draagplicht_heffingen_jaar_verhouding1,
+                            draagplicht_heffingen_jaar_verhouding2,
+                            verrekening_lijfrenten_pensioen_opnemen,
+                            verrekening_lijfrenten_pensioen_jaar,
+                            afkoop_alimentatie_verrekening_opnemen,
+                            afkoop_alimentatie_verrekening_jaar,
+                            optimalisatie_aangiften_opnemen,
+                            optimalisatie_voordeel_verdeling
+                        FROM dbo.convenant_info
+                        WHERE dossier_id = @DossierId;
+                    END
+                    ELSE
+                    BEGIN
+                        SELECT NULL WHERE 1=0; -- Empty result set
                     END";
 
                 using var command = new SqlCommand(query, connection);
@@ -689,6 +727,50 @@ namespace scheidingsdesk_document_generator.Services
                 {
                     _logger.LogWarning(ex, "Conditional placeholder columns may not exist yet, skipping conditional placeholders");
                 }
+
+                // Result set 15: Convenant fiscal data (Optional)
+                await reader.NextResultAsync();
+                ConvenantFiscaalData? convenantFiscaal = null;
+                try
+                {
+                    if (reader.FieldCount > 0 && await reader.ReadAsync())
+                    {
+                        convenantFiscaal = new ConvenantFiscaalData
+                        {
+                            FiscaalAdviesKeuze = SafeReadString(reader, "fiscaal_advies_keuze"),
+                            FiscaalAdviseurNaam = SafeReadString(reader, "fiscaal_adviseur_naam"),
+                            EigenWoningEinddatumBewust = SafeReadBoolean(reader, "eigen_woning_einddatum_bewust"),
+                            FiscaalPartnerschapKeuze = SafeReadString(reader, "fiscaal_partnerschap_keuze"),
+                            FiscaalPartnerschapAdviseur = SafeReadString(reader, "fiscaal_partnerschap_adviseur"),
+                            EigenWoningSectieOpnemen = SafeReadBoolean(reader, "eigen_woning_sectie_opnemen"),
+                            IbOndernemingSectieOpnemen = SafeReadBoolean(reader, "ib_onderneming_sectie_opnemen"),
+                            AanmerkelijkBelangOpnemen = SafeReadBoolean(reader, "aanmerkelijk_belang_opnemen"),
+                            AanmerkelijkBelangVanToepassing = SafeReadString(reader, "aanmerkelijk_belang_van_toepassing"),
+                            AanmerkelijkBelangAfrekening = SafeReadString(reader, "aanmerkelijk_belang_afrekening"),
+                            TerbeschikkingstellingOpnemen = SafeReadBoolean(reader, "terbeschikkingstelling_opnemen"),
+                            TerbeschikkingstellingKeuze = SafeReadString(reader, "terbeschikkingstelling_keuze"),
+                            SchenkbelastingOpnemen = SafeReadBoolean(reader, "schenkbelasting_opnemen"),
+                            DraagplichtHeffingenTot = SafeReadString(reader, "draagplicht_heffingen_tot"),
+                            DraagplichtHeffingenTotVerhouding1 = SafeReadInt(reader, "draagplicht_heffingen_tot_verhouding1"),
+                            DraagplichtHeffingenTotVerhouding2 = SafeReadInt(reader, "draagplicht_heffingen_tot_verhouding2"),
+                            DraagplichtHeffingenJaar = SafeReadString(reader, "draagplicht_heffingen_jaar"),
+                            DraagplichtHeffingenJaarVerhouding1 = SafeReadInt(reader, "draagplicht_heffingen_jaar_verhouding1"),
+                            DraagplichtHeffingenJaarVerhouding2 = SafeReadInt(reader, "draagplicht_heffingen_jaar_verhouding2"),
+                            VerrekeningLijfrentenPensioenOpnemen = SafeReadBoolean(reader, "verrekening_lijfrenten_pensioen_opnemen"),
+                            VerrekeningLijfrentenPensioenJaar = SafeReadInt(reader, "verrekening_lijfrenten_pensioen_jaar"),
+                            AfkoopAlimentatieVerrekeningOpnemen = SafeReadBoolean(reader, "afkoop_alimentatie_verrekening_opnemen"),
+                            AfkoopAlimentatieVerrekeningJaar = SafeReadInt(reader, "afkoop_alimentatie_verrekening_jaar"),
+                            OptimalisatieAangiftenOpnemen = SafeReadBoolean(reader, "optimalisatie_aangiften_opnemen"),
+                            OptimalisatieVoordeelVerdeling = SafeReadString(reader, "optimalisatie_voordeel_verdeling")
+                        };
+                        _logger.LogInformation("Loaded ConvenantFiscaal data for dossier {DossierId}", dossierId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Convenant fiscal columns may not exist yet, skipping");
+                }
+                dossier.ConvenantFiscaal = convenantFiscaal;
 
                 _logger.LogInformation("Successfully retrieved dossier data for dossier ID: {DossierId}", dossierId);
                 return dossier;

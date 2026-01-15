@@ -1177,6 +1177,7 @@ namespace scheidingsdesk_document_generator.Services
                         AND t.is_actief = 1
                         AND ISNULL(da.is_uitgesloten, 0) = 0
                         AND ISNULL(ga.is_actief, 1) = 1
+                        AND (t.eigenaar_id IS NULL OR t.eigenaar_id = @GebruikerId)
                     ORDER BY t.volgorde ASC";
 
                 using var command = new SqlCommand(query, connection);

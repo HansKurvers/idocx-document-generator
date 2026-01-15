@@ -73,6 +73,7 @@ De Ouderschapsplan Document Generator is een serverless applicatie gebouwd met A
 
 6. **Artikel Bibliotheek Integratie** (Nieuw in v2.3.0)
    - Haalt artikelen op uit database met 3-laags prioriteit (dossier > gebruiker > systeem)
+   - **Uitgeschakelde artikelen filteren**: Artikelen met `is_actief = false` worden automatisch uitgesloten
    - Automatische conditionele filtering op basis van dossier data
    - Placeholder vervanging binnen artikel teksten
    - `[[ARTIKELEN]]` placeholder genereert alle actieve artikelen
@@ -1854,6 +1855,7 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 - 📚 **Artikel Bibliotheek Integratie** - Dynamische artikelen uit database in documenten:
   - `[[ARTIKELEN]]` placeholder genereert alle actieve artikelen
   - 3-laags prioriteit systeem: dossier > gebruiker > systeem
+  - **Uitgeschakelde artikelen** worden automatisch uitgesloten (`is_actief = false`)
   - Conditionele filtering op basis van dossier data
   - Placeholder vervanging binnen artikel teksten
   - `[[IF:Veld]]...[[ENDIF:Veld]]` ondersteuning binnen artikelen

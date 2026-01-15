@@ -71,12 +71,13 @@ De Ouderschapsplan Document Generator is een serverless applicatie gebouwd met A
    - Vakantieregelingen (voorjaar, mei, zomer, herfst, kerst)
    - Feestdagenregelingen (Pasen, Koningsdag, Sinterklaas, etc.)
 
-6. **Artikel Bibliotheek Integratie** (Nieuw in v2.3.0)
-   - Haalt artikelen op uit database met 3-laags prioriteit (dossier > gebruiker > systeem)
+6. **Artikel Bibliotheek Integratie** (Nieuw in v2.3.0, uitgebreid in v2.6.0)
+   - Haalt artikelen op uit database met 4-laags prioriteit (dossier > gebruiker > eigen artikel > systeem)
+   - **Eigen artikelen**: Gebruiker-specifieke artikelen (`eigenaar_id = gebruiker_id`) worden automatisch meegenomen
    - **Uitgeschakelde artikelen filteren**: Artikelen met `is_actief = false` worden automatisch uitgesloten
    - Automatische conditionele filtering op basis van dossier data
    - Placeholder vervanging binnen artikel teksten
-   - `[[ARTIKELEN]]` placeholder genereert alle actieve artikelen
+   - `[[ARTIKELEN]]` placeholder genereert alle actieve artikelen (systeem + eigen)
    - Ondersteunt `[[IF:Veld]]...[[ENDIF:Veld]]` binnen artikelen
 
 7. **Template Placeholder Systemen**

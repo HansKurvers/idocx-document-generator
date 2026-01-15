@@ -1176,6 +1176,7 @@ namespace scheidingsdesk_document_generator.Services
                     WHERE t.document_type = @DocumentType
                         AND t.is_actief = 1
                         AND ISNULL(da.is_uitgesloten, 0) = 0
+                        AND ISNULL(ga.is_actief, 1) = 1
                     ORDER BY t.volgorde ASC";
 
                 using var command = new SqlCommand(query, connection);

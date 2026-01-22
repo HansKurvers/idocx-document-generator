@@ -154,20 +154,67 @@ namespace scheidingsdesk_document_generator.Services.Artikel
 
         /// <summary>
         /// Evalueert of een conditie waar is op basis van de replacements
+        /// Ondersteunt:
+        /// - "VeldNaam" → veld heeft een waarde (niet leeg)
+        /// - "!VeldNaam" → veld is leeg
+        /// - "VeldNaam=waarde" → veld is gelijk aan waarde
+        /// - "VeldNaam!=waarde" → veld is niet gelijk aan waarde
         /// </summary>
         private bool EvalueerConditie(string conditie, Dictionary<string, string> replacements)
         {
             if (string.IsNullOrEmpty(conditie))
                 return true;
 
-            // Ondersteun NOT operator (bijv. "!HeeftKinderrekening")
+            // Check voor != operator (moet voor = komen vanwege string matching)
+            if (conditie.Contains("!="))
+            {
+                var parts = conditie.Split(new[] { "!=" }, 2, StringSplitOptions.None);
+                if (parts.Length == 2)
+                {
+                    var veldNaam = parts[0].Trim();
+                    var verwachteWaarde = parts[1].Trim();
+                    var actueleWaarde = GetWaarde(veldNaam, replacements);
+                    return !string.Equals(actueleWaarde, verwachteWaarde, StringComparison.OrdinalIgnoreCase);
+                }
+            }
+
+            // Check voor = operator
+            if (conditie.Contains("="))
+            {
+                var parts = conditie.Split(new[] { "=" }, 2, StringSplitOptions.None);
+                if (parts.Length == 2)
+                {
+                    var veldNaam = parts[0].Trim();
+                    var verwachteWaarde = parts[1].Trim();
+                    var actueleWaarde = GetWaarde(veldNaam, replacements);
+                    return string.Equals(actueleWaarde, verwachteWaarde, StringComparison.OrdinalIgnoreCase);
+                }
+            }
+
+            // Bestaande NOT operator logica (bijv. "!HeeftKinderrekening")
             bool isNegated = conditie.StartsWith("!");
-            var veldNaam = isNegated ? conditie.Substring(1) : conditie;
+            var veldNaamSimple = isNegated ? conditie.Substring(1) : conditie;
 
             // Zoek waarde in replacements
-            var heeftWaarde = HeeftWaarde(veldNaam, replacements);
+            var heeftWaarde = HeeftWaarde(veldNaamSimple, replacements);
 
             return isNegated ? !heeftWaarde : heeftWaarde;
+        }
+
+        /// <summary>
+        /// Haalt de waarde van een veld op uit de replacements dictionary
+        /// </summary>
+        private string GetWaarde(string veldNaam, Dictionary<string, string> replacements)
+        {
+            // Exacte match
+            if (replacements.TryGetValue(veldNaam, out var value))
+                return value ?? "";
+
+            // Case-insensitive match
+            var key = replacements.Keys.FirstOrDefault(k =>
+                k.Equals(veldNaam, StringComparison.OrdinalIgnoreCase));
+
+            return key != null ? replacements[key] ?? "" : "";
         }
 
         /// <summary>

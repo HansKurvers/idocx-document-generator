@@ -56,6 +56,11 @@ namespace scheidingsdesk_document_generator.Models
         public ConvenantFiscaalData? ConvenantFiscaal { get; set; }
 
         /// <summary>
+        /// Complete convenant info (partneralimentatie, woning, vermogensverdeling, pensioen)
+        /// </summary>
+        public ConvenantInfoData? ConvenantInfo { get; set; }
+
+        /// <summary>
         /// Artikel templates with user/dossier customizations for document generation
         /// </summary>
         public List<ArtikelData> Artikelen { get; set; } = new List<ArtikelData>();

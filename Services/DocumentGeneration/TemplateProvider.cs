@@ -76,6 +76,15 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration
                     _logger.LogInformation("Using artikelen template with [[ARTIKELEN]] placeholder");
                     return artikelenUrl;
 
+                case "convenant":
+                    var convenantUrl = Environment.GetEnvironmentVariable("TemplateStorageUrlConvenant");
+                    if (string.IsNullOrWhiteSpace(convenantUrl))
+                    {
+                        throw new InvalidOperationException("TemplateStorageUrlConvenant environment variable is not set. This template is for echtscheidingsconvenant documents.");
+                    }
+                    _logger.LogInformation("Using convenant template (Convenant.docx)");
+                    return convenantUrl;
+
                 default:
                     _logger.LogWarning($"Unknown template type '{templateType}', falling back to default");
                     return GetTemplateUrlForType("default");

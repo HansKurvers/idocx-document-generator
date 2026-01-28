@@ -32,6 +32,9 @@ var host = new HostBuilder()
         // Register database service
         services.AddScoped<DatabaseService>();
 
+        // Register placeholder catalog service
+        services.AddSingleton<IPlaceholderCatalogService, PlaceholderCatalogService>();
+
         // Register template service
         services.AddScoped<IRegelingenTemplateService, RegelingenTemplateService>();
 

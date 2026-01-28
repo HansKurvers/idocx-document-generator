@@ -80,9 +80,11 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, $"{prefix}VolledigeAchternaam",
                 GetVolledigeAchternaam(person));
 
-            // Benaming placeholder (contextual party designation - always de vader/de moeder)
-            AddPlaceholder(replacements, $"{prefix}Benaming",
-                GetPartijBenaming(person, false));
+            // Benaming placeholder (contextual party designation)
+            // Anoniem: de vader/de moeder, Niet-anoniem: roepnaam
+            var benaming = GetBenaming(person, isAnoniem == true);
+            AddPlaceholder(replacements, $"{prefix}Benaming", benaming);
+            AddPlaceholder(replacements, $"{prefix}BenamingHoofdletter", Capitalize(benaming));
 
             // Voorletters + tussenvoegsel + achternaam
             AddPlaceholder(replacements, $"{prefix}VoorlettersAchternaam",
@@ -95,6 +97,37 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 DutchLanguageHelper.ToNationalityAdjective(person.Nationaliteit1));
             AddPlaceholder(replacements, $"{prefix}Nationaliteit2Bijvoeglijk",
                 DutchLanguageHelper.ToNationalityAdjective(person.Nationaliteit2));
+        }
+
+        /// <summary>
+        /// Gets the party designation based on anonymity setting.
+        /// Anoniem: de vader/de moeder (based on gender)
+        /// Niet-anoniem: roepnaam
+        /// </summary>
+        private string GetBenaming(PersonData person, bool isAnoniem)
+        {
+            if (isAnoniem)
+            {
+                // Anonymous: use de vader / de moeder
+                var geslacht = person.Geslacht?.Trim().ToLowerInvariant();
+                return geslacht switch
+                {
+                    "m" or "man" => "de vader",
+                    "v" or "vrouw" => "de moeder",
+                    _ => "de ouder"
+                };
+            }
+            else
+            {
+                // Not anonymous: use roepnaam
+                return person.Roepnaam ?? person.Voornamen?.Split(' ')[0] ?? "";
+            }
+        }
+
+        private string Capitalize(string? text)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            return char.ToUpper(text[0]) + text.Substring(1);
         }
     }
 }

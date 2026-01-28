@@ -31,7 +31,8 @@ namespace Scheidingsdesk
                 endpoints = new[]
                 {
                     new { name = "ProcessDocument", path = "/api/process", method = "POST" },
-                    new { name = "RemoveContentControls", path = "/api/RemoveContentControls", method = "POST" }
+                    new { name = "RemoveContentControls", path = "/api/RemoveContentControls", method = "POST" },
+                    new { name = "GetPlaceholders", path = "/api/placeholders", method = "GET" }
                 }
             });
         }

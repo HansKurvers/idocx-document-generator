@@ -24,7 +24,12 @@ Partij 1 Informatie:
 - [[Partij1Email]] - E-mailadres
 - [[Partij1Geboortedatum]] - Geboortedatum (d MMMM yyyy, bijv. "15 januari 2024")
 - [[Partij1VolledigAdres]] - Volledig adres (straat, postcode, plaats)
-- [[Partij1Benaming]] - Contextafhankelijke benaming (roepnaam of "de vader"/"de moeder" bij anoniem)
+- [[Partij1Benaming]] - Contextafhankelijke benaming (roepnaam bij niet-anoniem, "de vader"/"de moeder" bij anoniem)
+- [[Partij1BenamingHoofdletter]] - Zelfde als Partij1Benaming maar met hoofdletter (voor begin van zin)
+- [[Partij1Nationaliteit1]] - Eerste nationaliteit (basisvorm, bijv. "Nederlands")
+- [[Partij1Nationaliteit2]] - Tweede nationaliteit (basisvorm)
+- [[Partij1Nationaliteit1Bijvoeglijk]] - Eerste nationaliteit bijvoeglijk (bijv. "Nederlandse" voor "de Nederlandse nationaliteit")
+- [[Partij1Nationaliteit2Bijvoeglijk]] - Tweede nationaliteit bijvoeglijk
 
 Partij 2 Informatie:
 
@@ -44,7 +49,12 @@ Partij 2 Informatie:
 - [[Partij2Email]] - E-mailadres
 - [[Partij2Geboortedatum]] - Geboortedatum (d MMMM yyyy, bijv. "15 januari 2024")
 - [[Partij2VolledigAdres]] - Volledig adres
-- [[Partij2Benaming]] - Contextafhankelijke benaming (roepnaam of "de vader"/"de moeder" bij anoniem)
+- [[Partij2Benaming]] - Contextafhankelijke benaming (roepnaam bij niet-anoniem, "de vader"/"de moeder" bij anoniem)
+- [[Partij2BenamingHoofdletter]] - Zelfde als Partij2Benaming maar met hoofdletter (voor begin van zin)
+- [[Partij2Nationaliteit1]] - Eerste nationaliteit (basisvorm, bijv. "Belgisch")
+- [[Partij2Nationaliteit2]] - Tweede nationaliteit (basisvorm)
+- [[Partij2Nationaliteit1Bijvoeglijk]] - Eerste nationaliteit bijvoeglijk (bijv. "Belgische" voor "de Belgische nationaliteit")
+- [[Partij2Nationaliteit2Bijvoeglijk]] - Tweede nationaliteit bijvoeglijk
 
 Dossier Informatie:
 
@@ -68,6 +78,8 @@ Individuele Kind Gegevens (vervang # met 1, 2, 3, etc.):
 - [[Kind1Voornaam]] - Kind 1 voornaam/voornamen
 - [[Kind1Roepnaam]] - Kind 1 roepnaam
 - [[Kind1Achternaam]] - Kind 1 achternaam
+- [[Kind1Tussenvoegsel]] - Kind 1 tussenvoegsel (van, de, etc.)
+- [[Kind1RoepnaamAchternaam]] - Kind 1 roepnaam + tussenvoegsel + achternaam (bijv. "Jan de Vries")
 - [[Kind1Geboortedatum]] - Kind 1 geboortedatum (d MMMM yyyy, bijv. "15 januari 2024")
 - [[Kind1Geboorteplaats]] - Kind 1 geboorteplaats
 - [[Kind1Leeftijd]] - Kind 1 leeftijd
@@ -100,7 +112,13 @@ Relatie & Juridisch:
   * "samenwonend" → "In dit ouderschapsplan hebben we afspraken gemaakt over [ons kind/onze kinderen] omdat we onze samenleving willen beëindigen."
   * "lat_relatie" / "ex_partners" / "anders" → "In dit ouderschapsplan hebben we afspraken gemaakt over [ons kind/onze kinderen]."
 - [[BetrokkenheidKind]] - Betrokkenheid kind
-- [[Kiesplan]] - Kiesplan
+- [[Kiesplan]] - Kiesplan (ruwe database waarde: kindplan, kies_professional, kindbehartiger, nee)
+- [[KiesplanZin]] - Volledige zin over KIES plan op basis van gekozen optie (leeg bij "nee")
+  * "kindplan" → "Bij het maken van de afspraken in dit ouderschapsplan hebben we [kindnamen] gevraagd een KIES Kindplan te maken dat door ons is ondertekend, zodat wij rekening kunnen houden met [zijn/haar/hun] wensen. Het KIES Kindplan van [kindnamen] is opgenomen als bijlage van dit ouderschapsplan."
+  * "kies_professional" → "Bij het maken van de afspraken in dit ouderschapsplan [is/zijn] [kindnamen] ondersteund door een KIES professional met een KIES kindgesprek om [zijn/haar/hun] vragen te kunnen stellen en behoeftes en wensen aan te geven, zodat wij hiermee rekening kunnen houden. [Het/De] door ons ondertekende KIES [Kindplan is/Kindplannen zijn] daarbij gemaakt en bijlage van dit ouderschapsplan."
+  * "kindbehartiger" → "Bij het maken van de afspraken in dit ouderschapsplan [heeft/hebben] [kindnamen] hulp gekregen van een Kindbehartiger om [zijn/haar/hun] wensen in kaart te brengen zodat wij hiermee rekening kunnen houden."
+  * "nee" of leeg → geen tekst
+  * Let op: Werkwoorden (is/zijn, heeft/hebben) en bezittelijk voornaamwoord (zijn/haar/hun) worden automatisch aangepast op basis van het aantal kinderen en geslacht.
 - [[ParentingCoordinator]] - Parenting coordinator informatie
 
 Ouderlijk Gezag (Parental Authority):
@@ -181,6 +199,32 @@ Template Detectie Flags (nieuw):
 - [[IsKinderrekeningBetaalwijze]] - Of de betaalwijze een kinderrekening type is (Ja/Nee)
 - [[IsAlimentatieplichtBetaalwijze]] - Of de betaalwijze een alimentatieplichtige type is (Ja/Nee)
 
+Betaalwijze Beschrijving (nieuw):
+- [[BetaalwijzeBeschrijving]] - Volledige tekst over de gekozen betaalwijze (kinderrekening of alimentatie)
+
+  **Variant 1: Kinderrekening** (als IsKinderrekeningBetaalwijze = Ja)
+  Genereert tekst met:
+  - Intro: "We hebben ervoor gekozen om gebruik te maken van een gezamenlijke kinderrekening."
+  - Wie kinderbijslag ontvangt en of deze wordt gestort op kinderrekening
+  - Wie kindgebonden budget ontvangt en of deze wordt gestort op kinderrekening
+  - "We betalen allebei de eigen verblijfskosten."
+  - Verblijfsoverstijgende kosten (met kostensoorten) van kinderrekening
+  - Stortingsbedrag ouder 1 per maand
+  - Stortingsbedrag ouder 2 per maand
+  - Controle en tekort afspraken
+  - Opheffingsoptie (helft/verhouding/spaarrekening)
+
+  **Variant 2: Alimentatie** (als IsAlimentatieplichtBetaalwijze = Ja)
+  Genereert tekst met:
+  - Intro: "We hebben ervoor gekozen om een maandelijkse kinderalimentatie af te spreken."
+  - Alimentatiegerechtigde ontvangt kinderbijslag en kindgebonden budget
+  - "We betalen allebei de eigen verblijfskosten."
+  - Zorgkortingspercentage
+  - Alimentatiegerechtigde betaalt verblijfsoverstijgende kosten
+  - Alimentatieplichtige betaalt vanaf ingangsdatum een bedrag per kind per maand
+  - Wettelijke indexering
+  - Eerste indexeringsjaar
+
 Dynamische Lijst - Financiële Afspraken Alle Kinderen:
 - [[KinderenAlimentatie]] - Genereert automatisch een geformatteerde lijst van alle kinderen met hun complete financiële afspraken
   Voorbeeld output:
@@ -200,6 +244,58 @@ Dynamische Lijst - Financiële Afspraken Alle Kinderen:
     - Inschrijving bij: Jan
     - Kindgebonden budget: Kinderrekening
 
+Dynamische Hoofdverblijf Verdeling (nieuw):
+- [[HoofdverblijfVerdeling]] - Genereert automatisch een intelligente samenvatting van waar de kinderen hun hoofdverblijf hebben, inclusief co-ouderschap scenario's
+
+  Voorbeeld outputs:
+
+  **Scenario 1: Alle kinderen co-ouderschap**
+  "Wij hebben een zorgregeling afgesproken waarbij onze kinderen ongeveer evenveel tijd bij ieder van ons verblijven. Zij hebben dus geen hoofdverblijf."
+
+  **Scenario 2: Alle kinderen bij één ouder**
+  "Jan, Piet en Lisa hebben hun hoofdverblijf bij Maria."
+
+  **Scenario 3: Gemengde situatie (verschillende ouders)**
+  "Jan en Piet hebben hun hoofdverblijf bij Maria. Lisa heeft haar hoofdverblijf bij Hans."
+
+  **Scenario 4: Gemengd met co-ouderschap**
+  "Jan en Piet hebben hun hoofdverblijf bij Maria. Voor Lisa hebben wij een zorgregeling afgesproken waarbij zij ongeveer evenveel tijd bij ieder van ons verblijft. Zij heeft dus geen hoofdverblijf."
+
+  **Scenario 5: Eén kind co-ouderschap**
+  "Wij hebben een zorgregeling afgesproken waarbij ons kind ongeveer evenveel tijd bij ieder van ons verblijft. Het kind heeft dus geen hoofdverblijf."
+
+  Kenmerken:
+  - Gebruikt roepnamen van kinderen
+  - Gebruikt contextafhankelijke benaming van ouders ([[Partij1Benaming]], [[Partij2Benaming]])
+  - Correcte grammatica voor enkelvoud/meervoud (heeft/hebben, zijn/haar/hun)
+  - Automatische detectie van co-ouderschap per kind
+  - Handelt gemengde scenario's intelligent af met aparte zinnen per situatie
+
+Dynamische BRP Inschrijving Verdeling (nieuw):
+- [[InschrijvingVerdeling]] - Genereert automatisch een opsomming van waar de kinderen in de Basisregistratie Personen (BRP) zijn ingeschreven
+
+  Voorbeeld outputs:
+
+  **Scenario 1: Alle kinderen bij partij1**
+  "Jan, Piet en Lisa zullen ingeschreven staan in de Basisregistratie Personen aan het adres van Maria in Amsterdam."
+
+  **Scenario 2: Eén kind bij partij1**
+  "Jan zal ingeschreven staan in de Basisregistratie Personen aan het adres van Maria in Amsterdam."
+
+  **Scenario 3: Gemengde situatie (verschillende ouders)**
+  "Jan en Piet zullen ingeschreven staan in de Basisregistratie Personen aan het adres van Maria in Amsterdam. Lisa zal ingeschreven staan in de Basisregistratie Personen aan het adres van Hans in Rotterdam."
+
+  **Scenario 4: Anoniem dossier**
+  "Jan en Piet zullen ingeschreven staan in de Basisregistratie Personen aan het adres van de vader in Utrecht."
+
+  Kenmerken:
+  - Gebruikt roepnamen van kinderen
+  - Gebruikt contextafhankelijke benaming van ouders ([[Partij1Benaming]], [[Partij2Benaming]])
+  - Toont de plaats/woonplaats van elke ouder
+  - Correcte grammatica voor enkelvoud/meervoud (zal/zullen)
+  - Handelt gemengde scenario's af met aparte zinnen per ouder
+  - Een kind kan slechts op één adres ingeschreven staan (geen co-ouderschap optie voor BRP)
+
 Opmerking: Alle alimentatie gegevens worden automatisch opgehaald uit de database tabellen:
 - dbo.alimentaties (algemene alimentatie gegevens, inclusief nieuwe kinderrekening velden)
 - dbo.bijdrage_kosten_kinderen (bijdragen per persoon)
@@ -211,6 +307,8 @@ Grammatica Regels (Nederlands enkelvoud/meervoud):
 Opmerking: Gebruik de volledige vorm in je template (bijv. [[heeft/hebben]], niet [[meervoud heeft/hebben]])
 
 - [[ons kind/onze kinderen]] - "onze kinderen" (meervoud) of "ons kind" (enkelvoud)
+- [[het kind/de kinderen]] - "de kinderen" (meervoud) of "het kind" (enkelvoud)
+- [[kind/kinderen]] - "kinderen" (meervoud) of "kind" (enkelvoud)
 - [[heeft/hebben]] - "hebben" (meervoud) of "heeft" (enkelvoud)
 - [[is/zijn]] - "zijn" (meervoud) of "is" (enkelvoud)
 - [[verblijft/verblijven]] - "verblijven" (meervoud) of "verblijft" (enkelvoud)
@@ -327,17 +425,64 @@ Technische Werking Partij Benaming:
 Communicatie Afspraken Placeholders:
 
 Basis Afspraken:
-- [[VillaPinedoKinderen]] - Villa Pinedo methode voor kinderen
-- [[KinderenBetrokkenheid]] - Betrokkenheid kinderen bij beslissingen
+- [[VillaPinedoKinderen]] - Villa Pinedo methode voor kinderen (ruwe database waarde: ja/nee)
+- [[VillaPinedoZin]] - Volledige zin over Villa Pinedo op basis van gekozen optie
+  * "ja" → "Wij hebben [kindnamen] op de hoogte gebracht van Villa Pinedo, waar [hij/zij] terecht kan met [zijn/haar/hun] vragen, voor het delen van ervaringen, het krijgen van tips en steun om met de scheiding om te gaan."
+  * "nee" → "Wij hebben [kindnamen] nog niet op de hoogte gebracht van Villa Pinedo, waar [hij/zij] terecht kan met [zijn/haar/hun] vragen, voor het delen van ervaringen, het krijgen van tips en steun om met de scheiding om te gaan. Als daar aanleiding toe is zullen wij [hen/hem/haar] daar zeker op attenderen."
+  * leeg → geen tekst
+  * Let op: Persoonlijk voornaamwoord (hij/zij), bezittelijk voornaamwoord (zijn/haar/hun) en lijdend voorwerp (hem/haar/hen) worden automatisch aangepast op basis van geslacht en aantal kinderen.
+- [[KinderenBetrokkenheid]] - Betrokkenheid kinderen bij beslissingen (ruwe database waarde)
+- [[BetrokkenheidKindZin]] - Volledige zin over betrokkenheid kinderen op basis van gekozen optie
+  * "samen" → "Wij hebben samen met [kindnamen] gesproken zodat wij rekening kunnen houden met [zijn/haar/hun] wensen."
+  * "los_van_elkaar" → "Wij hebben los van elkaar met [kindnamen] gesproken zodat wij rekening kunnen houden met [zijn/haar/hun] wensen."
+  * "jonge_leeftijd" → "[kindnamen] [is/zijn] gezien de jonge leeftijd niet betrokken bij het opstellen van het ouderschapsplan."
+  * "niet_betrokken" → "[kindnamen] [is/zijn] niet betrokken bij het opstellen van het ouderschapsplan."
+  * Let op: Werkwoorden (is/zijn) en bezittelijk voornaamwoord (zijn/haar/hun) worden automatisch aangepast.
 - [[KiesMethode]] - Gekozen methode voor ouderschapsplan
 - [[OmgangTekstOfSchema]] - Omgangsregeling als tekst of schema
+- [[OmgangsregelingBeschrijving]] - Volledige omgangsregeling tekst op basis van keuze:
+  * Tekst: "Wij verdelen de zorg en opvoeding van ons kind / onze kinderen op de volgende manier: [beschrijving]"
+  * Beiden: Zoals tekst, plus verwijzing naar bijlage schema
+  * Schema/leeg/anders: "Wij verdelen de zorg en opvoeding van ons kind / onze kinderen volgens het vaste schema van bijlage 1." (default)
 - [[Opvang]] - Kinderopvang afspraken
+- [[OpvangBeschrijving]] - Volledige opvang tekst op basis van keuze:
+  * 1: "We blijven ieder zelf verantwoordelijk voor de opvang van onze kinderen op de dagen dat ze volgens het schema bij ieder van ons verblijven."
+  * 2: "Als opvang of een afwijking van het schema nodig is, vragen we altijd eerst aan de andere ouder of die beschikbaar is, voordat we anderen vragen voor de opvang van onze kinderen."
 - [[InformatieUitwisseling]] - Methode voor informatie-uitwisseling
+- [[InformatieUitwisselingBeschrijving]] - Volledige tekst over hoe ouders informatie delen (met roepnamen kinderen):
+  * email: "Wij delen de informatie over [roepnamen] met elkaar via de e-mail."
+  * telefoon: "Wij delen de informatie over [roepnamen] met elkaar telefonisch."
+  * app: "Wij delen de informatie over [roepnamen] met elkaar via een app (zoals WhatsApp)."
+  * oudersapp: "Wij delen de informatie over [roepnamen] met elkaar via een speciale ouders-app."
+  * persoonlijk: "Wij delen de informatie over [roepnamen] met elkaar in een persoonlijk gesprek."
+  * combinatie: "Wij delen de informatie over [roepnamen] met elkaar via een combinatie van methoden."
 - [[BijlageBeslissingen]] - Bijlage voor belangrijke beslissingen
-- [[IdBewijzen]] - Beheer van identiteitsbewijzen
-- [[Aansprakelijkheidsverzekering]] - Beheer aansprakelijkheidsverzekering
-- [[Ziektekostenverzekering]] - Beheer ziektekostenverzekering
-- [[ToestemmingReizen]] - Afspraken over toestemming reizen
+- [[IdBewijzen]] - Beheer van identiteitsbewijzen (ruwe waarde)
+- [[IdBewijzenBeschrijving]] - Volledige zin over wie de identiteitsbewijzen bewaart:
+  * ouder_1/partij1: "De identiteitsbewijzen van [kinderen] worden bewaard door [Ouder 1 naam]."
+  * ouder_2/partij2: "De identiteitsbewijzen van [kinderen] worden bewaard door [Ouder 2 naam]."
+  * beide_ouders/beiden: "De identiteitsbewijzen van [kinderen] worden bewaard door beide ouders."
+  * kinderen_zelf/kinderen: "[Kind] bewaart zijn/haar eigen identiteitsbewijs." of "[Kinderen] bewaren hun eigen identiteitsbewijs."
+  * nvt/niet_van_toepassing: "Niet van toepassing."
+- [[Aansprakelijkheidsverzekering]] - Beheer aansprakelijkheidsverzekering (ruwe waarde)
+- [[AansprakelijkheidsverzekeringBeschrijving]] - Volledige zin over aansprakelijkheidsverzekering:
+  * beiden/beide_ouders: "Wij zorgen ervoor dat [kinderen] bij ons beiden tegen wettelijke aansprakelijkheid zijn verzekerd."
+  * ouder_1/partij1: "[Ouder 1 naam] zorgt ervoor dat [kinderen] tegen wettelijke aansprakelijkheid zijn verzekerd."
+  * ouder_2/partij2: "[Ouder 2 naam] zorgt ervoor dat [kinderen] tegen wettelijke aansprakelijkheid zijn verzekerd."
+  * nvt/niet_van_toepassing: "Niet van toepassing."
+- [[Ziektekostenverzekering]] - Beheer ziektekostenverzekering (ruwe waarde)
+- [[ZiektekostenverzekeringBeschrijving]] - Volledige zin over ziektekostenverzekering:
+  * ouder_1/partij1: "[Kinderen] zijn verzekerd op de ziektekostenverzekering van [Ouder 1 naam]."
+  * ouder_2/partij2: "[Kinderen] zijn verzekerd op de ziektekostenverzekering van [Ouder 2 naam]."
+  * hoofdverblijf: "[Kinderen] zijn verzekerd op de ziektekostenverzekering van de ouder waar zij hun hoofdverblijf hebben."
+  * nvt/niet_van_toepassing: "Niet van toepassing."
+- [[ToestemmingReizen]] - Afspraken over toestemming reizen (ruwe waarde)
+- [[ToestemmingReizenBeschrijving]] - Volledige zin over toestemming voor reizen:
+  * altijd_overleggen/altijd: "Voor reizen met [kinderen] is altijd vooraf overleg tussen de ouders vereist."
+  * eu_vrij: "Met [kinderen] mag binnen de EU vrij worden gereisd. Voor reizen buiten de EU is vooraf overleg tussen de ouders vereist."
+  * vrij: "Met [kinderen] mag vrij worden gereisd zonder vooraf overleg."
+  * schriftelijk: "Voor reizen met [kinderen] is schriftelijke toestemming van de andere ouder vereist."
+  * nvt: leeg (geen tekst)
 - [[Jongmeerderjarige]] - Afspraken voor jongvolwassenen (18+)
 - [[Studiekosten]] - Afspraken over studiekosten
 - [[Evaluatie]] - Frequentie evaluatie afspraken
@@ -348,6 +493,11 @@ Social Media Afspraken:
 - [[SocialMedia]] - Volledige waarde (bijv. "wel_13" of "geen")
 - [[SocialMediaKeuze]] - Alleen de keuze (wel/geen/bepaalde_leeftijd/afspraken_later)
 - [[SocialMediaLeeftijd]] - Alleen de leeftijd (geëxtraheerd uit "wel_13")
+- [[SocialMediaBeschrijving]] - Volledige zin over social media (met roepnamen kinderen):
+  * geen: "Wij spreken als ouders af dat [kinderen] geen social media mogen gebruiken."
+  * wel: "Wij spreken als ouders af dat [kinderen] social media mogen gebruiken, op voorwaarde dat het op een veilige manier gebeurt."
+  * wel_13: "Wij spreken als ouders af dat [kinderen] social media mogen gebruiken vanaf hun 13e jaar, op voorwaarde dat het op een veilige manier gebeurt."
+  * later: "Wij maken als ouders later afspraken over het gebruik van social media door [kinderen]."
 
 Voorbeeld Social Media Gebruik:
 Als SocialMedia = "wel_13":
@@ -366,14 +516,48 @@ Device Afspraken (Leeftijdsgrenzen):
 - [[DeviceTablet]] - Leeftijd voor tablet (bijv. "14")
 - [[DeviceSmartwatch]] - Leeftijd voor smartwatch (bijv. "13")
 - [[DeviceLaptop]] - Leeftijd voor laptop (bijv. "16")
+- [[DevicesBeschrijving]] - Volledige zinnen over devices met roepnamen kinderen:
+  * Voorbeeld: "Jan en Lisa krijgen een smartphone vanaf hun 12e jaar."
+  * Per device (smartphone, tablet, smartwatch, laptop) een aparte zin
 
 Voorbeeld Device Gebruik:
-Als MobielTablet JSON = {"smartphone":12,"tablet":14}:
+Als MobielTablet JSON = {"smartphone":12,"tablet":14} en kinderen = Jan en Lisa:
   [[MobielTablet]] → "- Smartphone: 12 jaar\n- Tablet: 14 jaar"
   [[DeviceSmartphone]] → "12"
   [[DeviceTablet]] → "14"
   [[DeviceSmartwatch]] → ""
   [[DeviceLaptop]] → ""
+  [[DevicesBeschrijving]] → "Jan en Lisa krijgen een smartphone vanaf hun 12e jaar.\nJan en Lisa krijgen een tablet vanaf hun 14e jaar."
+
+Toezicht Apps (Ouderlijk Toezicht):
+- [[ToezichtApps]] - Keuze voor toezicht apps (wel/geen)
+- [[ToezichtAppsBeschrijving]] - Volledige zin over toezicht apps:
+  * wel: "We spreken als ouders af wel ouderlijk toezichtapps te gebruiken."
+  * geen: "We spreken als ouders af geen ouderlijk toezichtapps te gebruiken."
+
+Voorbeeld Toezicht Apps Gebruik:
+Als ToezichtApps = "wel":
+  [[ToezichtApps]] → "wel"
+  [[ToezichtAppsBeschrijving]] → "We spreken als ouders af wel ouderlijk toezichtapps te gebruiken."
+
+Als ToezichtApps = "geen":
+  [[ToezichtApps]] → "geen"
+  [[ToezichtAppsBeschrijving]] → "We spreken als ouders af geen ouderlijk toezichtapps te gebruiken."
+
+Locatie Delen (Location Sharing):
+- [[LocatieDelen]] - Keuze voor locatie delen (wel/geen)
+- [[LocatieDelenBeschrijving]] - Volledige zin over locatie delen:
+  * wel: "Wij spreken als ouders af om de locatie van onze kinderen wel te delen via digitale apparaten."
+  * geen: "Wij spreken als ouders af om de locatie van onze kinderen niet te delen via digitale apparaten."
+
+Voorbeeld Locatie Delen Gebruik:
+Als LocatieDelen = "wel":
+  [[LocatieDelen]] → "wel"
+  [[LocatieDelenBeschrijving]] → "Wij spreken als ouders af om de locatie van onze kinderen wel te delen via digitale apparaten."
+
+Als LocatieDelen = "geen":
+  [[LocatieDelen]] → "geen"
+  [[LocatieDelenBeschrijving]] → "Wij spreken als ouders af om de locatie van onze kinderen niet te delen via digitale apparaten."
 
 Bankrekeningen voor Kinderen:
 - [[BankrekeningKinderen]] - Geformatteerde lijst van alle bankrekeningen
@@ -442,3 +626,88 @@ Verzekeringen:
 
 Evaluatie:
 De afspraken worden [[Evaluatie]] geëvalueerd.
+
+Convenant Placeholders:
+
+Partij Aanduiding (specifiek voor convenant):
+- [[PARTIJ1_AANDUIDING]] - Partij 1 aanduiding: "de man"/"de vrouw" bij anoniem, roepnaam + achternaam bij niet-anoniem (bijv. "Jan de Vries")
+- [[PARTIJ1_AANDUIDING_HOOFDLETTER]] - Zelfde als PARTIJ1_AANDUIDING maar met hoofdletter (voor begin van zin)
+- [[PARTIJ2_AANDUIDING]] - Partij 2 aanduiding: "de man"/"de vrouw" bij anoniem, roepnaam + achternaam bij niet-anoniem (bijv. "Marie van den Berg")
+- [[PARTIJ2_AANDUIDING_HOOFDLETTER]] - Zelfde als PARTIJ2_AANDUIDING maar met hoofdletter (voor begin van zin)
+
+Voorbeeld Convenant Partij Aanduiding:
+
+Als IsAnoniem = false en Partij1 = Jan de Vries, Partij2 = Marie van den Berg:
+  [[PARTIJ1_AANDUIDING]] → "Jan de Vries"
+  [[PARTIJ1_AANDUIDING_HOOFDLETTER]] → "Jan de Vries"
+  [[PARTIJ2_AANDUIDING]] → "Marie van den Berg"
+
+Als IsAnoniem = true en Partij1 geslacht = M, Partij2 geslacht = V:
+  [[PARTIJ1_AANDUIDING]] → "de man"
+  [[PARTIJ1_AANDUIDING_HOOFDLETTER]] → "De man"
+  [[PARTIJ2_AANDUIDING]] → "de vrouw"
+  [[PARTIJ2_AANDUIDING_HOOFDLETTER]] → "De vrouw"
+
+Partneralimentatie:
+- [[ALIMENTATIEPLICHTIGE]] - De alimentatieplichtige partij (de vader/de moeder)
+- [[ALIMENTATIEGERECHTIGDE]] - De alimentatiegerechtigde partij (de vader/de moeder)
+- [[DUURZAAM_GESCHEIDEN_DATUM]] - Datum duurzaam gescheiden
+- [[NETTO_GEZINSINKOMEN]] - Netto gezinsinkomen
+- [[KOSTEN_KINDEREN_PARTNERALIMENTATIE]] - Kosten kinderen voor partneralimentatie berekening
+- [[NETTO_BEHOEFTE]] - Netto behoefte
+- [[BRUTO_AANVULLENDE_BEHOEFTE]] - Bruto aanvullende behoefte
+- [[BRUTO_JAARINKOMEN_PARTIJ1]] - Bruto jaarinkomen partij 1
+- [[DRAAGKRACHTLOOS_INKOMEN_PARTIJ1]] - Draagkrachtloos inkomen partij 1
+- [[DRAAGKRACHT_PARTIJ1]] - Draagkracht partij 1
+- [[BRUTO_JAARINKOMEN_PARTIJ2]] - Bruto jaarinkomen partij 2
+- [[DRAAGKRACHTLOOS_INKOMEN_PARTIJ2]] - Draagkrachtloos inkomen partij 2
+- [[DRAAGKRACHT_PARTIJ2]] - Draagkracht partij 2
+- [[EIGEN_INKOMSTEN_BEDRAG]] - Eigen inkomsten bedrag
+- [[VERDIENCAPACITEIT_BEDRAG]] - Verdiencapaciteit bedrag
+- [[HOOGTE_PARTNERALIMENTATIE]] - Hoogte partneralimentatie
+- [[PARTNERALIMENTATIE_INGANGSDATUM]] - Ingangsdatum partneralimentatie
+- [[AFKOOP_BEDRAG]] - Afkoop bedrag
+- [[BIJDRAGE_HYPOTHEEKRENTE_BEDRAG]] - Bijdrage hypotheekrente bedrag
+- [[BIJDRAGE_HYPOTHEEKRENTE_INGANGSDATUM]] - Ingangsdatum bijdrage hypotheekrente
+- [[BIJDRAGE_HYPOTHEEKRENTE_EINDDATUM]] - Einddatum bijdrage hypotheekrente
+- [[INDEXERING_EERSTE_JAAR]] - Eerste jaar indexering
+
+Woning:
+- [[WONING_ADRES]] - Woning adres
+- [[WONING_STRAAT]] - Straatnaam woning
+- [[WONING_HUISNUMMER]] - Huisnummer woning
+- [[WONING_POSTCODE]] - Postcode woning
+- [[WONING_PLAATS]] - Plaats woning
+- [[WONING_VOLLEDIG_ADRES]] - Volledig woning adres
+- [[WONING_TOEGEDEELD_AAN]] - Aan wie de woning is toegedeeld
+- [[WONING_WOZ_WAARDE]] - WOZ waarde woning
+- [[WONING_TOEDELING_WAARDE]] - Toedelingswaarde woning
+- [[WONING_LAATPRIJS]] - Laatprijs woning
+- [[WONING_OVERBEDELING]] - Overbedeling woning
+- [[NOTARIS_MR]] - Naam notaris (mr.)
+- [[NOTARIS_STANDPLAATS]] - Standplaats notaris
+- [[NOTARIS_LEVERING_DATUM]] - Leveringsdatum notaris
+
+Kadastraal:
+- [[KADASTRAAL_GEMEENTE]] - Kadastrale gemeente
+- [[KADASTRAAL_SECTIE]] - Kadastrale sectie
+- [[KADASTRAAL_PERCEEL]] - Kadastraal perceel
+- [[KADASTRAAL_ARE]] - Kadastrale are
+- [[KADASTRAAL_CENTIARE]] - Kadastrale centiare
+- [[KADASTRAAL_AANDUIDING]] - Kadastrale aanduiding
+- [[KADASTRAAL_VOLLEDIGE_NOTATIE]] - Volledige kadastrale notatie
+
+Ondertekening:
+- [[ONDERTEKEN_PLAATS_PARTIJ1]] - Ondertekeningsplaats partij 1
+- [[ONDERTEKEN_PLAATS_PARTIJ2]] - Ondertekeningsplaats partij 2
+- [[ONDERTEKEN_DATUM_PARTIJ1]] - Ondertekeningsdatum partij 1
+- [[ONDERTEKEN_DATUM_PARTIJ2]] - Ondertekeningsdatum partij 2
+
+Considerans:
+- [[HUWELIJKSDATUM]] - Huwelijksdatum
+- [[HUWELIJKSPLAATS]] - Huwelijksplaats
+- [[MEDIATOR_NAAM]] - Naam mediator
+- [[MEDIATOR_PLAATS]] - Plaats mediator
+- [[RECHTBANK]] - Rechtbank
+- [[ADVOCAAT_PARTIJ1]] - Advocaat partij 1
+- [[ADVOCAAT_PARTIJ2]] - Advocaat partij 2

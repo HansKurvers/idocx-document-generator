@@ -55,7 +55,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
         /// <summary>
         /// Builds partij aanduiding placeholders based on IsAnoniem setting.
-        /// For convenant: de man/de vrouw when anonymous, de vader/de moeder when named.
+        /// For convenant: de man/de vrouw when anonymous, roepnaam + achternaam when named.
+        /// Also creates capitalized variants for use at the start of sentences.
         /// </summary>
         private void BuildPartijAanduidingPlaceholders(Dictionary<string, string> replacements, DossierData data)
         {
@@ -63,48 +64,71 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             var partij2 = data.Partij2;
             var isAnoniem = data.IsAnoniem == true;
 
-            // Determine aanduidingen based on gender and anonymity
+            // Determine aanduidingen based on anonymity
             string partij1Aanduiding, partij2Aanduiding;
 
             if (isAnoniem)
             {
                 // Anonymous: use de man / de vrouw
-                partij1Aanduiding = GetGeslachtAanduiding(partij1?.Geslacht, isAnoniem);
-                partij2Aanduiding = GetGeslachtAanduiding(partij2?.Geslacht, isAnoniem);
+                partij1Aanduiding = GetGeslachtAanduiding(partij1?.Geslacht);
+                partij2Aanduiding = GetGeslachtAanduiding(partij2?.Geslacht);
             }
             else
             {
-                // Named: use de vader / de moeder
-                partij1Aanduiding = GetGeslachtAanduiding(partij1?.Geslacht, false);
-                partij2Aanduiding = GetGeslachtAanduiding(partij2?.Geslacht, false);
+                // Named: use roepnaam + achternaam
+                partij1Aanduiding = GetRoepnaamAchternaam(partij1);
+                partij2Aanduiding = GetRoepnaamAchternaam(partij2);
             }
 
+            // Regular (lowercase for mid-sentence use)
             AddPlaceholder(replacements, "PARTIJ1_AANDUIDING", partij1Aanduiding);
             AddPlaceholder(replacements, "PARTIJ2_AANDUIDING", partij2Aanduiding);
+
+            // Capitalized (for start of sentence)
+            AddPlaceholder(replacements, "PARTIJ1_AANDUIDING_HOOFDLETTER", Capitalize(partij1Aanduiding));
+            AddPlaceholder(replacements, "PARTIJ2_AANDUIDING_HOOFDLETTER", Capitalize(partij2Aanduiding));
         }
 
-        private string GetGeslachtAanduiding(string? geslacht, bool isAnoniem)
+        private string Capitalize(string? text)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            return char.ToUpper(text[0]) + text.Substring(1);
+        }
+
+        private string GetGeslachtAanduiding(string? geslacht)
         {
             var g = geslacht?.Trim().ToLowerInvariant();
 
-            if (isAnoniem)
+            return g switch
             {
-                return g switch
-                {
-                    "m" or "man" => "de man",
-                    "v" or "vrouw" => "de vrouw",
-                    _ => "de partij"
-                };
-            }
-            else
-            {
-                return g switch
-                {
-                    "m" or "man" => "de vader",
-                    "v" or "vrouw" => "de moeder",
-                    _ => "de ouder"
-                };
-            }
+                "m" or "man" => "de man",
+                "v" or "vrouw" => "de vrouw",
+                _ => "de partij"
+            };
+        }
+
+        /// <summary>
+        /// Gets roepnaam + tussenvoegsel + achternaam for a person.
+        /// Example: "Jan de Vries"
+        /// </summary>
+        private string GetRoepnaamAchternaam(PersonData? person)
+        {
+            if (person == null) return "";
+
+            var parts = new List<string>();
+
+            // Use roepnaam, or fall back to first name from voornamen
+            var roepnaam = person.Roepnaam ?? person.Voornamen?.Split(' ').FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(roepnaam))
+                parts.Add(roepnaam.Trim());
+
+            if (!string.IsNullOrWhiteSpace(person.Tussenvoegsel))
+                parts.Add(person.Tussenvoegsel.Trim());
+
+            if (!string.IsNullOrWhiteSpace(person.Achternaam))
+                parts.Add(person.Achternaam.Trim());
+
+            return string.Join(" ", parts);
         }
 
         private void BuildPartneralimentatiePlaceholders(

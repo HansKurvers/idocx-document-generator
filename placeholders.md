@@ -24,7 +24,8 @@ Partij 1 Informatie:
 - [[Partij1Email]] - E-mailadres
 - [[Partij1Geboortedatum]] - Geboortedatum (d MMMM yyyy, bijv. "15 januari 2024")
 - [[Partij1VolledigAdres]] - Volledig adres (straat, postcode, plaats)
-- [[Partij1Benaming]] - Contextafhankelijke benaming (roepnaam of "de vader"/"de moeder" bij anoniem)
+- [[Partij1Benaming]] - Contextafhankelijke benaming (roepnaam bij niet-anoniem, "de vader"/"de moeder" bij anoniem)
+- [[Partij1BenamingHoofdletter]] - Zelfde als Partij1Benaming maar met hoofdletter (voor begin van zin)
 - [[Partij1Nationaliteit1]] - Eerste nationaliteit (basisvorm, bijv. "Nederlands")
 - [[Partij1Nationaliteit2]] - Tweede nationaliteit (basisvorm)
 - [[Partij1Nationaliteit1Bijvoeglijk]] - Eerste nationaliteit bijvoeglijk (bijv. "Nederlandse" voor "de Nederlandse nationaliteit")
@@ -48,7 +49,8 @@ Partij 2 Informatie:
 - [[Partij2Email]] - E-mailadres
 - [[Partij2Geboortedatum]] - Geboortedatum (d MMMM yyyy, bijv. "15 januari 2024")
 - [[Partij2VolledigAdres]] - Volledig adres
-- [[Partij2Benaming]] - Contextafhankelijke benaming (roepnaam of "de vader"/"de moeder" bij anoniem)
+- [[Partij2Benaming]] - Contextafhankelijke benaming (roepnaam bij niet-anoniem, "de vader"/"de moeder" bij anoniem)
+- [[Partij2BenamingHoofdletter]] - Zelfde als Partij2Benaming maar met hoofdletter (voor begin van zin)
 - [[Partij2Nationaliteit1]] - Eerste nationaliteit (basisvorm, bijv. "Belgisch")
 - [[Partij2Nationaliteit2]] - Tweede nationaliteit (basisvorm)
 - [[Partij2Nationaliteit1Bijvoeglijk]] - Eerste nationaliteit bijvoeglijk (bijv. "Belgische" voor "de Belgische nationaliteit")
@@ -624,3 +626,88 @@ Verzekeringen:
 
 Evaluatie:
 De afspraken worden [[Evaluatie]] geëvalueerd.
+
+Convenant Placeholders:
+
+Partij Aanduiding (specifiek voor convenant):
+- [[PARTIJ1_AANDUIDING]] - Partij 1 aanduiding: "de man"/"de vrouw" bij anoniem, roepnaam + achternaam bij niet-anoniem (bijv. "Jan de Vries")
+- [[PARTIJ1_AANDUIDING_HOOFDLETTER]] - Zelfde als PARTIJ1_AANDUIDING maar met hoofdletter (voor begin van zin)
+- [[PARTIJ2_AANDUIDING]] - Partij 2 aanduiding: "de man"/"de vrouw" bij anoniem, roepnaam + achternaam bij niet-anoniem (bijv. "Marie van den Berg")
+- [[PARTIJ2_AANDUIDING_HOOFDLETTER]] - Zelfde als PARTIJ2_AANDUIDING maar met hoofdletter (voor begin van zin)
+
+Voorbeeld Convenant Partij Aanduiding:
+
+Als IsAnoniem = false en Partij1 = Jan de Vries, Partij2 = Marie van den Berg:
+  [[PARTIJ1_AANDUIDING]] → "Jan de Vries"
+  [[PARTIJ1_AANDUIDING_HOOFDLETTER]] → "Jan de Vries"
+  [[PARTIJ2_AANDUIDING]] → "Marie van den Berg"
+
+Als IsAnoniem = true en Partij1 geslacht = M, Partij2 geslacht = V:
+  [[PARTIJ1_AANDUIDING]] → "de man"
+  [[PARTIJ1_AANDUIDING_HOOFDLETTER]] → "De man"
+  [[PARTIJ2_AANDUIDING]] → "de vrouw"
+  [[PARTIJ2_AANDUIDING_HOOFDLETTER]] → "De vrouw"
+
+Partneralimentatie:
+- [[ALIMENTATIEPLICHTIGE]] - De alimentatieplichtige partij (de vader/de moeder)
+- [[ALIMENTATIEGERECHTIGDE]] - De alimentatiegerechtigde partij (de vader/de moeder)
+- [[DUURZAAM_GESCHEIDEN_DATUM]] - Datum duurzaam gescheiden
+- [[NETTO_GEZINSINKOMEN]] - Netto gezinsinkomen
+- [[KOSTEN_KINDEREN_PARTNERALIMENTATIE]] - Kosten kinderen voor partneralimentatie berekening
+- [[NETTO_BEHOEFTE]] - Netto behoefte
+- [[BRUTO_AANVULLENDE_BEHOEFTE]] - Bruto aanvullende behoefte
+- [[BRUTO_JAARINKOMEN_PARTIJ1]] - Bruto jaarinkomen partij 1
+- [[DRAAGKRACHTLOOS_INKOMEN_PARTIJ1]] - Draagkrachtloos inkomen partij 1
+- [[DRAAGKRACHT_PARTIJ1]] - Draagkracht partij 1
+- [[BRUTO_JAARINKOMEN_PARTIJ2]] - Bruto jaarinkomen partij 2
+- [[DRAAGKRACHTLOOS_INKOMEN_PARTIJ2]] - Draagkrachtloos inkomen partij 2
+- [[DRAAGKRACHT_PARTIJ2]] - Draagkracht partij 2
+- [[EIGEN_INKOMSTEN_BEDRAG]] - Eigen inkomsten bedrag
+- [[VERDIENCAPACITEIT_BEDRAG]] - Verdiencapaciteit bedrag
+- [[HOOGTE_PARTNERALIMENTATIE]] - Hoogte partneralimentatie
+- [[PARTNERALIMENTATIE_INGANGSDATUM]] - Ingangsdatum partneralimentatie
+- [[AFKOOP_BEDRAG]] - Afkoop bedrag
+- [[BIJDRAGE_HYPOTHEEKRENTE_BEDRAG]] - Bijdrage hypotheekrente bedrag
+- [[BIJDRAGE_HYPOTHEEKRENTE_INGANGSDATUM]] - Ingangsdatum bijdrage hypotheekrente
+- [[BIJDRAGE_HYPOTHEEKRENTE_EINDDATUM]] - Einddatum bijdrage hypotheekrente
+- [[INDEXERING_EERSTE_JAAR]] - Eerste jaar indexering
+
+Woning:
+- [[WONING_ADRES]] - Woning adres
+- [[WONING_STRAAT]] - Straatnaam woning
+- [[WONING_HUISNUMMER]] - Huisnummer woning
+- [[WONING_POSTCODE]] - Postcode woning
+- [[WONING_PLAATS]] - Plaats woning
+- [[WONING_VOLLEDIG_ADRES]] - Volledig woning adres
+- [[WONING_TOEGEDEELD_AAN]] - Aan wie de woning is toegedeeld
+- [[WONING_WOZ_WAARDE]] - WOZ waarde woning
+- [[WONING_TOEDELING_WAARDE]] - Toedelingswaarde woning
+- [[WONING_LAATPRIJS]] - Laatprijs woning
+- [[WONING_OVERBEDELING]] - Overbedeling woning
+- [[NOTARIS_MR]] - Naam notaris (mr.)
+- [[NOTARIS_STANDPLAATS]] - Standplaats notaris
+- [[NOTARIS_LEVERING_DATUM]] - Leveringsdatum notaris
+
+Kadastraal:
+- [[KADASTRAAL_GEMEENTE]] - Kadastrale gemeente
+- [[KADASTRAAL_SECTIE]] - Kadastrale sectie
+- [[KADASTRAAL_PERCEEL]] - Kadastraal perceel
+- [[KADASTRAAL_ARE]] - Kadastrale are
+- [[KADASTRAAL_CENTIARE]] - Kadastrale centiare
+- [[KADASTRAAL_AANDUIDING]] - Kadastrale aanduiding
+- [[KADASTRAAL_VOLLEDIGE_NOTATIE]] - Volledige kadastrale notatie
+
+Ondertekening:
+- [[ONDERTEKEN_PLAATS_PARTIJ1]] - Ondertekeningsplaats partij 1
+- [[ONDERTEKEN_PLAATS_PARTIJ2]] - Ondertekeningsplaats partij 2
+- [[ONDERTEKEN_DATUM_PARTIJ1]] - Ondertekeningsdatum partij 1
+- [[ONDERTEKEN_DATUM_PARTIJ2]] - Ondertekeningsdatum partij 2
+
+Considerans:
+- [[HUWELIJKSDATUM]] - Huwelijksdatum
+- [[HUWELIJKSPLAATS]] - Huwelijksplaats
+- [[MEDIATOR_NAAM]] - Naam mediator
+- [[MEDIATOR_PLAATS]] - Plaats mediator
+- [[RECHTBANK]] - Rechtbank
+- [[ADVOCAAT_PARTIJ1]] - Advocaat partij 1
+- [[ADVOCAAT_PARTIJ2]] - Advocaat partij 2

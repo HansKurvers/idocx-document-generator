@@ -301,6 +301,18 @@ namespace scheidingsdesk_document_generator.Services
                     ELSE
                     BEGIN
                         SELECT NULL WHERE 1=0; -- Empty result set
+                    END
+
+                    -- Result set 16: Complete convenant info data - Optional
+                    IF EXISTS (SELECT * FROM sys.tables WHERE name = 'convenant_info' AND schema_id = SCHEMA_ID('dbo'))
+                    BEGIN
+                        SELECT *
+                        FROM dbo.convenant_info
+                        WHERE dossier_id = @DossierId;
+                    END
+                    ELSE
+                    BEGIN
+                        SELECT NULL WHERE 1=0; -- Empty result set
                     END";
 
                 using var command = new SqlCommand(query, connection);
@@ -772,6 +784,23 @@ namespace scheidingsdesk_document_generator.Services
                 }
                 dossier.ConvenantFiscaal = convenantFiscaal;
 
+                // Result set 16: Complete Convenant Info (Optional)
+                await reader.NextResultAsync();
+                ConvenantInfoData? convenantInfo = null;
+                try
+                {
+                    if (reader.FieldCount > 0 && await reader.ReadAsync())
+                    {
+                        convenantInfo = MapConvenantInfoData(reader);
+                        _logger.LogInformation("Loaded ConvenantInfo data for dossier {DossierId}", dossierId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Convenant info columns may not exist yet, skipping");
+                }
+                dossier.ConvenantInfo = convenantInfo;
+
                 _logger.LogInformation("Successfully retrieved dossier data for dossier ID: {DossierId}", dossierId);
                 return dossier;
             }
@@ -976,6 +1005,171 @@ namespace scheidingsdesk_document_generator.Services
 
             var value = reader[columnName];
             return value == DBNull.Value ? null : (DateTime?)value;
+        }
+
+        /// <summary>
+        /// Maps convenant info data from database reader
+        /// </summary>
+        private static ConvenantInfoData MapConvenantInfoData(SqlDataReader reader)
+        {
+            return new ConvenantInfoData
+            {
+                // PARTNERALIMENTATIE - Behoefteberekening & Draagkracht
+                DuurzaamGescheiden = SafeReadBoolean(reader, "duurzaam_gescheiden"),
+                DuurzaamGescheidenDatum = SafeReadDateTime(reader, "duurzaam_gescheiden_datum"),
+                AlimentatieBerekeningAanhechten = SafeReadBoolean(reader, "alimentatie_berekening_aanhechten"),
+                BerekeningMethode = SafeReadString(reader, "berekening_methode"),
+                NettoGezinsinkomen = SafeReadDecimal(reader, "netto_gezinsinkomen"),
+                KostenKinderenPartneralimentatie = SafeReadDecimal(reader, "kosten_kinderen_partneralimentatie"),
+                NettoBehoefte = SafeReadDecimal(reader, "netto_behoefte"),
+                BrutoAanvullendeBehoefte = SafeReadDecimal(reader, "bruto_aanvullende_behoefte"),
+                BrutoJaarinkomenPartij1 = SafeReadDecimal(reader, "bruto_jaarinkomen_partij1"),
+                DraagkrachtloosInkomenPartij1 = SafeReadDecimal(reader, "draagkrachtloos_inkomen_partij1"),
+                DraagkrachtPartij1 = SafeReadDecimal(reader, "draagkracht_partij1"),
+                BrutoJaarinkomenPartij2 = SafeReadDecimal(reader, "bruto_jaarinkomen_partij2"),
+                DraagkrachtloosInkomenPartij2 = SafeReadDecimal(reader, "draagkrachtloos_inkomen_partij2"),
+                DraagkrachtPartij2 = SafeReadDecimal(reader, "draagkracht_partij2"),
+                VerdiencapaciteitType = SafeReadString(reader, "verdiencapaciteit_type"),
+                EigenInkomstenBedrag = SafeReadDecimal(reader, "eigen_inkomsten_bedrag"),
+                VerdiencapaciteitBedrag = SafeReadDecimal(reader, "verdiencapaciteit_bedrag"),
+
+                // PARTNERALIMENTATIE - Bedrag & Afkoop
+                PartneralimentatieBetaler = SafeReadString(reader, "partneralimentatie_betaler"),
+                HoogtePartneralimentatie = SafeReadDecimal(reader, "hoogte_partneralimentatie"),
+                PartneralimentatieIngangsdatum = SafeReadDateTime(reader, "partneralimentatie_ingangsdatum"),
+                AfstandRecht = SafeReadString(reader, "afstand_recht"),
+                Jusvergelijking = SafeReadBoolean(reader, "jusvergelijking"),
+                BijdrageHypotheekrente = SafeReadBoolean(reader, "bijdrage_hypotheekrente"),
+                BijdrageHypotheekrenteBedrag = SafeReadDecimal(reader, "bijdrage_hypotheekrente_bedrag"),
+                PartneralimentatieAfkopen = SafeReadBoolean(reader, "partneralimentatie_afkopen"),
+                AfkoopType = SafeReadString(reader, "afkoop_type"),
+                AfkoopBedrag = SafeReadDecimal(reader, "afkoop_bedrag"),
+
+                // PARTNERALIMENTATIE - Termijnen & Indexering
+                NietWijzigingsbeding = SafeReadString(reader, "niet_wijzigingsbeding"),
+                IndexeringType = SafeReadString(reader, "indexering_type"),
+                WettelijkeTermijn = SafeReadString(reader, "wettelijke_termijn"),
+                VerlengingTermijn = SafeReadString(reader, "verlenging_termijn"),
+
+                // PARTNERALIMENTATIE - Afwijkingen
+                Afwijking1160 = SafeReadBoolean(reader, "afwijking_1160"),
+                HoeAfwijken1160 = SafeReadString(reader, "hoe_afwijken_1160"),
+                PeriodeDoorbetalen1160 = SafeReadString(reader, "periode_doorbetalen_1160"),
+
+                // WONING - Basis
+                WoningAdresKeuze = SafeReadString(reader, "woning_adres_keuze"),
+                WoningAdres = SafeReadString(reader, "woning_adres"),
+                WoningPostcode = SafeReadString(reader, "woning_postcode"),
+                WoningHuisnummer = SafeReadString(reader, "woning_huisnummer"),
+                WoningToevoeging = SafeReadString(reader, "woning_toevoeging"),
+                WoningStraat = SafeReadString(reader, "woning_straat"),
+                WoningPlaats = SafeReadString(reader, "woning_plaats"),
+                WoningSoort = SafeReadString(reader, "woning_soort"),
+                WoningStatusVermogen = SafeReadString(reader, "woning_status_vermogen"),
+
+                // WONING - Huurwoning
+                HuurrechtToekomtAan = SafeReadString(reader, "huurrecht_toekomt_aan"),
+                HuurrechtWanneer = SafeReadString(reader, "huurrecht_wanneer"),
+                HuurrechtAndereDatum = SafeReadDateTime(reader, "huurrecht_andere_datum"),
+                HuurVerzoekRechter = SafeReadBoolean(reader, "huur_verzoek_rechter"),
+                HuurVerplichtingenVoldaan = SafeReadBoolean(reader, "huur_verplichtingen_voldaan"),
+                HuurVerplichtingenOvernameDatum = SafeReadDateTime(reader, "huur_verplichtingen_overname_datum"),
+                HuurBorgToedelen = SafeReadBoolean(reader, "huur_borg_toedelen"),
+                HuurBorgAan = SafeReadString(reader, "huur_borg_aan"),
+
+                // WONING - Koopwoning
+                KoopNieuwbouw = SafeReadBoolean(reader, "koop_nieuwbouw"),
+                KoopPrivevermogenInvestering = SafeReadBoolean(reader, "koop_privevermogen_investering"),
+                KoopToedeling = SafeReadString(reader, "koop_toedeling"),
+                Hypotheken = SafeReadString(reader, "hypotheken"),
+                KewSewBew = SafeReadString(reader, "kew_sew_bew"),
+
+                // Kadaster & Notaris
+                KoopKadastraalVermelden = SafeReadBoolean(reader, "koop_kadastraal_vermelden"),
+                KoopKadastraalGemeente = SafeReadString(reader, "koop_kadastraal_gemeente"),
+                KoopKadastraalGemeenteCode = SafeReadString(reader, "koop_kadastraal_gemeente_code"),
+                KoopKadastraalSectie = SafeReadString(reader, "koop_kadastraal_sectie"),
+                KoopKadastraalPerceel = SafeReadString(reader, "koop_kadastraal_perceel"),
+                KoopKadastraalAre = SafeReadInt(reader, "koop_kadastraal_are"),
+                KoopKadastraalCentiare = SafeReadInt(reader, "koop_kadastraal_centiare"),
+                KoopKadastraalAanduiding = SafeReadString(reader, "koop_kadastraal_aanduiding"),
+                KoopKadastraalOppervlakte = SafeReadInt(reader, "koop_kadastraal_oppervlakte"),
+                KoopBouwjaar = SafeReadInt(reader, "koop_bouwjaar"),
+                KoopGebruiksdoel = SafeReadString(reader, "koop_gebruiksdoel"),
+                KoopGebruiksoppervlakte = SafeReadInt(reader, "koop_gebruiksoppervlakte"),
+                KoopNotarisMr = SafeReadString(reader, "koop_notaris_mr"),
+                KoopNotarisStandplaats = SafeReadString(reader, "koop_notaris_standplaats"),
+                KoopNotarisLeveringDatum = SafeReadDateTime(reader, "koop_notaris_levering_datum"),
+                KoopNotarisHypotheekZelfde = SafeReadBoolean(reader, "koop_notaris_hypotheek_zelfde"),
+                KoopNotarisHypotheekMr = SafeReadString(reader, "koop_notaris_hypotheek_mr"),
+                KoopNotarisHypotheekStandplaats = SafeReadString(reader, "koop_notaris_hypotheek_standplaats"),
+                KoopNotarisHypotheekDatum = SafeReadDateTime(reader, "koop_notaris_hypotheek_datum"),
+
+                // Privevermogen
+                KoopInvesteringNa2012 = SafeReadBoolean(reader, "koop_investering_na_2012"),
+                KoopPrivevermogenHoe = SafeReadString(reader, "koop_privevermogen_hoe"),
+                KoopPrivevermogenReden = SafeReadString(reader, "koop_privevermogen_reden"),
+                KoopPrivevermogenVordering = SafeReadString(reader, "koop_privevermogen_vordering"),
+                KoopPrivevermogenVorderingBedrag = SafeReadDecimal(reader, "koop_privevermogen_vordering_bedrag"),
+
+                // Waarde
+                KoopWozWaarde = SafeReadDecimal(reader, "koop_woz_waarde"),
+                KoopWozPeildatum = SafeReadString(reader, "koop_woz_peildatum"),
+                KoopToedelingWaarde = SafeReadDecimal(reader, "koop_toedeling_waarde"),
+                KoopOntslagHoofdelijkheid = SafeReadBoolean(reader, "koop_ontslag_hoofdelijkheid"),
+                KoopOntslagHoofdelijkheidDatum = SafeReadDateTime(reader, "koop_ontslag_hoofdelijkheid_datum"),
+                KoopMakelaarVerkoop = SafeReadString(reader, "koop_makelaar_verkoop"),
+                KoopLaatprijs = SafeReadDecimal(reader, "koop_laatprijs"),
+                KoopVolmachtNotaris = SafeReadBoolean(reader, "koop_volmacht_notaris"),
+                KoopMedewerkingLeveren = SafeReadBoolean(reader, "koop_medewerking_leveren"),
+                KoopOverbedelingWoning = SafeReadDecimal(reader, "koop_overbedeling_woning"),
+                KoopOverbedelingSpaarproducten = SafeReadDecimal(reader, "koop_overbedeling_spaarproducten"),
+
+                // Lasten
+                KoopLastenWoning = SafeReadBoolean(reader, "koop_lasten_woning"),
+                KoopHypotheekrente = SafeReadString(reader, "koop_hypotheekrente"),
+                KoopMaandelijkseAflossing = SafeReadString(reader, "koop_maandelijkse_aflossing"),
+                KoopPremieInleg = SafeReadString(reader, "koop_premie_inleg"),
+                KoopAanslagWoz = SafeReadString(reader, "koop_aanslag_woz"),
+                KoopGebruikerslasten = SafeReadString(reader, "koop_gebruikerslasten"),
+                KoopKleinOnderhoud = SafeReadString(reader, "koop_klein_onderhoud"),
+                KoopGrootOnderhoud = SafeReadString(reader, "koop_groot_onderhoud"),
+
+                // VERMOGENSVERDELING
+                Bankrekeningen = SafeReadString(reader, "bankrekeningen"),
+                Beleggingen = SafeReadString(reader, "beleggingen"),
+                Voertuigen = SafeReadString(reader, "voertuigen"),
+                Verzekeringen = SafeReadString(reader, "verzekeringen"),
+                Schulden = SafeReadString(reader, "schulden"),
+                Vorderingen = SafeReadString(reader, "vorderingen"),
+                Inboedel = SafeReadString(reader, "inboedel"),
+                VermogensverdelingOpmerkingen = SafeReadString(reader, "vermogensverdeling_opmerkingen"),
+
+                // PENSIOEN
+                Pensioenen = SafeReadString(reader, "pensioenen"),
+                PensioenOpmerkingen = SafeReadString(reader, "pensioen_opmerkingen"),
+                BijzonderPartnerpensioen = SafeReadString(reader, "bijzonder_partnerpensioen"),
+
+                // FISCAAL
+                FiscaalJaar = SafeReadInt(reader, "fiscaal_jaar"),
+                BelastingaangifteAfspraken = SafeReadString(reader, "belastingaangifte_afspraken"),
+                HypotheekrenteAftrek = SafeReadString(reader, "hypotheekrente_aftrek"),
+                FiscaalOpmerkingen = SafeReadString(reader, "fiscaal_opmerkingen"),
+
+                // KWIJTING & HUWELIJKSVOORWAARDEN
+                Huwelijksgoederenregime = SafeReadString(reader, "huwelijksgoederenregime"),
+                HuwelijksgoederenregimeUitzondering = SafeReadString(reader, "huwelijksgoederenregime_uitzondering"),
+                HuwelijksgoederenregimeAnders = SafeReadString(reader, "huwelijksgoederenregime_anders"),
+                HuwelijksvoorwaardenDatum = SafeReadDateTime(reader, "huwelijksvoorwaarden_datum"),
+                HuwelijksvoorwaardenNotaris = SafeReadString(reader, "huwelijksvoorwaarden_notaris"),
+                HuwelijksvoorwaardenNotarisPlaats = SafeReadString(reader, "huwelijksvoorwaarden_notaris_plaats"),
+                KwijtingAkkoord = SafeReadBoolean(reader, "kwijting_akkoord"),
+                Slotbepalingen = SafeReadString(reader, "slotbepalingen"),
+
+                // META
+                AangemaaktOp = SafeReadDateTime(reader, "aangemaakt_op") ?? DateTime.MinValue,
+                GewijzigdOp = SafeReadDateTime(reader, "gewijzigd_op") ?? DateTime.MinValue
+            };
         }
 
         /// <summary>

@@ -267,3 +267,6 @@ __pycache__/
 
 # Generated output files
 output/
+
+# Convenant reference/analysis files
+Convenant/

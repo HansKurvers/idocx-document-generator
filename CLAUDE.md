@@ -49,6 +49,33 @@ Alle placeholder builders bevinden zich in:
 
 Builders worden uitgevoerd op basis van hun `Order` property (laag naar hoog).
 
+## CI/CD & Deployment
+
+Alle drie de repositories hebben GitHub Actions workflows voor automatische deployment.
+
+### idocx-document-generator (deze repository)
+
+| Trigger | Workflow | Deploy naar | App naam |
+|---------|----------|-------------|----------|
+| Push naar `development` | `development_idocx-document-staging.yml` | Staging | `idocx-document-staging` |
+| Push naar `main` | `deploy-mediation.yml` | Productie | `mediation-document-generator` |
+
+### idocx-api (backend)
+
+| Trigger | Workflow | Deploy naar | App naam |
+|---------|----------|-------------|----------|
+| Push naar `development` | `development_idocx-staging.yml` | Staging | `idocx-staging` |
+| Push naar `main` | `main_idocx-api.yml` | Productie | `ouderschaps-api-fvgbfwachxabawgs` |
+
+### idocx-web (frontend)
+
+| Trigger | Workflow | Deploy naar | App naam |
+|---------|----------|-------------|----------|
+| Push naar `development` | `azure-static-web-apps-jolly-glacier-0e4a15003.yml` | Staging | `jolly-glacier-0e4a15003` |
+| Push naar `main` | `azure-static-web-apps-agreeable-grass-0622e6803.yml` | Productie | `Ouderschaps-web` |
+
+**Belangrijk**: Na een push naar `development` of `main` wordt automatisch gedeployed. Handmatige deployment is alleen nodig als de GitHub Actions workflow faalt.
+
 ## Git workflow
 
 - **main** - Productie branch

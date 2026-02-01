@@ -61,3 +61,32 @@ Builders worden uitgevoerd op basis van hun `Order` property (laag naar hoog).
 - **NOOIT** uit eigen beweging een merge uitvoeren (bijv. `git merge`, `git rebase` naar een andere branch, of een PR mergen).
 - Een merge mag **alleen** plaatsvinden als de gebruiker hier een **directe, expliciete opdracht** toe geeft.
 - Wanneer de gebruiker opdracht geeft tot een merge, **altijd eerst bevestiging vragen** via AskUserQuestion: "Weet u zeker dat u wilt mergen? Dit kan niet ongedaan worden gemaakt." met opties Ja/Nee. Pas na bevestiging uitvoeren.
+
+## Databases & Migraties
+
+Database migraties worden beheerd in de `idocx-api` repository (`/home/hans/idocx-api/migrations/`).
+
+Beide databases draaien op dezelfde Azure SQL server: `sql-ouderschapsplan-server.database.windows.net`
+
+| Omgeving | Database | Branch |
+|----------|----------|--------|
+| **Staging** | `db-ouderschapsplan-staging` | `development` |
+| **Productie** | `db-ouderschapsplan` | `main` |
+
+### Migratie Workflow
+1. Nieuwe migratie aanmaken in `idocx-api/migrations/` op `development` branch
+2. Uitvoeren op **staging** database
+3. Testen op staging omgeving
+4. Na goedkeuring: merge `development` naar `main`
+5. Uitvoeren op **productie** database
+
+### Claude Code instructies voor migraties
+- **ALTIJD** bevestiging vragen voordat een migratie wordt uitgevoerd
+- **ALTIJD** duidelijk vermelden op WELKE database (staging of productie)
+- **NOOIT** migraties uitvoeren op productie voordat ze op staging zijn getest
+- Bij een merge naar `main`: herinner de gebruiker dat de migratie OOK op productie moet worden uitgevoerd
+
+### Backwards-compatible migraties (verplicht)
+- Nieuwe kolommen: ALTIJD met `NULL` of `DEFAULT` waarde
+- Geen `DROP COLUMN` zonder migratiestrategie
+- Geen `NOT NULL` constraints toevoegen aan bestaande kolommen zonder default

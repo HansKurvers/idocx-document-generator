@@ -54,7 +54,7 @@ Builders worden uitgevoerd op basis van hun `Order` property (laag naar hoog).
 - **main** - Productie branch
 - **development** - Development/staging branch
 
-Werk altijd in de `development` branch en merge naar `main` wanneer klaar voor productie.
+**NOOIT direct op `main` committen of pushen.** Alle wijzigingen gaan via de `development` branch. Commit en push altijd naar `development`. Pas na review/goedkeuring wordt `development` naar `main` gemerged.
 
 ### Git Merge Policy
 

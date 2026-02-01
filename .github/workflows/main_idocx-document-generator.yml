@@ -49,6 +49,6 @@ jobs:
         id: fa
         with:
           app-name: 'scheidingsdesk-document-service'
-          slot-name: 'Production'
+          sku: 'flexconsumption'
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
           

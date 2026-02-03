@@ -72,8 +72,11 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "OuderschapsplanDoelZin",
                 GetOuderschapsplanDoelZin(info.SoortRelatie, kinderen.Count));
 
-            // Gezag (parental authority)
-            var gezagRegeling = GetGezagRegeling(info.GezagPartij, info.GezagTermijnWeken, partij1, partij2, kinderen);
+            // Gezag (parental authority) - only applies to minors
+            var minderjarigeKinderen = kinderen
+                .Where(k => k.Leeftijd.HasValue && k.Leeftijd.Value < 18)
+                .ToList();
+            var gezagRegeling = GetGezagRegeling(info.GezagPartij, info.GezagTermijnWeken, partij1, partij2, minderjarigeKinderen);
             AddPlaceholder(replacements, "GezagRegeling", gezagRegeling);
             AddPlaceholder(replacements, "GezagZin", gezagRegeling); // Alias
             AddPlaceholder(replacements, "GezagPartij", info.GezagPartij?.ToString());

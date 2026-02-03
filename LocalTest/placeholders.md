@@ -122,12 +122,12 @@ Relatie & Juridisch:
 - [[ParentingCoordinator]] - Parenting coordinator informatie
 
 Ouderlijk Gezag (Parental Authority):
-- [[GezagRegeling]] - Volledige zin over ouderlijk gezag op basis van gekozen optie
-  * Optie 1: "[Partij1] en [Partij2] hebben samen het ouderlijk gezag over [kinderen]."
-  * Optie 2: "[Partij1] heeft alleen het ouderlijk gezag over [kinderen]. Dit blijft zo."
-  * Optie 3: "[Partij2] heeft alleen het ouderlijk gezag over [kinderen]. Dit blijft zo."
-  * Optie 4: "[Partij1] heeft alleen het ouderlijk gezag over [kinderen]. Partijen spreken af dat zij binnen [X] weken na ondertekening van dit ouderschapsplan gezamenlijk gezag zullen regelen."
-  * Optie 5: "[Partij2] heeft alleen het ouderlijk gezag over [kinderen]. Partijen spreken af dat zij binnen [X] weken na ondertekening van dit ouderschapsplan gezamenlijk gezag zullen regelen."
+- [[GezagRegeling]] - Volledige zin over ouderlijk gezag op basis van gekozen optie (gebruikt roepnamen van minderjarige kinderen)
+  * Optie 1: "[Partij1] en [Partij2] hebben samen het ouderlijk gezag over [roepnamen minderjarigen]. Na de scheiding blijft dit zo."
+  * Optie 2: "[Partij1] heeft alleen het ouderlijk gezag over [roepnamen minderjarigen]. Dit blijft zo."
+  * Optie 3: "[Partij2] heeft alleen het ouderlijk gezag over [roepnamen minderjarigen]. Dit blijft zo."
+  * Optie 4: "[Partij1] heeft alleen het ouderlijk gezag over [roepnamen minderjarigen]. Partijen spreken af dat zij binnen [X] weken na ondertekening van dit ouderschapsplan gezamenlijk gezag zullen regelen."
+  * Optie 5: "[Partij2] heeft alleen het ouderlijk gezag over [roepnamen minderjarigen]. Partijen spreken af dat zij binnen [X] weken na ondertekening van dit ouderschapsplan gezamenlijk gezag zullen regelen."
 - [[GezagPartij]] - Nummer van gekozen gezagsoptie (1-5)
 - [[GezagTermijnWeken]] - Aantal weken termijn (alleen bij optie 4 of 5)
 

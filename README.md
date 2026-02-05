@@ -71,11 +71,14 @@ De Ouderschapsplan Document Generator is een serverless applicatie gebouwd met A
    - Vakantieregelingen (voorjaar, mei, zomer, herfst, kerst)
    - Feestdagenregelingen (Pasen, Koningsdag, Sinterklaas, etc.)
 
-6. **Artikel Bibliotheek Integratie** (Nieuw in v2.3.0, uitgebreid in v2.6.0)
+6. **Artikel Bibliotheek Integratie** (Nieuw in v2.3.0, uitgebreid in v2.7.0)
    - Haalt artikelen op uit database met 4-laags prioriteit (dossier > gebruiker > eigen artikel > systeem)
    - **Eigen artikelen**: Gebruiker-specifieke artikelen (`eigenaar_id = gebruiker_id`) worden automatisch meegenomen
    - **Uitgeschakelde artikelen filteren**: Artikelen met `is_actief = false` worden automatisch uitgesloten
-   - Automatische conditionele filtering op basis van dossier data
+   - **Geavanceerde conditionele filtering** met AND/OR logica via `conditie_config` JSON:
+     - Prioriteit: `conditie_config` (AND/OR JSON) > `conditie_veld` (simpele string) > altijd zichtbaar
+     - Hergebruikt bestaande `ConditieEvaluator` met volledige dossier context
+     - Computed velden beschikbaar: `HeeftKinderen`, `AantalKinderen`, `HeeftAlimentatie`, `IsCoOuderschap`, etc.
    - Placeholder vervanging binnen artikel teksten
    - `[[ARTIKELEN]]` placeholder genereert alle actieve artikelen (systeem + eigen)
    - Ondersteunt `[[IF:Veld]]...[[ENDIF:Veld]]` binnen artikelen
@@ -109,7 +112,8 @@ Deze applicatie is gebouwd met de volgende principes in gedachten:
 │   ├── ZorgData.cs                             # Zorgregelingen
 │   ├── AlimentatieData.cs                      # Alimentatie informatie
 │   ├── OuderschapsplanInfoData.cs              # Ouderschapsplan specifieke info
-│   └── ArtikelData.cs                          # Artikel bibliotheek data (v2.3.0)
+│   ├── ArtikelData.cs                          # Artikel bibliotheek data (v2.3.0, conditieConfig v2.7.0)
+│   └── ConditieModels.cs                       # Conditie/ConditieConfig modellen
 │
 ├── Services/                                    # Business logic services
 │   ├── DatabaseService.cs                      # Database interactie (SQL queries)
@@ -137,7 +141,9 @@ Deze applicatie is gebouwd met de volgende principes in gedachten:
 │       │   ├── ContentControlProcessor.cs      # Verwerkt content controls en tabel placeholders
 │       │   ├── IContentControlProcessor.cs
 │       │   ├── ConditionalSectionProcessor.cs  # Verwerkt [[IF:]]...[[ENDIF:]] blokken
-│       │   └── IConditionalSectionProcessor.cs
+│       │   ├── IConditionalSectionProcessor.cs
+│       │   ├── ConditieEvaluator.cs            # AND/OR conditie evaluatie (placeholders + artikelen)
+│       │   └── IConditieEvaluator.cs
 │       │
 │       └── Generators/                         # Strategy Pattern: Tabel generators
 │           ├── ITableGenerator.cs              # Interface voor alle generators
@@ -1755,7 +1761,42 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.6.0 (Current) - Testing, CI/CD & Code Quality
+### v2.7.0 (Current) - Geavanceerde Conditionele Artikelen
+
+**Nieuwe features:**
+- **Geavanceerde artikel condities** - AND/OR logica voor artikel zichtbaarheid:
+  - Nieuw `conditie_config` JSON veld op `ArtikelData` met lazy-parsed `ConditieConfig` property
+  - `DatabaseService` leest `t.conditie_config` kolom uit `artikel_templates`
+  - `ConditieEvaluator.EvaluateConditie()` - nieuwe publieke methode voor boolean conditie evaluatie
+  - `ArtikelService.FilterConditioneleArtikelen()` ondersteunt nu `DossierData` parameter
+  - Prioriteitslogica: `conditie_config` (JSON) > `conditie_veld` (string) > altijd zichtbaar
+  - `ArtikelContentGenerator` geeft dossier data door voor volledige context evaluatie
+  - Hergebruikt bestaande `ConditieEvaluator` (AND/OR boom, operatoren: =, !=, >, <, bevat, in, leeg, etc.)
+
+**Voorbeeld `conditie_config` JSON (opgeslagen in database):**
+```json
+{
+  "operator": "AND",
+  "voorwaarden": [
+    { "veld": "HeeftKinderen", "operator": "=", "waarde": true },
+    { "veld": "HeeftAlimentatie", "operator": "=", "waarde": true }
+  ]
+}
+```
+
+**Technische wijzigingen:**
+- `Models/ArtikelData.cs` - `ConditieConfigJson` + lazy `ConditieConfig` property
+- `Services/DatabaseService.cs` - `conditie_config` kolom in SQL query + mapping
+- `Services/DocumentGeneration/Processors/IConditieEvaluator.cs` - Nieuwe `EvaluateConditie()` methode
+- `Services/DocumentGeneration/Processors/ConditieEvaluator.cs` - Publieke wrapper voor boolean evaluatie
+- `Services/Artikel/IArtikelService.cs` - `DossierData?` parameter toegevoegd
+- `Services/Artikel/ArtikelService.cs` - `IConditieEvaluator` injectie + prioriteitslogica
+- `Services/DocumentGeneration/Generators/ArtikelContentGenerator.cs` - Geeft `data` door aan filter
+
+**Breaking Changes:**
+- Geen! Bestaande artikelen met `conditie_veld` string werken ongewijzigd. De nieuwe `conditie_config` is optioneel.
+
+### v2.6.0 - Testing, CI/CD & Code Quality
 
 **Nieuwe features:**
 - 📑 **Word Inhoudsopgave (TOC)** - Nieuwe `[[INHOUDSOPGAVE]]` placeholder:

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using scheidingsdesk_document_generator.Models;
+using scheidingsdesk_document_generator.Services.DocumentGeneration.Processors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ namespace scheidingsdesk_document_generator.Services.Artikel
     public class ArtikelService : IArtikelService
     {
         private readonly ILogger<ArtikelService> _logger;
+        private readonly IConditieEvaluator _conditieEvaluator;
 
         // Regex patronen voor conditionele blokken en placeholders
         private static readonly Regex IfEndIfPattern = new Regex(
@@ -24,42 +26,75 @@ namespace scheidingsdesk_document_generator.Services.Artikel
             @"\[\[([^\]]+)\]\]",
             RegexOptions.IgnoreCase);
 
-        public ArtikelService(ILogger<ArtikelService> logger)
+        public ArtikelService(ILogger<ArtikelService> logger, IConditieEvaluator conditieEvaluator)
         {
             _logger = logger;
+            _conditieEvaluator = conditieEvaluator;
         }
 
         /// <summary>
         /// Filtert conditionele artikelen op basis van beschikbare data
+        /// Prioriteit: conditieConfig (JSON) > conditieVeld (simpele string) > altijd zichtbaar
         /// </summary>
         public List<ArtikelData> FilterConditioneleArtikelen(
             List<ArtikelData> artikelen,
-            Dictionary<string, string> replacements)
+            Dictionary<string, string> replacements,
+            DossierData? dossierData = null)
         {
             if (artikelen == null || artikelen.Count == 0)
                 return new List<ArtikelData>();
+
+            // Bouw evaluatie context als dossierData beschikbaar is (voor geavanceerde condities)
+            Dictionary<string, object>? evaluationContext = null;
+            if (dossierData != null)
+            {
+                evaluationContext = _conditieEvaluator.BuildEvaluationContext(dossierData, replacements);
+            }
 
             var result = new List<ArtikelData>();
 
             foreach (var artikel in artikelen)
             {
                 // Niet-conditionele artikelen altijd toevoegen
-                if (!artikel.IsConditioneel || string.IsNullOrEmpty(artikel.ConditieVeld))
+                if (!artikel.IsConditioneel)
                 {
                     result.Add(artikel);
                     continue;
                 }
 
-                // Evalueer conditie
-                if (EvalueerConditie(artikel.ConditieVeld, replacements))
+                // Prioriteit 1: Geavanceerde conditieConfig (AND/OR JSON)
+                if (artikel.ConditieConfig != null && evaluationContext != null)
                 {
-                    result.Add(artikel);
-                    _logger.LogDebug($"Artikel '{artikel.ArtikelCode}' toegevoegd (conditie '{artikel.ConditieVeld}' is waar)");
+                    var zichtbaar = _conditieEvaluator.EvaluateConditie(artikel.ConditieConfig, evaluationContext);
+                    if (zichtbaar)
+                    {
+                        result.Add(artikel);
+                        _logger.LogDebug("Artikel '{Code}' toegevoegd (geavanceerde conditie is waar)", artikel.ArtikelCode);
+                    }
+                    else
+                    {
+                        _logger.LogDebug("Artikel '{Code}' gefilterd (geavanceerde conditie is onwaar)", artikel.ArtikelCode);
+                    }
+                    continue;
                 }
-                else
+
+                // Prioriteit 2: Simpele conditieVeld string
+                if (!string.IsNullOrEmpty(artikel.ConditieVeld))
                 {
-                    _logger.LogDebug($"Artikel '{artikel.ArtikelCode}' gefilterd (conditie '{artikel.ConditieVeld}' is onwaar)");
+                    if (EvalueerConditie(artikel.ConditieVeld, replacements))
+                    {
+                        result.Add(artikel);
+                        _logger.LogDebug("Artikel '{Code}' toegevoegd (conditie '{Conditie}' is waar)", artikel.ArtikelCode, artikel.ConditieVeld);
+                    }
+                    else
+                    {
+                        _logger.LogDebug("Artikel '{Code}' gefilterd (conditie '{Conditie}' is onwaar)", artikel.ArtikelCode, artikel.ConditieVeld);
+                    }
+                    continue;
                 }
+
+                // Geen conditie gevonden maar IsConditioneel=true, voeg toe
+                result.Add(artikel);
             }
 
             return result;

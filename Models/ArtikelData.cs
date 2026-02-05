@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 
 namespace scheidingsdesk_document_generator.Models
 {
@@ -17,6 +18,7 @@ namespace scheidingsdesk_document_generator.Models
         public bool IsVerplicht { get; set; }
         public bool IsConditioneel { get; set; }
         public string? ConditieVeld { get; set; }
+        public string? ConditieConfigJson { get; set; }
         public string? Categorie { get; set; }
         public string? HelpTekst { get; set; }
         public int Versie { get; set; }
@@ -65,6 +67,32 @@ namespace scheidingsdesk_document_generator.Models
                 if (!string.IsNullOrEmpty(GebruikerTekst))
                     return "gebruiker";
                 return "systeem";
+            }
+        }
+
+        /// <summary>
+        /// Parsed conditie configuration for advanced AND/OR conditions (lazy loaded)
+        /// Takes priority over ConditieVeld when present
+        /// </summary>
+        private Conditie? _parsedConditieConfig;
+        private bool _conditieConfigParsed;
+        public Conditie? ConditieConfig
+        {
+            get
+            {
+                if (!_conditieConfigParsed && !string.IsNullOrEmpty(ConditieConfigJson))
+                {
+                    try
+                    {
+                        _parsedConditieConfig = JsonSerializer.Deserialize<Conditie>(ConditieConfigJson);
+                    }
+                    catch
+                    {
+                        _parsedConditieConfig = null;
+                    }
+                    _conditieConfigParsed = true;
+                }
+                return _parsedConditieConfig;
             }
         }
 

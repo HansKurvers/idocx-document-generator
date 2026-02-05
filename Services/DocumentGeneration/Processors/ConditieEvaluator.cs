@@ -65,6 +65,14 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
         }
 
         /// <summary>
+        /// Evaluates a single Conditie for boolean visibility (public API for artikel templates)
+        /// </summary>
+        public bool EvaluateConditie(Conditie conditie, Dictionary<string, object> context)
+        {
+            return EvaluateCondition(conditie, context);
+        }
+
+        /// <summary>
         /// Evaluates a single condition (either group or comparison)
         /// </summary>
         private bool EvaluateCondition(Conditie conditie, Dictionary<string, object> context)

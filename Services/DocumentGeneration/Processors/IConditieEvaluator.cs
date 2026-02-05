@@ -34,5 +34,13 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
         /// <param name="replacements">Current placeholder replacements</param>
         /// <returns>Context dictionary for condition evaluation</returns>
         Dictionary<string, object> BuildEvaluationContext(DossierData data, Dictionary<string, string> replacements);
+
+        /// <summary>
+        /// Evaluates a single Conditie for boolean visibility (used by artikel templates)
+        /// </summary>
+        /// <param name="conditie">The condition tree to evaluate</param>
+        /// <param name="context">Dictionary of field values to evaluate against</param>
+        /// <returns>True if the condition is met, false otherwise</returns>
+        bool EvaluateConditie(Conditie conditie, Dictionary<string, object> context);
     }
 }

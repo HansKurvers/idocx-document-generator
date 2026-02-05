@@ -48,8 +48,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             // Gebruik de replacements voor conditionele filtering
             var replacements = Replacements ?? new Dictionary<string, string>();
 
-            // Filter conditionele artikelen
-            var artikelen = _artikelService.FilterConditioneleArtikelen(data.Artikelen, replacements);
+            // Filter conditionele artikelen (met dossierData voor geavanceerde AND/OR condities)
+            var artikelen = _artikelService.FilterConditioneleArtikelen(data.Artikelen, replacements, data);
 
             _logger.LogInformation($"[{correlationId}] Na conditionele filtering: {artikelen.Count} artikelen");
 

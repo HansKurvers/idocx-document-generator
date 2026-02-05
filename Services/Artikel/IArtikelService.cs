@@ -13,10 +13,12 @@ namespace scheidingsdesk_document_generator.Services.Artikel
         /// </summary>
         /// <param name="artikelen">Lijst van artikelen</param>
         /// <param name="replacements">Beschikbare placeholder waarden</param>
+        /// <param name="dossierData">Optioneel dossier data voor geavanceerde conditie evaluatie</param>
         /// <returns>Gefilterde lijst met alleen toepasselijke artikelen</returns>
         List<ArtikelData> FilterConditioneleArtikelen(
             List<ArtikelData> artikelen,
-            Dictionary<string, string> replacements);
+            Dictionary<string, string> replacements,
+            DossierData? dossierData = null);
 
         /// <summary>
         /// Vervangt placeholders in artikel tekst

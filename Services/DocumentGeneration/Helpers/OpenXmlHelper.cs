@@ -13,6 +13,14 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
     public static class OpenXmlHelper
     {
         /// <summary>
+        /// Style IDs that represent Heading 1 in Word documents.
+        /// "Heading1" is the English ID, "Kop1" is the Dutch ID.
+        /// </summary>
+        private static readonly string[] Heading1StyleIds = { "Heading1", "Kop1" };
+
+        private static bool IsHeading1Style(string? styleId) =>
+            styleId != null && Heading1StyleIds.Contains(styleId);
+        /// <summary>
         /// Creates a styled table cell with optional formatting
         /// </summary>
         /// <param name="text">Text content for the cell</param>
@@ -413,9 +421,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
 
             if (hasComplexFieldToc) return;
 
-            // Find the first Heading1 paragraph
+            // Find the first Heading1 paragraph (supports both English "Heading1" and Dutch "Kop1")
             var firstHeading1 = body.Elements<Paragraph>()
-                .FirstOrDefault(p => p.ParagraphProperties?.ParagraphStyleId?.Val?.Value == "Heading1");
+                .FirstOrDefault(p => IsHeading1Style(p.ParagraphProperties?.ParagraphStyleId?.Val?.Value));
 
             if (firstHeading1 == null) return;
 
@@ -536,7 +544,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                 if (pPr == null) continue;
 
                 var styleId = pPr.ParagraphStyleId?.Val?.Value;
-                if (styleId != "Heading1") continue;
+                if (!IsHeading1Style(styleId)) continue;
 
                 var numPr = pPr.NumberingProperties;
                 var levelRef = numPr?.NumberingLevelReference?.Val?.Value;

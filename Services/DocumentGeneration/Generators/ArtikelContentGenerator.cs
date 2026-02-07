@@ -115,22 +115,28 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
         }
 
         /// <summary>
-        /// Maakt een artikel heading paragraph met Heading1 style voor Word inhoudsopgave
+        /// Maakt een artikel heading met Heading1 style voor Word inhoudsopgave
         /// </summary>
         private Paragraph CreateArtikelHeading(string text)
         {
             var paragraph = new Paragraph();
+
+            // Paragraph properties
             var paragraphProps = new ParagraphProperties();
 
+            // Heading1 style voor Word TOC (inhoudsopgave)
             paragraphProps.Append(new ParagraphStyleId() { Val = "Heading1" });
+
+            // Spacing voor heading (ruimte boven)
             paragraphProps.Append(new SpacingBetweenLines()
             {
-                Before = "200",
-                After = "120"
+                Before = "200",  // 10pt ruimte boven
+                After = "120"    // 6pt ruimte onder
             });
 
             paragraph.Append(paragraphProps);
 
+            // Run met bold text
             var run = new Run();
             var runProps = new RunProperties();
             runProps.Append(new Bold());

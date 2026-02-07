@@ -140,6 +140,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration
                     _logger.LogInformation($"[{correlationId}] Step 2: Processing conditional sections");
                     _conditionalSectionProcessor.ProcessConditionalSections(doc, replacements, correlationId);
 
+                    // Ensure Heading1 style exists for TOC
+                    OpenXmlHelper.EnsureHeadingStyle(doc);
+
                     // Step 3: Process table placeholders (generates dynamic tables and artikelen with [[ARTIKEL]] placeholders)
                     _logger.LogInformation($"[{correlationId}] Step 3: Processing table placeholders");
                     _contentControlProcessor.ProcessTablePlaceholders(body, dossierData, replacements, correlationId);
@@ -148,9 +151,19 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration
                     _logger.LogInformation($"[{correlationId}] Step 3b: Re-processing table placeholders for nested content");
                     _contentControlProcessor.ProcessTablePlaceholders(body, dossierData, replacements, correlationId);
 
-                    // Step 4: Remove content controls
+                    // Step 4: Process article numbering (now [[ARTIKEL]] placeholders exist from Step 3)
+                    _logger.LogInformation($"[{correlationId}] Step 4: Processing article numbering");
+                    ArticleNumberingHelper.ProcessArticlePlaceholders(doc, _logger, correlationId);
+
+                    // Step 5: Remove content controls
                     _logger.LogInformation($"[{correlationId}] Step 5: Removing content controls");
                     _contentControlProcessor.RemoveContentControls(mainPart.Document, correlationId);
+
+                    // Insert TOC if template doesn't have [[INHOUDSOPGAVE]] placeholder
+                    OpenXmlHelper.InsertTocIfMissing(doc);
+
+                    // Populate TOC server-side with actual article entries (no Word dialog)
+                    OpenXmlHelper.PopulateTocEntries(doc);
 
                     // Save changes
                     mainPart.Document.Save();

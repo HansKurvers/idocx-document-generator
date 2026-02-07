@@ -95,14 +95,22 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 return elements;
             }
 
-            // Artikel kop met [[ARTIKEL]] placeholder (nummering via ArticleNumberingHelper)
-            // Heading style wordt gebruikt voor Word TOC
+            // Artikel kop met nummering afhankelijk van nummering_type
             var effectieveTitel = _artikelService.VervangPlaceholders(artikel.EffectieveTitel, replacements);
-            var kopTekst = $"[[ARTIKEL]] {effectieveTitel}";
 
-            // Maak heading paragraph met Heading1 style voor Word inhoudsopgave
-            var heading = CreateArtikelHeading(kopTekst);
-            elements.Add(heading);
+            switch (artikel.NummeringType)
+            {
+                case "nieuw_nummer":
+                    elements.Add(CreateArtikelHeading($"[[ARTIKEL]] {effectieveTitel}"));
+                    break;
+                case "doornummeren":
+                    elements.Add(CreateArtikelHeading($"[[SUBARTIKEL]] {effectieveTitel}"));
+                    break;
+                case "geen_nummer":
+                default:
+                    elements.Add(CreateBoldParagraph(effectieveTitel));
+                    break;
+            }
 
             // Maak body paragraphs (split op newlines)
             var bodyParagraphs = CreateBodyParagraphs(verwerkteTekst);
@@ -144,6 +152,31 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             run.Append(runProps);
             run.Append(new Text(text));
 
+            paragraph.Append(run);
+            return paragraph;
+        }
+
+        /// <summary>
+        /// Maakt een bold paragraph zonder Heading style (verschijnt niet in TOC)
+        /// Gebruikt voor artikelen met nummering_type 'geen_nummer'
+        /// </summary>
+        private Paragraph CreateBoldParagraph(string text)
+        {
+            var paragraph = new Paragraph();
+            var paragraphProps = new ParagraphProperties();
+            paragraphProps.Append(new SpacingBetweenLines()
+            {
+                Before = "200",
+                After = "120"
+            });
+            paragraph.Append(paragraphProps);
+
+            var run = new Run();
+            var runProps = new RunProperties();
+            runProps.Append(new Bold());
+            runProps.Append(new FontSize() { Val = "24" }); // 12pt
+            run.Append(runProps);
+            run.Append(new Text(text));
             paragraph.Append(run);
             return paragraph;
         }

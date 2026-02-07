@@ -23,9 +23,6 @@ namespace scheidingsdesk_document_generator.Models
         public string? HelpTekst { get; set; }
         public int Versie { get; set; }
         public bool IsActief { get; set; }
-        /// <summary>
-        /// Nummering type: 'nieuw_nummer' (Artikel 1), 'doornummeren' (1.1), 'geen_nummer' (geen nummering)
-        /// </summary>
         public string NummeringType { get; set; } = "doornummeren";
 
         // Gebruiker aanpassingen (nullable)

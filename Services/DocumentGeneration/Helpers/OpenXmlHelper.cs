@@ -1,4 +1,6 @@
+using System.Linq;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
@@ -258,6 +260,71 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
 
             run.Append(new Text(text));
             paragraph.Append(run);
+        }
+
+        /// <summary>
+        /// Ensures a Heading1 style definition exists in the document's StyleDefinitionsPart.
+        /// This is required for the TOC field to recognize article headings.
+        /// If the style already exists, ensures it has an OutlineLevel for TOC compatibility.
+        /// </summary>
+        public static void EnsureHeadingStyle(WordprocessingDocument document)
+        {
+            var mainPart = document.MainDocumentPart;
+            if (mainPart == null) return;
+
+            var stylesPart = mainPart.StyleDefinitionsPart;
+            if (stylesPart == null)
+            {
+                stylesPart = mainPart.AddNewPart<StyleDefinitionsPart>();
+                stylesPart.Styles = new Styles();
+            }
+
+            var styles = stylesPart.Styles ?? (stylesPart.Styles = new Styles());
+
+            // Check of Heading1 al bestaat
+            var existingStyle = styles.Elements<Style>()
+                .FirstOrDefault(s => s.StyleId?.Value == "Heading1");
+
+            if (existingStyle != null)
+            {
+                // Style bestaat al, controleer of OutlineLevel aanwezig is
+                var pPr = existingStyle.StyleParagraphProperties;
+                if (pPr != null && pPr.OutlineLevel == null)
+                {
+                    pPr.Append(new OutlineLevel() { Val = 0 });
+                }
+                return;
+            }
+
+            // Maak Heading1 stijl aan
+            var heading1Style = new Style()
+            {
+                Type = StyleValues.Paragraph,
+                StyleId = "Heading1"
+            };
+
+            heading1Style.Append(new StyleName() { Val = "heading 1" });
+            heading1Style.Append(new BasedOn() { Val = "Normal" });
+            heading1Style.Append(new NextParagraphStyle() { Val = "Normal" });
+            heading1Style.Append(new UIPriority() { Val = 9 });
+            heading1Style.Append(new PrimaryStyle());
+
+            // Paragraph properties met OutlineLevel (cruciaal voor TOC)
+            var stylePPr = new StyleParagraphProperties();
+            stylePPr.Append(new KeepNext());
+            stylePPr.Append(new KeepLines());
+            stylePPr.Append(new SpacingBetweenLines() { Before = "200", After = "120" });
+            stylePPr.Append(new OutlineLevel() { Val = 0 }); // Level 1 = index 0
+            heading1Style.Append(stylePPr);
+
+            // Run properties
+            var styleRPr = new StyleRunProperties();
+            styleRPr.Append(new Bold());
+            styleRPr.Append(new FontSize() { Val = "24" }); // 12pt
+            heading1Style.Append(styleRPr);
+
+            styles.Append(heading1Style);
+            styles.Save();
         }
 
         /// <summary>

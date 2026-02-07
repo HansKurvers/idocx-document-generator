@@ -95,14 +95,25 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 return elements;
             }
 
-            // Artikel kop met [[ARTIKEL]] placeholder (nummering via ArticleNumberingHelper)
-            // Heading style wordt gebruikt voor Word TOC
+            // Artikel kop met nummering placeholder (nummering via ArticleNumberingHelper)
             var effectieveTitel = _artikelService.VervangPlaceholders(artikel.EffectieveTitel, replacements);
-            var kopTekst = $"[[ARTIKEL]] {effectieveTitel}";
 
-            // Maak heading paragraph met Heading1 style voor Word inhoudsopgave
-            var heading = CreateArtikelHeading(kopTekst);
-            elements.Add(heading);
+            switch (artikel.NummeringType)
+            {
+                case "nieuw_nummer":
+                    // Heading1 style voor Word TOC met [[ARTIKEL]] nummering
+                    elements.Add(CreateArtikelHeading($"[[ARTIKEL]] {effectieveTitel}"));
+                    break;
+                case "doornummeren":
+                    // Sub-artikel nummering (1.1, 1.2, etc.)
+                    elements.Add(CreateArtikelHeading($"[[SUBARTIKEL]] {effectieveTitel}"));
+                    break;
+                case "geen_nummer":
+                default:
+                    // Geen nummering (considerans, ondertekening, etc.)
+                    elements.Add(CreateArtikelHeading(effectieveTitel));
+                    break;
+            }
 
             // Maak body paragraphs (split op newlines)
             var bodyParagraphs = CreateBodyParagraphs(verwerkteTekst);

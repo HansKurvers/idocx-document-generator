@@ -1354,6 +1354,7 @@ namespace scheidingsdesk_document_generator.Services
                         t.help_tekst,
                         t.versie,
                         t.is_actief,
+                        t.nummering_type,
                         -- Gebruiker aanpassingen
                         ga.aangepaste_titel AS gebruiker_titel,
                         ga.aangepaste_tekst AS gebruiker_tekst,
@@ -1401,6 +1402,7 @@ namespace scheidingsdesk_document_generator.Services
                         HelpTekst = reader["help_tekst"] == DBNull.Value ? null : ConvertToString(reader["help_tekst"]),
                         Versie = (int)reader["versie"],
                         IsActief = (bool)reader["is_actief"],
+                        NummeringType = reader["nummering_type"] == DBNull.Value ? "doornummeren" : ConvertToString(reader["nummering_type"]),
                         // Gebruiker aanpassingen
                         GebruikerTitel = reader["gebruiker_titel"] == DBNull.Value ? null : ConvertToString(reader["gebruiker_titel"]),
                         GebruikerTekst = reader["gebruiker_tekst"] == DBNull.Value ? null : ConvertToString(reader["gebruiker_tekst"]),

@@ -159,6 +159,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration
                     _logger.LogInformation($"[{correlationId}] Step 5: Removing content controls");
                     _contentControlProcessor.RemoveContentControls(mainPart.Document, correlationId);
 
+                    // Insert TOC if template doesn't have [[INHOUDSOPGAVE]] placeholder
+                    OpenXmlHelper.InsertTocIfMissing(doc);
+
                     // Populate TOC server-side with actual article entries (no Word dialog)
                     OpenXmlHelper.PopulateTocEntries(doc);
 

@@ -390,6 +390,74 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
         }
 
         /// <summary>
+        /// Inserts a TOC (heading + SimpleField + spacing) before the first Heading1 paragraph
+        /// if the document does not already contain a TOC. This ensures templates without
+        /// the [[INHOUDSOPGAVE]] placeholder still get an auto-generated table of contents.
+        /// </summary>
+        public static void InsertTocIfMissing(WordprocessingDocument document)
+        {
+            var mainPart = document.MainDocumentPart;
+            if (mainPart?.Document?.Body == null) return;
+
+            var body = mainPart.Document.Body;
+
+            // Check if a TOC SimpleField already exists
+            var hasSimpleFieldToc = body.Descendants<SimpleField>()
+                .Any(sf => sf.Instruction?.Value?.Contains("TOC") == true);
+
+            if (hasSimpleFieldToc) return;
+
+            // Check if a TOC complex field already exists (FieldCode with "TOC")
+            var hasComplexFieldToc = body.Descendants<FieldCode>()
+                .Any(fc => fc.Text?.Contains("TOC") == true);
+
+            if (hasComplexFieldToc) return;
+
+            // Find the first Heading1 paragraph
+            var firstHeading1 = body.Elements<Paragraph>()
+                .FirstOrDefault(p => p.ParagraphProperties?.ParagraphStyleId?.Val?.Value == "Heading1");
+
+            if (firstHeading1 == null) return;
+
+            // 1. TOC heading: "Inhoudsopgave" (bold, 14pt, spacing after 200)
+            var tocHeading = new Paragraph();
+            var headingProps = new ParagraphProperties();
+            headingProps.Append(new SpacingBetweenLines() { Before = "0", After = "200" });
+            tocHeading.Append(headingProps);
+
+            var headingRun = new Run();
+            var headingRunProps = new RunProperties();
+            headingRunProps.Append(new Bold());
+            headingRunProps.Append(new FontSize() { Val = "28" }); // 14pt
+            headingRun.Append(headingRunProps);
+            headingRun.Append(new Text("Inhoudsopgave"));
+            tocHeading.Append(headingRun);
+
+            // 2. SimpleField TOC paragraph
+            var tocFieldParagraph = new Paragraph();
+            var tocField = new SimpleField()
+            {
+                Instruction = " TOC \\o \"1-1\" \\h \\z \\u "
+            };
+            var placeholderRun = new Run();
+            var placeholderRunProps = new RunProperties();
+            placeholderRunProps.Append(new Color() { Val = "808080" });
+            placeholderRunProps.Append(new Italic());
+            placeholderRun.Append(placeholderRunProps);
+            placeholderRun.Append(new Text("Inhoudsopgave wordt gegenereerd..."));
+            tocField.Append(placeholderRun);
+            tocFieldParagraph.Append(tocField);
+
+            // 3. Empty spacing paragraph
+            var spacingParagraph = new Paragraph();
+
+            // Insert before the first Heading1
+            body.InsertBefore(spacingParagraph, firstHeading1);
+            body.InsertBefore(tocFieldParagraph, spacingParagraph);
+            body.InsertBefore(tocHeading, tocFieldParagraph);
+        }
+
+        /// <summary>
         /// Populates the TOC field server-side with actual article entries.
         /// This avoids the Word "update fields" dialog that SetUpdateFieldsOnOpen caused.
         /// Finds the SimpleField TOC, collects Heading1 paragraphs, reconstructs

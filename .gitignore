@@ -270,3 +270,6 @@ output/
 
 # Convenant reference/analysis files
 Convenant/
+
+# Manual deploy scripts
+manual-deploy/

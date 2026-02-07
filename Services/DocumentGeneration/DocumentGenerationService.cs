@@ -159,8 +159,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration
                     _logger.LogInformation($"[{correlationId}] Step 5: Removing content controls");
                     _contentControlProcessor.RemoveContentControls(mainPart.Document, correlationId);
 
-                    // Enable automatic field update on open (zodat TOC direct wordt gevuld)
-                    OpenXmlHelper.SetUpdateFieldsOnOpen(doc);
+                    // Populate TOC server-side with actual article entries (no Word dialog)
+                    OpenXmlHelper.PopulateTocEntries(doc);
 
                     // Save changes
                     mainPart.Document.Save();

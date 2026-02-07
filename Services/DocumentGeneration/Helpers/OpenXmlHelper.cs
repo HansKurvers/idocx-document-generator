@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -328,35 +329,187 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
         }
 
         /// <summary>
-        /// Enables automatic field update when the document is opened in Word.
-        /// This ensures the Table of Contents (TOC) is populated automatically.
+        /// Populates the TOC field server-side with actual article entries.
+        /// This avoids the Word "update fields" dialog that SetUpdateFieldsOnOpen caused.
+        /// Finds the SimpleField TOC, collects Heading1 paragraphs, reconstructs
+        /// "Artikel N Title" text, and builds a complex field with hyperlink entries.
         /// </summary>
-        public static void SetUpdateFieldsOnOpen(WordprocessingDocument document)
+        public static void PopulateTocEntries(WordprocessingDocument document)
         {
             var mainPart = document.MainDocumentPart;
-            if (mainPart == null) return;
+            if (mainPart?.Document?.Body == null) return;
 
-            var settingsPart = mainPart.DocumentSettingsPart;
-            if (settingsPart == null)
+            var body = mainPart.Document.Body;
+
+            // Find the paragraph containing the TOC SimpleField
+            var tocSimpleField = body.Descendants<SimpleField>()
+                .FirstOrDefault(sf => sf.Instruction?.Value?.Contains("TOC") == true);
+
+            if (tocSimpleField == null) return;
+
+            var tocParagraph = tocSimpleField.Ancestors<Paragraph>().FirstOrDefault();
+            if (tocParagraph == null) return;
+
+            // Collect all Heading1 paragraphs and reconstruct display text
+            var headings = CollectHeadingEntries(body, document);
+
+            if (headings.Count == 0) return;
+
+            // Add bookmarks to each heading paragraph
+            for (int i = 0; i < headings.Count; i++)
             {
-                settingsPart = mainPart.AddNewPart<DocumentSettingsPart>();
-                settingsPart.Settings = new Settings();
+                var bookmarkName = $"_Toc_Artikel_{i + 1}";
+                var bookmarkId = (i + 100).ToString(); // Use offset to avoid conflicts
+
+                headings[i].BookmarkName = bookmarkName;
+
+                var heading = headings[i].Paragraph;
+                var bmStart = new BookmarkStart { Id = bookmarkId, Name = bookmarkName };
+                var bmEnd = new BookmarkEnd { Id = bookmarkId };
+
+                // Insert bookmark around the heading content
+                heading.InsertAt(bmStart, 0);
+                heading.AppendChild(bmEnd);
             }
 
-            var settings = settingsPart.Settings;
-            if (settings == null)
+            // Build the complex field structure to replace the SimpleField
+            var newElements = BuildTocComplexField(headings);
+
+            // Insert new elements before the TOC paragraph, then remove the original
+            var parent = tocParagraph.Parent;
+            if (parent == null) return;
+
+            foreach (var element in newElements)
             {
-                settings = new Settings();
-                settingsPart.Settings = settings;
+                parent.InsertBefore(element, tocParagraph);
             }
 
-            // Remove existing UpdateFieldsOnOpen if present
-            var existing = settings.GetFirstChild<UpdateFieldsOnOpen>();
-            if (existing != null)
-                existing.Remove();
+            tocParagraph.Remove();
+        }
 
-            settings.PrependChild(new UpdateFieldsOnOpen() { Val = true });
-            settings.Save();
+        /// <summary>
+        /// Collects all Heading1 paragraphs and reconstructs their display text
+        /// by tracking article numbering per NumberingId.
+        /// </summary>
+        private static List<TocEntry> CollectHeadingEntries(Body body, WordprocessingDocument document)
+        {
+            var entries = new List<TocEntry>();
+            var counterByNumId = new Dictionary<int, int>();
+
+            var paragraphs = body.Elements<Paragraph>().ToList();
+
+            foreach (var paragraph in paragraphs)
+            {
+                var pPr = paragraph.ParagraphProperties;
+                if (pPr == null) continue;
+
+                var styleId = pPr.ParagraphStyleId?.Val?.Value;
+                if (styleId != "Heading1") continue;
+
+                var numPr = pPr.NumberingProperties;
+                var levelRef = numPr?.NumberingLevelReference?.Val?.Value;
+
+                // Only process level 0 (artikel headings)
+                if (levelRef != null && levelRef != 0) continue;
+
+                // Get the paragraph text (title only, "Artikel N" is from numbering)
+                var title = string.Join("", paragraph.Descendants<Text>().Select(t => t.Text)).Trim();
+
+                // Determine article number from numbering
+                int artikelNumber;
+                if (numPr != null)
+                {
+                    var numId = numPr.NumberingId?.Val?.Value ?? LegalNumberingHelper.NumberingInstanceId;
+
+                    if (!counterByNumId.ContainsKey(numId))
+                        counterByNumId[numId] = 1;
+
+                    artikelNumber = counterByNumId[numId];
+                    counterByNumId[numId]++;
+                }
+                else
+                {
+                    // Heading without numbering - use sequential number
+                    artikelNumber = entries.Count + 1;
+                }
+
+                var displayText = $"Artikel {artikelNumber} {title}";
+
+                entries.Add(new TocEntry
+                {
+                    Paragraph = paragraph,
+                    DisplayText = displayText,
+                    BookmarkName = "" // Will be set later
+                });
+            }
+
+            return entries;
+        }
+
+        /// <summary>
+        /// Builds a complex field structure for the TOC with hyperlink entries.
+        /// Structure: fldChar begin + instrText + fldChar separate + entries + fldChar end
+        /// </summary>
+        private static List<OpenXmlElement> BuildTocComplexField(List<TocEntry> headings)
+        {
+            var elements = new List<OpenXmlElement>();
+
+            // Paragraph 1: Field begin + instruction + field separate
+            var fieldStartParagraph = new Paragraph();
+            // fldChar begin
+            var beginRun = new Run();
+            beginRun.AppendChild(new FieldChar { FieldCharType = FieldCharValues.Begin });
+            fieldStartParagraph.AppendChild(beginRun);
+            // instrText
+            var instrRun = new Run();
+            instrRun.AppendChild(new FieldCode(" TOC \\o \"1-1\" \\h \\z \\u ") { Space = SpaceProcessingModeValues.Preserve });
+            fieldStartParagraph.AppendChild(instrRun);
+            // fldChar separate
+            var separateRun = new Run();
+            separateRun.AppendChild(new FieldChar { FieldCharType = FieldCharValues.Separate });
+            fieldStartParagraph.AppendChild(separateRun);
+            elements.Add(fieldStartParagraph);
+
+            // TOC entry paragraphs with hyperlinks to bookmarks
+            foreach (var entry in headings)
+            {
+                var entryParagraph = new Paragraph();
+
+                // Paragraph properties for TOC entry styling
+                var pPr = new ParagraphProperties();
+                pPr.AppendChild(new SpacingBetweenLines { After = "40" });
+                entryParagraph.AppendChild(pPr);
+
+                // Create hyperlink to bookmark
+                var hyperlink = new Hyperlink { Anchor = entry.BookmarkName };
+
+                var linkRun = new Run();
+                var linkRunProps = new RunProperties();
+                linkRunProps.AppendChild(new FontSize { Val = "22" }); // 11pt
+                linkRun.AppendChild(linkRunProps);
+                linkRun.AppendChild(new Text(entry.DisplayText) { Space = SpaceProcessingModeValues.Preserve });
+
+                hyperlink.AppendChild(linkRun);
+                entryParagraph.AppendChild(hyperlink);
+
+                elements.Add(entryParagraph);
+            }
+
+            // Final paragraph: fldChar end
+            var fieldEndParagraph = new Paragraph();
+            var endRun = new Run();
+            endRun.AppendChild(new FieldChar { FieldCharType = FieldCharValues.End });
+            fieldEndParagraph.AppendChild(endRun);
+            elements.Add(fieldEndParagraph);
+
+            return elements;
+        }
+
+        private class TocEntry
+        {
+            public Paragraph Paragraph { get; set; } = null!;
+            public string DisplayText { get; set; } = "";
+            public string BookmarkName { get; set; } = "";
         }
 
         /// <summary>

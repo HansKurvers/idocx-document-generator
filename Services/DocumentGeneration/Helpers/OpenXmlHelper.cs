@@ -329,6 +329,67 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
         }
 
         /// <summary>
+        /// Ensures a TOC1 style definition exists in the document's StyleDefinitionsPart.
+        /// This style matches Word's built-in "toc 1" format with right-aligned tab,
+        /// dot leader, and page number positioning.
+        /// </summary>
+        public static void EnsureTocStyle(WordprocessingDocument document)
+        {
+            var mainPart = document.MainDocumentPart;
+            if (mainPart == null) return;
+
+            var stylesPart = mainPart.StyleDefinitionsPart;
+            if (stylesPart == null)
+            {
+                stylesPart = mainPart.AddNewPart<StyleDefinitionsPart>();
+                stylesPart.Styles = new Styles();
+            }
+
+            var styles = stylesPart.Styles ?? (stylesPart.Styles = new Styles());
+
+            // Check of TOC1 al bestaat
+            var existingStyle = styles.Elements<Style>()
+                .FirstOrDefault(s => s.StyleId?.Value == "TOC1");
+
+            if (existingStyle != null) return;
+
+            // Maak TOC1 stijl aan
+            var toc1Style = new Style()
+            {
+                Type = StyleValues.Paragraph,
+                StyleId = "TOC1"
+            };
+
+            toc1Style.Append(new StyleName() { Val = "toc 1" });
+            toc1Style.Append(new BasedOn() { Val = "Normal" });
+            toc1Style.Append(new NextParagraphStyle() { Val = "Normal" });
+            toc1Style.Append(new UIPriority() { Val = 39 });
+
+            // Paragraph properties: right-aligned tab with dot leader
+            var stylePPr = new StyleParagraphProperties();
+            stylePPr.Append(new SpacingBetweenLines() { After = "40" });
+
+            var tabs = new Tabs();
+            tabs.Append(new TabStop()
+            {
+                Val = TabStopValues.Right,
+                Leader = TabStopLeaderCharValues.Dot,
+                Position = 9062
+            });
+            stylePPr.Append(tabs);
+
+            toc1Style.Append(stylePPr);
+
+            // Run properties
+            var styleRPr = new StyleRunProperties();
+            styleRPr.Append(new FontSize() { Val = "22" }); // 11pt
+            toc1Style.Append(styleRPr);
+
+            styles.Append(toc1Style);
+            styles.Save();
+        }
+
+        /// <summary>
         /// Populates the TOC field server-side with actual article entries.
         /// This avoids the Word "update fields" dialog that SetUpdateFieldsOnOpen caused.
         /// Finds the SimpleField TOC, collects Heading1 paragraphs, reconstructs
@@ -340,6 +401,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             if (mainPart?.Document?.Body == null) return;
 
             var body = mainPart.Document.Body;
+
+            // Ensure TOC1 style exists for proper entry formatting
+            EnsureTocStyle(document);
 
             // Find the paragraph containing the TOC SimpleField
             var tocSimpleField = body.Descendants<SimpleField>()
@@ -471,28 +535,54 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             elements.Add(fieldStartParagraph);
 
             // TOC entry paragraphs with hyperlinks to bookmarks
+            int pageNum = 1;
             foreach (var entry in headings)
             {
                 var entryParagraph = new Paragraph();
 
-                // Paragraph properties for TOC entry styling
+                // Paragraph properties: use TOC1 style
                 var pPr = new ParagraphProperties();
-                pPr.AppendChild(new SpacingBetweenLines { After = "40" });
+                pPr.AppendChild(new ParagraphStyleId { Val = "TOC1" });
                 entryParagraph.AppendChild(pPr);
 
                 // Create hyperlink to bookmark
                 var hyperlink = new Hyperlink { Anchor = entry.BookmarkName };
 
-                var linkRun = new Run();
-                var linkRunProps = new RunProperties();
-                linkRunProps.AppendChild(new FontSize { Val = "22" }); // 11pt
-                linkRun.AppendChild(linkRunProps);
-                linkRun.AppendChild(new Text(entry.DisplayText) { Space = SpaceProcessingModeValues.Preserve });
+                // Run 1: Display text (e.g. "Artikel 1 Respectvol ouderschap")
+                var textRun = new Run();
+                textRun.AppendChild(new Text(entry.DisplayText) { Space = SpaceProcessingModeValues.Preserve });
+                hyperlink.AppendChild(textRun);
 
-                hyperlink.AppendChild(linkRun);
+                // Run 2: Tab character (triggers the right-aligned dot leader from TOC1 style)
+                var tabRun = new Run();
+                tabRun.AppendChild(new TabChar());
+                hyperlink.AppendChild(tabRun);
+
+                // Runs 3-7: PAGEREF complex field for page number
+                var pageRefBeginRun = new Run();
+                pageRefBeginRun.AppendChild(new FieldChar { FieldCharType = FieldCharValues.Begin });
+                hyperlink.AppendChild(pageRefBeginRun);
+
+                var pageRefInstrRun = new Run();
+                pageRefInstrRun.AppendChild(new FieldCode($" PAGEREF {entry.BookmarkName} \\h ") { Space = SpaceProcessingModeValues.Preserve });
+                hyperlink.AppendChild(pageRefInstrRun);
+
+                var pageRefSeparateRun = new Run();
+                pageRefSeparateRun.AppendChild(new FieldChar { FieldCharType = FieldCharValues.Separate });
+                hyperlink.AppendChild(pageRefSeparateRun);
+
+                var pageNumRun = new Run();
+                pageNumRun.AppendChild(new Text(pageNum.ToString()));
+                hyperlink.AppendChild(pageNumRun);
+
+                var pageRefEndRun = new Run();
+                pageRefEndRun.AppendChild(new FieldChar { FieldCharType = FieldCharValues.End });
+                hyperlink.AppendChild(pageRefEndRun);
+
                 entryParagraph.AppendChild(hyperlink);
-
                 elements.Add(entryParagraph);
+
+                pageNum++;
             }
 
             // Final paragraph: fldChar end

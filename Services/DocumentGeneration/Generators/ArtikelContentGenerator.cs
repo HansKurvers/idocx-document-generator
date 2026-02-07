@@ -95,25 +95,14 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 return elements;
             }
 
-            // Artikel kop met nummering placeholder (nummering via ArticleNumberingHelper)
+            // Artikel kop met [[ARTIKEL]] placeholder (nummering via ArticleNumberingHelper)
+            // Heading style wordt gebruikt voor Word TOC
             var effectieveTitel = _artikelService.VervangPlaceholders(artikel.EffectieveTitel, replacements);
+            var kopTekst = $"[[ARTIKEL]] {effectieveTitel}";
 
-            switch (artikel.NummeringType)
-            {
-                case "nieuw_nummer":
-                    // Heading1 style voor Word TOC met [[ARTIKEL]] nummering
-                    elements.Add(CreateHeadingParagraph($"[[ARTIKEL]] {effectieveTitel}", "Heading1", "24", "200", "120"));
-                    break;
-                case "doornummeren":
-                    // Heading2 style met [[SUBARTIKEL]] nummering (1.1, 1.2, etc.)
-                    elements.Add(CreateHeadingParagraph($"[[SUBARTIKEL]] {effectieveTitel}", "Heading2", "22", "120", "60"));
-                    break;
-                case "geen_nummer":
-                default:
-                    // Geen nummering, geen heading style (considerans, ondertekening, etc.)
-                    elements.Add(CreateHeadingParagraph(effectieveTitel, null, "24", "200", "120"));
-                    break;
-            }
+            // Maak heading paragraph met Heading1 style voor Word inhoudsopgave
+            var heading = CreateArtikelHeading(kopTekst);
+            elements.Add(heading);
 
             // Maak body paragraphs (split op newlines)
             var bodyParagraphs = CreateBodyParagraphs(verwerkteTekst);
@@ -126,27 +115,18 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
         }
 
         /// <summary>
-        /// Maakt een heading paragraph met configureerbare style en grootte.
+        /// Maakt een artikel heading paragraph met Heading1 style voor Word inhoudsopgave
         /// </summary>
-        /// <param name="text">Tekst inclusief eventuele nummering placeholder</param>
-        /// <param name="headingStyle">Word heading style (bijv. "Heading1", "Heading2") of null voor geen heading style</param>
-        /// <param name="fontSize">Font grootte in half-points (bijv. "24" = 12pt)</param>
-        /// <param name="spaceBefore">Ruimte boven in twips</param>
-        /// <param name="spaceAfter">Ruimte onder in twips</param>
-        private Paragraph CreateHeadingParagraph(string text, string? headingStyle, string fontSize, string spaceBefore, string spaceAfter)
+        private Paragraph CreateArtikelHeading(string text)
         {
             var paragraph = new Paragraph();
             var paragraphProps = new ParagraphProperties();
 
-            if (headingStyle != null)
-            {
-                paragraphProps.Append(new ParagraphStyleId() { Val = headingStyle });
-            }
-
+            paragraphProps.Append(new ParagraphStyleId() { Val = "Heading1" });
             paragraphProps.Append(new SpacingBetweenLines()
             {
-                Before = spaceBefore,
-                After = spaceAfter
+                Before = "200",
+                After = "120"
             });
 
             paragraph.Append(paragraphProps);
@@ -154,7 +134,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             var run = new Run();
             var runProps = new RunProperties();
             runProps.Append(new Bold());
-            runProps.Append(new FontSize() { Val = fontSize });
+            runProps.Append(new FontSize() { Val = "24" }); // 12pt
             run.Append(runProps);
             run.Append(new Text(text));
 

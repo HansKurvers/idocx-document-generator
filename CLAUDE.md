@@ -76,6 +76,19 @@ Alle drie de repositories hebben GitHub Actions workflows voor automatische depl
 
 **Belangrijk**: Na een push naar `development` of `main` wordt automatisch gedeployed. Handmatige deployment is alleen nodig als de GitHub Actions workflow faalt.
 
+### Azure Hostnamen
+
+Azure gebruikt een nieuw URL-formaat met unieke suffix. Dit zijn de actuele hostnamen:
+
+| Service | Omgeving | Hostnaam |
+|---------|----------|----------|
+| **idocx-api** | Staging | `idocx-staging-fwfnghfua7dwcsdd.westeurope-01.azurewebsites.net` |
+| **idocx-api** | Productie | `ouderschaps-api-fvgbfwachxabawgs.westeurope-01.azurewebsites.net` |
+| **idocx-document-gen** | Staging | `idocx-document-staging-fqdtbhhmb0fka6g8.westeurope-01.azurewebsites.net` |
+| **idocx-document-gen** | Productie | `mediation-document-generator.azurewebsites.net` |
+| **idocx-web** | Staging | `jolly-glacier-0e4a15003.6.azurestaticapps.net` |
+| **idocx-web** | Productie | `app.idocx.nl` |
+
 ## Git workflow
 
 - **main** - Productie branch

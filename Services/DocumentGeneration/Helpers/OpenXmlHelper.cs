@@ -328,6 +328,38 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
         }
 
         /// <summary>
+        /// Enables automatic field update when the document is opened in Word.
+        /// This ensures the Table of Contents (TOC) is populated automatically.
+        /// </summary>
+        public static void SetUpdateFieldsOnOpen(WordprocessingDocument document)
+        {
+            var mainPart = document.MainDocumentPart;
+            if (mainPart == null) return;
+
+            var settingsPart = mainPart.DocumentSettingsPart;
+            if (settingsPart == null)
+            {
+                settingsPart = mainPart.AddNewPart<DocumentSettingsPart>();
+                settingsPart.Settings = new Settings();
+            }
+
+            var settings = settingsPart.Settings;
+            if (settings == null)
+            {
+                settings = new Settings();
+                settingsPart.Settings = settings;
+            }
+
+            // Remove existing UpdateFieldsOnOpen if present
+            var existing = settings.GetFirstChild<UpdateFieldsOnOpen>();
+            if (existing != null)
+                existing.Remove();
+
+            settings.PrependChild(new UpdateFieldsOnOpen() { Val = true });
+            settings.Save();
+        }
+
+        /// <summary>
         /// Color constants for consistent styling
         /// </summary>
         public static class Colors

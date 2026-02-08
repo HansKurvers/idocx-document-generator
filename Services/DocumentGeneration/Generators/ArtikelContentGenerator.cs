@@ -58,8 +58,16 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
 
             int artikelCount = 0;
 
-            foreach (var artikel in artikelen)
+            for (int i = 0; i < artikelen.Count; i++)
             {
+                var artikel = artikelen[i];
+
+                // Lege regel vóór een nieuw hoofdartikel (niet voor het eerste artikel)
+                if (artikel.NummeringType == "nieuw_nummer" && artikelCount > 0)
+                {
+                    elements.Add(OpenXmlHelper.CreateEmptyParagraph());
+                }
+
                 // Genereer artikel elementen (nummering wordt later toegepast door ArticleNumberingHelper)
                 var artikelElements = GenerateArtikelContent(artikel, replacements, correlationId);
 
@@ -111,9 +119,6 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 var bodyParagraphs = CreateBodyParagraphs(verwerkteTekst);
                 elements.AddRange(bodyParagraphs);
             }
-
-            // Voeg lege regel toe na artikel
-            elements.Add(OpenXmlHelper.CreateEmptyParagraph());
 
             return elements;
         }

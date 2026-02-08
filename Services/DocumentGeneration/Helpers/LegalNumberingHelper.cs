@@ -8,7 +8,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
     /// Helper voor multi-level juridische nummering.
     /// Gebruikt Word's native list numbering met meerdere levels.
     /// Level 0 = Artikelen (Artikel 1, Artikel 2)
-    /// Level 1 = Subartikelen (1.1, 1.2, 2.1)
+    /// Level 1 = Subartikelen (Artikel 1.1, Artikel 1.2, Artikel 2.1)
     /// </summary>
     public static class LegalNumberingHelper
     {
@@ -103,11 +103,11 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
 
             abstractNum.Append(level0);
 
-            // Level 1: 1.1, 1.2, 2.1, etc. (erft %1 van level 0!)
+            // Level 1: Artikel 1.1, Artikel 1.2, Artikel 2.1, etc. (erft %1 van level 0!)
             var level1 = new Level { LevelIndex = 1 };
             level1.Append(new StartNumberingValue { Val = 1 });
             level1.Append(new NumberingFormat { Val = NumberFormatValues.Decimal });
-            level1.Append(new LevelText { Val = "%1.%2" });  // %1 = artikel nummer, %2 = subartikel nummer
+            level1.Append(new LevelText { Val = "Artikel %1.%2" });  // %1 = artikel nummer, %2 = subartikel nummer
             level1.Append(new LevelJustification { Val = LevelJustificationValues.Left });
 
             var pPr1 = new PreviousParagraphProperties();

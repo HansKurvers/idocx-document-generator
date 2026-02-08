@@ -88,13 +88,6 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             // Verwerk artikel tekst (conditionele blokken en placeholders)
             var verwerkteTekst = _artikelService.VerwerkArtikelTekst(artikel, replacements);
 
-            // Skip artikel als tekst leeg is na verwerking
-            if (string.IsNullOrWhiteSpace(verwerkteTekst))
-            {
-                _logger.LogDebug($"[{correlationId}] Artikel '{artikel.ArtikelCode}' overgeslagen (lege tekst na verwerking)");
-                return elements;
-            }
-
             // Artikel kop met nummering afhankelijk van nummering_type
             var effectieveTitel = _artikelService.VervangPlaceholders(artikel.EffectieveTitel, replacements);
 
@@ -112,9 +105,12 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                     break;
             }
 
-            // Maak body paragraphs (split op newlines)
-            var bodyParagraphs = CreateBodyParagraphs(verwerkteTekst);
-            elements.AddRange(bodyParagraphs);
+            // Maak body paragraphs als er tekst is (split op newlines)
+            if (!string.IsNullOrWhiteSpace(verwerkteTekst))
+            {
+                var bodyParagraphs = CreateBodyParagraphs(verwerkteTekst);
+                elements.AddRange(bodyParagraphs);
+            }
 
             // Voeg lege regel toe na artikel
             elements.Add(OpenXmlHelper.CreateEmptyParagraph());

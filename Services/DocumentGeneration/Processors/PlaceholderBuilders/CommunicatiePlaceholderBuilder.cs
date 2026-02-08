@@ -365,7 +365,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 return "";
 
             var kinderenTekst = GetKinderenTekst(kinderen);
-            var krijgtKrijgen = kinderen.Count == 1 ? "krijgt" : "krijgen";
+            var krijgtKrijgen = kinderen.Count == 1 ? "kan krijgen" : "kunnenkrijgen";
             var zijnHun = kinderen.Count == 1
                 ? (kinderen[0].Geslacht?.ToLowerInvariant() == "m" ? "zijn" : "haar")
                 : "hun";

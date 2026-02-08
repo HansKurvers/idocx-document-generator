@@ -469,7 +469,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
         /// Populates the TOC field server-side with actual article entries.
         /// Finds the SimpleField TOC, collects Heading1 paragraphs, reconstructs
         /// "Artikel N Title" text, and builds a complex field with hyperlink entries.
-        /// PAGEREF velden worden als Dirty gemarkeerd zodat Word ze herberekent bij openen.
+        /// Geen PAGEREF velden — paginanummers zijn verwijderd om de "update fields" dialoog te voorkomen.
         /// </summary>
         public static void PopulateTocEntries(WordprocessingDocument document)
         {
@@ -611,7 +611,6 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             elements.Add(fieldStartParagraph);
 
             // TOC entry paragraphs with hyperlinks to bookmarks
-            int pageNum = 1;
             foreach (var entry in headings)
             {
                 var entryParagraph = new Paragraph();
@@ -629,36 +628,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                 textRun.AppendChild(new Text(entry.DisplayText) { Space = SpaceProcessingModeValues.Preserve });
                 hyperlink.AppendChild(textRun);
 
-                // Run 2: Tab character (triggers the right-aligned dot leader from TOC1 style)
-                var tabRun = new Run();
-                tabRun.AppendChild(new TabChar());
-                hyperlink.AppendChild(tabRun);
-
-                // Runs 3-7: PAGEREF complex field for page number (Dirty = true voor automatische update)
-                var pageRefBeginRun = new Run();
-                pageRefBeginRun.AppendChild(new FieldChar { FieldCharType = FieldCharValues.Begin, Dirty = true });
-                hyperlink.AppendChild(pageRefBeginRun);
-
-                var pageRefInstrRun = new Run();
-                pageRefInstrRun.AppendChild(new FieldCode($" PAGEREF {entry.BookmarkName} \\h ") { Space = SpaceProcessingModeValues.Preserve });
-                hyperlink.AppendChild(pageRefInstrRun);
-
-                var pageRefSeparateRun = new Run();
-                pageRefSeparateRun.AppendChild(new FieldChar { FieldCharType = FieldCharValues.Separate });
-                hyperlink.AppendChild(pageRefSeparateRun);
-
-                var pageNumRun = new Run();
-                pageNumRun.AppendChild(new Text(pageNum.ToString()));
-                hyperlink.AppendChild(pageNumRun);
-
-                var pageRefEndRun = new Run();
-                pageRefEndRun.AppendChild(new FieldChar { FieldCharType = FieldCharValues.End });
-                hyperlink.AppendChild(pageRefEndRun);
-
                 entryParagraph.AppendChild(hyperlink);
                 elements.Add(entryParagraph);
-
-                pageNum++;
             }
 
             // Final paragraph: fldChar end
@@ -669,6 +640,91 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             elements.Add(fieldEndParagraph);
 
             return elements;
+        }
+
+        /// <summary>
+        /// Removes all page number fields (PAGE, NUMPAGES) from footers
+        /// to prevent the "update fields" dialog in Word.
+        /// </summary>
+        public static void RemovePageNumberFields(WordprocessingDocument document)
+        {
+            var mainPart = document.MainDocumentPart;
+            if (mainPart == null) return;
+
+            foreach (var footerPart in mainPart.FooterParts)
+            {
+                var footer = footerPart.Footer;
+                if (footer == null) continue;
+
+                // Remove SimpleField elements containing PAGE or NUMPAGES
+                var simpleFields = footer.Descendants<SimpleField>()
+                    .Where(sf => sf.Instruction?.Value != null &&
+                        (sf.Instruction.Value.Contains("PAGE") || sf.Instruction.Value.Contains("NUMPAGES")))
+                    .ToList();
+
+                foreach (var field in simpleFields)
+                {
+                    var parent = field.Parent;
+                    field.Remove();
+                    // Remove empty parent paragraphs
+                    if (parent is Paragraph p && !p.Descendants<Run>().Any())
+                        p.Remove();
+                }
+
+                // Remove complex field sequences (FieldChar Begin...FieldCode PAGE...FieldChar End)
+                var fieldChars = footer.Descendants<FieldChar>().ToList();
+                var i = 0;
+                while (i < fieldChars.Count)
+                {
+                    var fc = fieldChars[i];
+                    if (fc.FieldCharType?.Value == FieldCharValues.Begin)
+                    {
+                        // Find the instruction between Begin and Separate/End
+                        var beginRun = fc.Parent as Run;
+                        if (beginRun == null) { i++; continue; }
+
+                        var paragraph = beginRun.Parent;
+                        if (paragraph == null) { i++; continue; }
+
+                        // Collect all runs in this field sequence
+                        var fieldRuns = new List<Run>();
+                        var isPageField = false;
+                        var foundEnd = false;
+
+                        var sibling = beginRun;
+                        while (sibling != null)
+                        {
+                            fieldRuns.Add(sibling);
+
+                            var fieldCode = sibling.GetFirstChild<FieldCode>();
+                            if (fieldCode != null && (fieldCode.Text.Contains("PAGE") || fieldCode.Text.Contains("NUMPAGES")))
+                                isPageField = true;
+
+                            var endChar = sibling.GetFirstChild<FieldChar>();
+                            if (endChar != null && endChar.FieldCharType?.Value == FieldCharValues.End && sibling != beginRun)
+                            {
+                                foundEnd = true;
+                                break;
+                            }
+
+                            sibling = sibling.NextSibling<Run>();
+                        }
+
+                        if (isPageField && foundEnd)
+                        {
+                            foreach (var run in fieldRuns)
+                                run.Remove();
+
+                            // Remove empty parent paragraph
+                            if (paragraph is Paragraph para && !para.Descendants<Run>().Any())
+                                para.Remove();
+                        }
+                    }
+                    i++;
+                }
+
+                footer.Save();
+            }
         }
 
         private class TocEntry

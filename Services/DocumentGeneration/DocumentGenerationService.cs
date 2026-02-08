@@ -165,6 +165,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration
                     // Populate TOC server-side with actual article entries (no Word dialog)
                     OpenXmlHelper.PopulateTocEntries(doc);
 
+                    // Remove page number fields from footers to prevent "update fields" dialog
+                    OpenXmlHelper.RemovePageNumberFields(doc);
+
                     // Save changes
                     mainPart.Document.Save();
                     _logger.LogInformation($"[{correlationId}] Document saved successfully");

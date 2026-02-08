@@ -79,19 +79,22 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             PersonData? partij2,
             List<ChildData> kinderen)
         {
+            // Filter minderjarige kinderen voor enkelvoud/meervoud bepaling
+            var minderjarigeKinderen = kinderen.Where(k => k.Leeftijd.HasValue && k.Leeftijd.Value < 18).ToList();
+
             // Villa Pinedo
             AddPlaceholder(replacements, "VillaPinedoKinderen", comm.VillaPinedoKinderen);
-            AddPlaceholder(replacements, "VillaPinedoZin", GetVillaPinedoZin(comm.VillaPinedoKinderen, kinderen));
+            AddPlaceholder(replacements, "VillaPinedoZin", GetVillaPinedoZin(comm.VillaPinedoKinderen, minderjarigeKinderen));
 
             // Betrokkenheid
             AddPlaceholder(replacements, "KinderenBetrokkenheid", comm.KinderenBetrokkenheid);
-            AddPlaceholder(replacements, "BetrokkenheidKindZin", GetBetrokkenheidKindZin(comm.KinderenBetrokkenheid, kinderen));
+            AddPlaceholder(replacements, "BetrokkenheidKindZin", GetBetrokkenheidKindZin(comm.KinderenBetrokkenheid, minderjarigeKinderen));
             AddPlaceholder(replacements, "KiesMethode", comm.KiesMethode);
 
             // Omgangsregeling
             AddPlaceholder(replacements, "OmgangTekstOfSchema", comm.OmgangTekstOfSchema);
             AddPlaceholder(replacements, "OmgangsregelingBeschrijving",
-                GetOmgangsregelingBeschrijving(comm.OmgangTekstOfSchema, comm.OmgangBeschrijving, kinderen.Count));
+                GetOmgangsregelingBeschrijving(comm.OmgangTekstOfSchema, comm.OmgangBeschrijving, minderjarigeKinderen.Count));
 
             // Opvang
             AddPlaceholder(replacements, "Opvang", comm.Opvang);
@@ -100,7 +103,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             // Informatie uitwisseling
             AddPlaceholder(replacements, "InformatieUitwisseling", comm.InformatieUitwisseling);
             AddPlaceholder(replacements, "InformatieUitwisselingBeschrijving",
-                GetInformatieUitwisselingBeschrijving(comm.InformatieUitwisseling, kinderen));
+                GetInformatieUitwisselingBeschrijving(comm.InformatieUitwisseling, minderjarigeKinderen));
             AddPlaceholder(replacements, "BijlageBeslissingen", comm.BijlageBeslissingen);
 
             // Social media
@@ -111,7 +114,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 AddPlaceholder(replacements, "SocialMediaKeuze", keuze);
                 AddPlaceholder(replacements, "SocialMediaLeeftijd", leeftijd);
             }
-            AddPlaceholder(replacements, "SocialMediaBeschrijving", GetSocialMediaBeschrijving(comm.SocialMedia, kinderen));
+            AddPlaceholder(replacements, "SocialMediaBeschrijving", GetSocialMediaBeschrijving(comm.SocialMedia, minderjarigeKinderen));
 
             // Devices
             if (!string.IsNullOrEmpty(comm.MobielTablet))
@@ -122,7 +125,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 AddPlaceholder(replacements, "DeviceTablet", deviceAfspraken.Tablet?.ToString());
                 AddPlaceholder(replacements, "DeviceSmartwatch", deviceAfspraken.Smartwatch?.ToString());
                 AddPlaceholder(replacements, "DeviceLaptop", deviceAfspraken.Laptop?.ToString());
-                AddPlaceholder(replacements, "DevicesBeschrijving", GetDevicesBeschrijving(deviceAfspraken, kinderen));
+                AddPlaceholder(replacements, "DevicesBeschrijving", GetDevicesBeschrijving(deviceAfspraken, minderjarigeKinderen));
             }
 
             // Toezicht apps
@@ -135,19 +138,19 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             // Documenten
             AddPlaceholder(replacements, "IdBewijzen", comm.IdBewijzen);
-            AddPlaceholder(replacements, "IdBewijzenBeschrijving", GetIdBewijzenBeschrijving(comm.IdBewijzen, partij1, partij2, kinderen));
+            AddPlaceholder(replacements, "IdBewijzenBeschrijving", GetIdBewijzenBeschrijving(comm.IdBewijzen, partij1, partij2, minderjarigeKinderen));
 
             // Verzekeringen
             AddPlaceholder(replacements, "Aansprakelijkheidsverzekering", comm.Aansprakelijkheidsverzekering);
             AddPlaceholder(replacements, "AansprakelijkheidsverzekeringBeschrijving",
-                GetAansprakelijkheidsverzekeringBeschrijving(comm.Aansprakelijkheidsverzekering, partij1, partij2, kinderen));
+                GetAansprakelijkheidsverzekeringBeschrijving(comm.Aansprakelijkheidsverzekering, partij1, partij2, minderjarigeKinderen));
             AddPlaceholder(replacements, "Ziektekostenverzekering", comm.Ziektekostenverzekering);
             AddPlaceholder(replacements, "ZiektekostenverzekeringBeschrijving",
-                GetZiektekostenverzekeringBeschrijving(comm.Ziektekostenverzekering, partij1, partij2, kinderen));
+                GetZiektekostenverzekeringBeschrijving(comm.Ziektekostenverzekering, partij1, partij2, minderjarigeKinderen));
 
             // Reizen
             AddPlaceholder(replacements, "ToestemmingReizen", comm.ToestemmingReizen);
-            AddPlaceholder(replacements, "ToestemmingReizenBeschrijving", GetToestemmingReizenBeschrijving(comm.ToestemmingReizen, kinderen));
+            AddPlaceholder(replacements, "ToestemmingReizenBeschrijving", GetToestemmingReizenBeschrijving(comm.ToestemmingReizen, minderjarigeKinderen));
 
             // Toekomst
             AddPlaceholder(replacements, "Jongmeerderjarige", comm.Jongmeerderjarige);
@@ -365,7 +368,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 return "";
 
             var kinderenTekst = GetKinderenTekst(kinderen);
-            var krijgtKrijgen = kinderen.Count == 1 ? "kan krijgen" : "kunnenkrijgen";
+            var krijgtKrijgen = kinderen.Count == 1 ? "kan krijgen" : "kunnen krijgen";
             var zijnHun = kinderen.Count == 1
                 ? (kinderen[0].Geslacht?.ToLowerInvariant() == "m" ? "zijn" : "haar")
                 : "hun";

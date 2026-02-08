@@ -96,6 +96,12 @@ Azure gebruikt een nieuw URL-formaat met unieke suffix. Dit zijn de actuele host
 
 **NOOIT direct op `main` committen of pushen.** Alle wijzigingen gaan via de `development` branch. Commit en push altijd naar `development`. Pas na review/goedkeuring wordt `development` naar `main` gemerged.
 
+### Git Commit & Push Policy
+
+- **NOOIT** uit eigen beweging committen of pushen zonder expliciete toestemming van de gebruiker.
+- **ALTIJD** eerst toestemming vragen via AskUserQuestion voordat je commit en/of pusht: "Mag ik de wijzigingen committen en pushen naar development?" met opties Ja/Nee.
+- Pas na bevestiging uitvoeren.
+
 ### Git Merge Policy
 
 - **NOOIT** uit eigen beweging een merge uitvoeren (bijv. `git merge`, `git rebase` naar een andere branch, of een PR mergen).

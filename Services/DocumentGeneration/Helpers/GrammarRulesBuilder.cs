@@ -120,6 +120,56 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                 rules["hij/zij/ze"] = "hij/zij";
             }
 
+            // === "Alle" rules: based on TOTAL child count (minor + adult) ===
+            int totalCount = children.Count;
+            bool allPlural = totalCount > 1;
+
+            _logger.LogInformation($"[{correlationId}] Building 'alle' grammar rules for {totalCount} total children (allPlural: {allPlural})");
+
+            rules["alle ons kind/onze kinderen"] = DutchLanguageHelper.GetChildTerm(allPlural);
+            rules["alle het kind/de kinderen"] = allPlural ? "de kinderen" : "het kind";
+            rules["alle kind/kinderen"] = allPlural ? "kinderen" : "kind";
+            rules["alle heeft/hebben"] = DutchLanguageHelper.VerbForms.Heeft_Hebben(allPlural);
+            rules["alle is/zijn"] = DutchLanguageHelper.VerbForms.Is_Zijn(allPlural);
+            rules["alle verblijft/verblijven"] = DutchLanguageHelper.VerbForms.Verblijft_Verblijven(allPlural);
+            rules["alle kan/kunnen"] = DutchLanguageHelper.VerbForms.Kan_Kunnen(allPlural);
+            rules["alle zal/zullen"] = DutchLanguageHelper.VerbForms.Zal_Zullen(allPlural);
+            rules["alle moet/moeten"] = DutchLanguageHelper.VerbForms.Moet_Moeten(allPlural);
+            rules["alle wordt/worden"] = DutchLanguageHelper.VerbForms.Wordt_Worden(allPlural);
+            rules["alle blijft/blijven"] = DutchLanguageHelper.VerbForms.Blijft_Blijven(allPlural);
+            rules["alle gaat/gaan"] = DutchLanguageHelper.VerbForms.Gaat_Gaan(allPlural);
+            rules["alle komt/komen"] = DutchLanguageHelper.VerbForms.Komt_Komen(allPlural);
+            rules["alle zou/zouden"] = allPlural ? "zouden" : "zou";
+            rules["alle wil/willen"] = allPlural ? "willen" : "wil";
+            rules["alle mag/mogen"] = allPlural ? "mogen" : "mag";
+            rules["alle doet/doen"] = allPlural ? "doen" : "doet";
+            rules["alle krijgt/krijgen"] = allPlural ? "krijgen" : "krijgt";
+            rules["alle neemt/nemen"] = allPlural ? "nemen" : "neemt";
+            rules["alle brengt/brengen"] = allPlural ? "brengen" : "brengt";
+            rules["alle haalt/halen"] = allPlural ? "halen" : "haalt";
+
+            // "Alle" possessive pronouns
+            rules["alle zijn/haar/hun"] = allPlural ? "hun" : "zijn/haar";
+            rules["alle diens/dier/hun"] = allPlural ? "hun" : "diens/dier";
+
+            // "Alle" gender and count specific pronouns
+            if (allPlural)
+            {
+                rules["alle hem/haar/hen"] = DutchLanguageHelper.GetObjectPronoun(null, isPlural: true);
+                rules["alle hij/zij/ze"] = DutchLanguageHelper.GetSubjectPronoun(null, isPlural: true);
+            }
+            else if (totalCount == 1)
+            {
+                var singleChild = children.First();
+                rules["alle hem/haar/hen"] = DutchLanguageHelper.GetObjectPronoun(singleChild.Geslacht, isPlural: false);
+                rules["alle hij/zij/ze"] = DutchLanguageHelper.GetSubjectPronoun(singleChild.Geslacht, isPlural: false);
+            }
+            else
+            {
+                rules["alle hem/haar/hen"] = "hem/haar";
+                rules["alle hij/zij/ze"] = "hij/zij";
+            }
+
             _logger.LogInformation($"[{correlationId}] Created {rules.Count} grammar rules");
 
             return rules;
@@ -174,7 +224,34 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
 
                 // Object and subject pronouns
                 ["hem/haar/hen"] = isPlural ? "hen" : "hem/haar",
-                ["hij/zij/ze"] = isPlural ? "ze" : "hij/zij"
+                ["hij/zij/ze"] = isPlural ? "ze" : "hij/zij",
+
+                // === "Alle" rules: same as above in simple mode (childCount = total) ===
+                ["alle ons kind/onze kinderen"] = DutchLanguageHelper.GetChildTerm(isPlural),
+                ["alle het kind/de kinderen"] = isPlural ? "de kinderen" : "het kind",
+                ["alle kind/kinderen"] = isPlural ? "kinderen" : "kind",
+                ["alle heeft/hebben"] = DutchLanguageHelper.VerbForms.Heeft_Hebben(isPlural),
+                ["alle is/zijn"] = DutchLanguageHelper.VerbForms.Is_Zijn(isPlural),
+                ["alle verblijft/verblijven"] = DutchLanguageHelper.VerbForms.Verblijft_Verblijven(isPlural),
+                ["alle kan/kunnen"] = DutchLanguageHelper.VerbForms.Kan_Kunnen(isPlural),
+                ["alle zal/zullen"] = DutchLanguageHelper.VerbForms.Zal_Zullen(isPlural),
+                ["alle moet/moeten"] = DutchLanguageHelper.VerbForms.Moet_Moeten(isPlural),
+                ["alle wordt/worden"] = DutchLanguageHelper.VerbForms.Wordt_Worden(isPlural),
+                ["alle blijft/blijven"] = DutchLanguageHelper.VerbForms.Blijft_Blijven(isPlural),
+                ["alle gaat/gaan"] = DutchLanguageHelper.VerbForms.Gaat_Gaan(isPlural),
+                ["alle komt/komen"] = DutchLanguageHelper.VerbForms.Komt_Komen(isPlural),
+                ["alle zou/zouden"] = isPlural ? "zouden" : "zou",
+                ["alle wil/willen"] = isPlural ? "willen" : "wil",
+                ["alle mag/mogen"] = isPlural ? "mogen" : "mag",
+                ["alle doet/doen"] = isPlural ? "doen" : "doet",
+                ["alle krijgt/krijgen"] = isPlural ? "krijgen" : "krijgt",
+                ["alle neemt/nemen"] = isPlural ? "nemen" : "neemt",
+                ["alle brengt/brengen"] = isPlural ? "brengen" : "brengt",
+                ["alle haalt/halen"] = isPlural ? "halen" : "haalt",
+                ["alle zijn/haar/hun"] = isPlural ? "hun" : "zijn/haar",
+                ["alle diens/dier/hun"] = isPlural ? "hun" : "diens/dier",
+                ["alle hem/haar/hen"] = isPlural ? "hen" : "hem/haar",
+                ["alle hij/zij/ze"] = isPlural ? "ze" : "hij/zij"
             };
 
             _logger.LogInformation($"[{correlationId}] Created {rules.Count} simple grammar rules");

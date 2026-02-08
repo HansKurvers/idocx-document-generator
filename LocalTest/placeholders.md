@@ -332,6 +332,36 @@ Opmerking: Gebruik de volledige vorm in je template (bijv. [[heeft/hebben]], nie
 - [[zijn/haar/hun]] - "hun" (meervoud), "zijn" (mannelijk), "haar" (vrouwelijk)
 - [[diens/dier/hun]] - "hun" (meervoud), "diens" (mannelijk), "dier" (vrouwelijk)
 
+Grammatica Regels voor ALLE kinderen (minderjarig + meerderjarig):
+
+Opmerking: Deze placeholders werken hetzelfde als bovenstaande, maar tellen ALLE kinderen (minderjarig + meerderjarig) voor enkelvoud/meervoud. Gebruik dit wanneer een zin betrekking heeft op alle kinderen, niet alleen de minderjarige.
+
+- [[alle kind/kinderen]] - "kinderen" (meervoud) of "kind" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle ons kind/onze kinderen]] - "onze kinderen" (meervoud) of "ons kind" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle het kind/de kinderen]] - "de kinderen" (meervoud) of "het kind" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle heeft/hebben]] - "hebben" (meervoud) of "heeft" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle is/zijn]] - "zijn" (meervoud) of "is" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle verblijft/verblijven]] - "verblijven" (meervoud) of "verblijft" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle kan/kunnen]] - "kunnen" (meervoud) of "kan" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle zal/zullen]] - "zullen" (meervoud) of "zal" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle moet/moeten]] - "moeten" (meervoud) of "moet" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle wordt/worden]] - "worden" (meervoud) of "wordt" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle blijft/blijven]] - "blijven" (meervoud) of "blijft" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle gaat/gaan]] - "gaan" (meervoud) of "gaat" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle komt/komen]] - "komen" (meervoud) of "komt" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle zou/zouden]] - "zouden" (meervoud) of "zou" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle wil/willen]] - "willen" (meervoud) of "wil" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle mag/mogen]] - "mogen" (meervoud) of "mag" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle doet/doen]] - "doen" (meervoud) of "doet" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle krijgt/krijgen]] - "krijgen" (meervoud) of "krijgt" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle neemt/nemen]] - "nemen" (meervoud) of "neemt" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle brengt/brengen]] - "brengen" (meervoud) of "brengt" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle haalt/halen]] - "halen" (meervoud) of "haalt" (enkelvoud) - gebaseerd op ALLE kinderen
+- [[alle hem/haar/hen]] - "hen" (meervoud), "hem" (mannelijk), "haar" (vrouwelijk) - gebaseerd op ALLE kinderen
+- [[alle hij/zij/ze]] - "ze" (meervoud), "hij" (mannelijk), "zij" (vrouwelijk) - gebaseerd op ALLE kinderen
+- [[alle zijn/haar/hun]] - "hun" (meervoud), "zijn" (mannelijk), "haar" (vrouwelijk) - gebaseerd op ALLE kinderen
+- [[alle diens/dier/hun]] - "hun" (meervoud), "diens" (mannelijk), "dier" (vrouwelijk) - gebaseerd op ALLE kinderen
+
 Tabel Placeholders (Plaats op een eigen regel in het document):
 
 - [[TABEL_ALIMENTATIE]] - Genereert alimentatie/financiële afspraken tabel

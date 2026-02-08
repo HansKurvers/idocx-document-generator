@@ -197,6 +197,108 @@ public class GrammarRulesBuilderTests
 
     #endregion
 
+    #region BuildRules "Alle" Rules Tests
+
+    [Fact]
+    public void BuildRules_AlleRules_WithOneMinorAndOneAdult_ReturnsPluralForAlleAndSingularForRegular()
+    {
+        var children = new List<ChildData>
+        {
+            new ChildData
+            {
+                Roepnaam = "Jan",
+                GeboorteDatum = DateTime.Today.AddYears(-20) // volwassen
+            },
+            new ChildData
+            {
+                Roepnaam = "Emma",
+                GeboorteDatum = DateTime.Today.AddYears(-10) // minderjarig
+            }
+        };
+
+        var rules = _builder.BuildRules(children, "test-123");
+
+        // Regular rules: 1 minderjarig = enkelvoud
+        Assert.Equal("heeft", rules["heeft/hebben"]);
+        Assert.Equal("is", rules["is/zijn"]);
+        Assert.Equal("ons kind", rules["ons kind/onze kinderen"]);
+        Assert.Equal("kind", rules["kind/kinderen"]);
+
+        // "Alle" rules: 2 totaal = meervoud
+        Assert.Equal("hebben", rules["alle heeft/hebben"]);
+        Assert.Equal("zijn", rules["alle is/zijn"]);
+        Assert.Equal("onze kinderen", rules["alle ons kind/onze kinderen"]);
+        Assert.Equal("kinderen", rules["alle kind/kinderen"]);
+        Assert.Equal("de kinderen", rules["alle het kind/de kinderen"]);
+        Assert.Equal("verblijven", rules["alle verblijft/verblijven"]);
+        Assert.Equal("kunnen", rules["alle kan/kunnen"]);
+        Assert.Equal("zullen", rules["alle zal/zullen"]);
+        Assert.Equal("moeten", rules["alle moet/moeten"]);
+        Assert.Equal("worden", rules["alle wordt/worden"]);
+    }
+
+    [Fact]
+    public void BuildRules_AlleRules_WithOneChildTotal_ReturnsSingular()
+    {
+        var children = new List<ChildData>
+        {
+            new ChildData
+            {
+                Roepnaam = "Emma",
+                GeboorteDatum = DateTime.Today.AddYears(-10)
+            }
+        };
+
+        var rules = _builder.BuildRules(children, "test-123");
+
+        // Both regular and "alle" should be singular
+        Assert.Equal("heeft", rules["heeft/hebben"]);
+        Assert.Equal("heeft", rules["alle heeft/hebben"]);
+        Assert.Equal("is", rules["alle is/zijn"]);
+        Assert.Equal("ons kind", rules["alle ons kind/onze kinderen"]);
+        Assert.Equal("het kind", rules["alle het kind/de kinderen"]);
+        Assert.Equal("kind", rules["alle kind/kinderen"]);
+    }
+
+    [Fact]
+    public void BuildRules_AllePronouns_WithMultipleChildren_ReturnsPluralPronouns()
+    {
+        var children = new List<ChildData>
+        {
+            new ChildData { Roepnaam = "Jan", Geslacht = "M", GeboorteDatum = DateTime.Today.AddYears(-20) },
+            new ChildData { Roepnaam = "Emma", Geslacht = "V", GeboorteDatum = DateTime.Today.AddYears(-10) }
+        };
+
+        var rules = _builder.BuildRules(children, "test-123");
+
+        // "Alle" pronouns: 2 total = plural
+        Assert.Equal("hen", rules["alle hem/haar/hen"]);
+        Assert.Equal("ze", rules["alle hij/zij/ze"]);
+        Assert.Equal("hun", rules["alle zijn/haar/hun"]);
+        Assert.Equal("hun", rules["alle diens/dier/hun"]);
+    }
+
+    [Fact]
+    public void BuildRules_AllePronouns_WithOneMaleChild_ReturnsMalePronouns()
+    {
+        var children = new List<ChildData>
+        {
+            new ChildData
+            {
+                Roepnaam = "Lucas",
+                Geslacht = "M",
+                GeboorteDatum = DateTime.Today.AddYears(-10)
+            }
+        };
+
+        var rules = _builder.BuildRules(children, "test-123");
+
+        Assert.Equal("hem", rules["alle hem/haar/hen"]);
+        Assert.Equal("hij", rules["alle hij/zij/ze"]);
+    }
+
+    #endregion
+
     #region BuildSimpleRules Tests
 
     [Fact]
@@ -278,6 +380,38 @@ public class GrammarRulesBuilderTests
         var verbKey = rules.Keys.FirstOrDefault(k => rules[k] == expected);
         Assert.NotNull(verbKey);
         Assert.Equal(expected, rules[verbKey]);
+    }
+
+    [Fact]
+    public void BuildSimpleRules_ContainsAllAlleVerbForms()
+    {
+        var rules = _builder.BuildSimpleRules(1, "test-123");
+
+        Assert.Contains("alle ons kind/onze kinderen", rules.Keys);
+        Assert.Contains("alle het kind/de kinderen", rules.Keys);
+        Assert.Contains("alle kind/kinderen", rules.Keys);
+        Assert.Contains("alle heeft/hebben", rules.Keys);
+        Assert.Contains("alle is/zijn", rules.Keys);
+        Assert.Contains("alle verblijft/verblijven", rules.Keys);
+        Assert.Contains("alle kan/kunnen", rules.Keys);
+        Assert.Contains("alle zal/zullen", rules.Keys);
+        Assert.Contains("alle moet/moeten", rules.Keys);
+        Assert.Contains("alle wordt/worden", rules.Keys);
+        Assert.Contains("alle blijft/blijven", rules.Keys);
+        Assert.Contains("alle gaat/gaan", rules.Keys);
+        Assert.Contains("alle komt/komen", rules.Keys);
+        Assert.Contains("alle zou/zouden", rules.Keys);
+        Assert.Contains("alle wil/willen", rules.Keys);
+        Assert.Contains("alle mag/mogen", rules.Keys);
+        Assert.Contains("alle doet/doen", rules.Keys);
+        Assert.Contains("alle krijgt/krijgen", rules.Keys);
+        Assert.Contains("alle neemt/nemen", rules.Keys);
+        Assert.Contains("alle brengt/brengen", rules.Keys);
+        Assert.Contains("alle haalt/halen", rules.Keys);
+        Assert.Contains("alle hem/haar/hen", rules.Keys);
+        Assert.Contains("alle hij/zij/ze", rules.Keys);
+        Assert.Contains("alle zijn/haar/hun", rules.Keys);
+        Assert.Contains("alle diens/dier/hun", rules.Keys);
     }
 
     #endregion

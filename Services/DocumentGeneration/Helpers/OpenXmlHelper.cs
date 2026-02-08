@@ -467,9 +467,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
 
         /// <summary>
         /// Populates the TOC field server-side with actual article entries.
-        /// This avoids the Word "update fields" dialog that SetUpdateFieldsOnOpen caused.
         /// Finds the SimpleField TOC, collects Heading1 paragraphs, reconstructs
         /// "Artikel N Title" text, and builds a complex field with hyperlink entries.
+        /// PAGEREF velden worden als Dirty gemarkeerd zodat Word ze herberekent bij openen.
         /// </summary>
         public static void PopulateTocEntries(WordprocessingDocument document)
         {
@@ -596,7 +596,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
 
             // Paragraph 1: Field begin + instruction + field separate
             var fieldStartParagraph = new Paragraph();
-            // fldChar begin
+            // fldChar begin (NIET dirty markeren, dat triggert "update TOC" dialoog in Word)
             var beginRun = new Run();
             beginRun.AppendChild(new FieldChar { FieldCharType = FieldCharValues.Begin });
             fieldStartParagraph.AppendChild(beginRun);
@@ -634,9 +634,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                 tabRun.AppendChild(new TabChar());
                 hyperlink.AppendChild(tabRun);
 
-                // Runs 3-7: PAGEREF complex field for page number
+                // Runs 3-7: PAGEREF complex field for page number (Dirty = true voor automatische update)
                 var pageRefBeginRun = new Run();
-                pageRefBeginRun.AppendChild(new FieldChar { FieldCharType = FieldCharValues.Begin });
+                pageRefBeginRun.AppendChild(new FieldChar { FieldCharType = FieldCharValues.Begin, Dirty = true });
                 hyperlink.AppendChild(pageRefBeginRun);
 
                 var pageRefInstrRun = new Run();

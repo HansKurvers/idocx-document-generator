@@ -102,7 +102,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             switch (artikel.NummeringType)
             {
                 case "nieuw_nummer":
-                    elements.Add(CreateArtikelHeading($"[[ARTIKEL]] {effectieveTitel}"));
+                    elements.Add(CreateArtikelHeading($"[[ARTIKEL]] {effectieveTitel.ToUpper()}"));
                     break;
                 case "doornummeren":
                     elements.Add(CreateArtikelHeading($"[[SUBARTIKEL]] {effectieveTitel}"));

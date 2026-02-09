@@ -106,7 +106,9 @@ Azure gebruikt een nieuw URL-formaat met unieke suffix. Dit zijn de actuele host
 
 - **NOOIT** uit eigen beweging een merge uitvoeren (bijv. `git merge`, `git rebase` naar een andere branch, of een PR mergen).
 - Een merge mag **alleen** plaatsvinden als de gebruiker hier een **directe, expliciete opdracht** toe geeft.
-- Wanneer de gebruiker opdracht geeft tot een merge, **altijd eerst bevestiging vragen** via AskUserQuestion: "Weet u zeker dat u wilt mergen? Dit kan niet ongedaan worden gemaakt." met opties Ja/Nee. Pas na bevestiging uitvoeren.
+- **ALTIJD** eerst toestemming vragen via AskUserQuestion voordat je een merge uitvoert, ook als de gebruiker zelf om de merge vraagt. Vraag: "Weet u zeker dat u [branch] naar [branch] wilt mergen? Dit kan niet ongedaan worden gemaakt." met opties Ja/Nee.
+- **NOOIT** een merge uitvoeren zonder expliciete bevestiging via AskUserQuestion. Geen uitzonderingen.
+- Pas na bevestiging uitvoeren.
 
 ## Databases & Migraties
 

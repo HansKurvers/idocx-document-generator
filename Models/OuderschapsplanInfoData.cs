@@ -14,6 +14,7 @@ namespace scheidingsdesk_document_generator.Models
         public string? SoortRelatie { get; set; }
         public DateTime? DatumAanvangRelatie { get; set; }
         public string? PlaatsRelatie { get; set; }
+        public bool? OvereenkomstGemaakt { get; set; }
         public string? SoortRelatieVerbreking { get; set; }
         public string? BetrokkenheidKind { get; set; }
         public string? Kiesplan { get; set; }

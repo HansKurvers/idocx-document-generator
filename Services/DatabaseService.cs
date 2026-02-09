@@ -580,6 +580,7 @@ namespace scheidingsdesk_document_generator.Services
                             SoortRelatie = SafeReadString(reader, "soort_relatie"),
                             DatumAanvangRelatie = SafeReadDateTime(reader, "datum_aanvang_relatie"),
                             PlaatsRelatie = SafeReadString(reader, "plaats_relatie"),
+                            OvereenkomstGemaakt = SafeReadBoolean(reader, "overeenkomst_gemaakt"),
                             SoortRelatieVerbreking = SafeReadString(reader, "soort_relatie_verbreking"),
                             BetrokkenheidKind = SafeReadString(reader, "betrokkenheid_kind"),
                             Kiesplan = SafeReadString(reader, "kiesplan"),

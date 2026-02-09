@@ -46,7 +46,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             BuildHypotheekPlaceholders(replacements, convenantInfo);
             BuildVermogensverdelingPlaceholders(replacements, convenantInfo);
             BuildPensioenPlaceholders(replacements, convenantInfo);
-            BuildKwijtingPlaceholders(replacements, convenantInfo);
+            BuildKwijtingPlaceholders(replacements, data, convenantInfo);
             BuildOndertekeningPlaceholders(replacements, convenantInfo);
             BuildConsideransPlaceholders(replacements, data, convenantInfo);
 
@@ -358,9 +358,15 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "BIJZONDER_PARTNERPENSIOEN_BEDRAG", info.BijzonderPartnerpensioenbedrag ?? "");
         }
 
-        private void BuildKwijtingPlaceholders(Dictionary<string, string> replacements, ConvenantInfoData info)
+        private void BuildKwijtingPlaceholders(Dictionary<string, string> replacements, DossierData data, ConvenantInfoData info)
         {
-            AddPlaceholder(replacements, "HUWELIJKSGOEDERENREGIME", info.Huwelijksgoederenregime ?? "");
+            // Derive huwelijksgoederenregime automatically from OuderschapsplanInfo
+            var opInfo = data.OuderschapsplanInfo;
+            var afgeleidRegime = DetermineHuwelijksgoederenregime(opInfo?.SoortRelatie, opInfo?.OvereenkomstGemaakt, opInfo?.DatumAanvangRelatie);
+            var omschrijving = GetHuwelijksgoederenregimeOmschrijving(afgeleidRegime);
+
+            AddPlaceholder(replacements, "HUWELIJKSGOEDERENREGIME", afgeleidRegime);
+            AddPlaceholder(replacements, "HUWELIJKSGOEDERENREGIME_OMSCHRIJVING", omschrijving);
             AddPlaceholder(replacements, "HUWELIJKSGOEDERENREGIME_UITZONDERING", info.HuwelijksgoederenregimeUitzondering ?? "");
             AddPlaceholder(replacements, "HUWELIJKSGOEDERENREGIME_ANDERS", info.HuwelijksgoederenregimeAnders ?? "");
             AddPlaceholder(replacements, "HUWELIJKSVOORWAARDEN_DATUM", FormatDate(info.HuwelijksvoorwaardenDatum));
@@ -369,7 +375,47 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "SLOTBEPALINGEN", info.Slotbepalingen ?? "");
 
             // Condition fields for article selection
-            AddPlaceholder(replacements, "huwelijksgoederenregime", info.Huwelijksgoederenregime ?? "");
+            AddPlaceholder(replacements, "huwelijksgoederenregime", afgeleidRegime);
+        }
+
+        /// <summary>
+        /// Determines the huwelijksgoederenregime (raw value) based on SoortRelatie, OvereenkomstGemaakt, and DatumAanvangRelatie.
+        /// </summary>
+        private string DetermineHuwelijksgoederenregime(string? soortRelatie, bool? overeenkomstGemaakt, DateTime? datumAanvangRelatie)
+        {
+            var relatie = soortRelatie?.Trim().ToLowerInvariant();
+            var heeftOvereenkomst = overeenkomstGemaakt == true;
+            var datumVoor2018 = datumAanvangRelatie.HasValue && datumAanvangRelatie.Value < new DateTime(2018, 1, 1);
+
+            return relatie switch
+            {
+                "gehuwd" when heeftOvereenkomst => "huwelijksvoorwaarden",
+                "gehuwd" when datumVoor2018 => "algehele_gemeenschap_voor_2018",
+                "gehuwd" => "beperkte_gemeenschap_na_2018",
+                "geregistreerd_partnerschap" when heeftOvereenkomst => "partnerschapsvoorwaarden",
+                "geregistreerd_partnerschap" when datumVoor2018 => "algehele_gemeenschap_voor_2018",
+                "geregistreerd_partnerschap" => "beperkte_gemeenschap_na_2018",
+                "samenwonend" when heeftOvereenkomst => "samenlevingsovereenkomst",
+                "samenwonend" => "geen_overeenkomst",
+                _ => ""
+            };
+        }
+
+        /// <summary>
+        /// Returns the Dutch description for a huwelijksgoederenregime raw value.
+        /// </summary>
+        private string GetHuwelijksgoederenregimeOmschrijving(string regime)
+        {
+            return regime switch
+            {
+                "algehele_gemeenschap_voor_2018" => "algehele gemeenschap van goederen",
+                "beperkte_gemeenschap_na_2018" => "beperkte gemeenschap van goederen",
+                "huwelijksvoorwaarden" => "huwelijkse voorwaarden",
+                "partnerschapsvoorwaarden" => "partnerschapsvoorwaarden",
+                "samenlevingsovereenkomst" => "samenlevingsovereenkomst",
+                "geen_overeenkomst" => "",
+                _ => ""
+            };
         }
 
         private void BuildOndertekeningPlaceholders(Dictionary<string, string> replacements, ConvenantInfoData info)

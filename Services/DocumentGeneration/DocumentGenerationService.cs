@@ -155,6 +155,11 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration
                     _logger.LogInformation($"[{correlationId}] Step 4: Processing article numbering");
                     ArticleNumberingHelper.ProcessArticlePlaceholders(doc, _logger, correlationId);
 
+                    // Step 4b: Process list items (bullets and numbered lists)
+                    _logger.LogInformation($"[{correlationId}] Step 4b: Processing list placeholders");
+                    ListNumberingHelper.EnsureListNumberingDefinitions(doc);
+                    ListNumberingHelper.ProcessListPlaceholders(doc, _logger, correlationId);
+
                     // Step 5: Remove content controls
                     _logger.LogInformation($"[{correlationId}] Step 5: Removing content controls");
                     _contentControlProcessor.RemoveContentControls(mainPart.Document, correlationId);

@@ -6,6 +6,7 @@ using scheidingsdesk_document_generator.Services.Artikel;
 using scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generators
 {
@@ -15,6 +16,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
     /// </summary>
     public class ArtikelContentGenerator : ITableGenerator
     {
+        private static readonly Regex BulletLinePattern = new(@"^- ", RegexOptions.Compiled);
+        private static readonly Regex NumberedLinePattern = new(@"^\d+\.\s", RegexOptions.Compiled);
+
         private readonly ILogger<ArtikelContentGenerator> _logger;
         private readonly IArtikelService _artikelService;
 
@@ -202,6 +206,18 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 {
                     // Lege regel wordt een spacing paragraph
                     paragraphs.Add(CreateSpacingParagraph());
+                }
+                else if (BulletLinePattern.IsMatch(regel))
+                {
+                    // Bullet list item: strip "- " prefix, voeg [[BULLET]] marker toe
+                    var bulletTekst = BulletLinePattern.Replace(regel, "", 1);
+                    paragraphs.Add(CreateBodyParagraph("[[BULLET]]" + bulletTekst));
+                }
+                else if (NumberedLinePattern.IsMatch(regel))
+                {
+                    // Genummerd list item: strip "1. " prefix, voeg [[LISTITEM]] marker toe
+                    var listTekst = NumberedLinePattern.Replace(regel, "", 1);
+                    paragraphs.Add(CreateBodyParagraph("[[LISTITEM]]" + listTekst));
                 }
                 else
                 {

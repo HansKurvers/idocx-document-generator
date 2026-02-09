@@ -727,6 +727,16 @@ Kadastraal:
 - [[KADASTRAAL_AANDUIDING]] - Kadastrale aanduiding
 - [[KADASTRAAL_VOLLEDIGE_NOTATIE]] - Volledige kadastrale notatie
 
+Kwijting / Huwelijksgoederenregime:
+- [[HUWELIJKSGOEDERENREGIME]] - Automatisch afgeleid huwelijksgoederenregime (raw waarde, bijv. "huwelijksvoorwaarden", "algehele_gemeenschap_voor_2018"). Wordt bepaald op basis van SoortRelatie, OvereenkomstGemaakt en DatumAanvangRelatie uit stap 2 (Partijen).
+- [[HUWELIJKSGOEDERENREGIME_OMSCHRIJVING]] - Nederlandse omschrijving van het huwelijksgoederenregime (bijv. "huwelijkse voorwaarden", "algehele gemeenschap van goederen")
+- [[HUWELIJKSGOEDERENREGIME_UITZONDERING]] - Uitzondering op het huwelijksgoederenregime
+- [[HUWELIJKSGOEDERENREGIME_ANDERS]] - Andere omschrijving huwelijksgoederenregime
+- [[HUWELIJKSVOORWAARDEN_DATUM]] - Datum huwelijksvoorwaarden
+- [[HUWELIJKSVOORWAARDEN_NOTARIS]] - Notaris huwelijksvoorwaarden
+- [[HUWELIJKSVOORWAARDEN_PLAATS]] - Plaats notaris huwelijksvoorwaarden
+- [[SLOTBEPALINGEN]] - Slotbepalingen
+
 Ondertekening:
 - [[ONDERTEKEN_PLAATS_PARTIJ1]] - Ondertekeningsplaats partij 1
 - [[ONDERTEKEN_PLAATS_PARTIJ2]] - Ondertekeningsplaats partij 2

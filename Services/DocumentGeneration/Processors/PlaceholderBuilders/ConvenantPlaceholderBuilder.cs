@@ -413,7 +413,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 "huwelijksvoorwaarden" => "huwelijkse voorwaarden",
                 "partnerschapsvoorwaarden" => "partnerschapsvoorwaarden",
                 "samenlevingsovereenkomst" => "samenlevingsovereenkomst",
-                "geen_overeenkomst" => "",
+                "geen_overeenkomst" => "samenwonend zonder overeenkomst",
                 _ => ""
             };
         }

@@ -99,18 +99,22 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             // Artikel kop met nummering afhankelijk van nummering_type
             var effectieveTitel = _artikelService.VervangPlaceholders(artikel.EffectieveTitel, replacements);
 
-            switch (artikel.NummeringType)
+            // Alleen een heading toevoegen als de titel niet leeg is
+            if (!string.IsNullOrWhiteSpace(effectieveTitel))
             {
-                case "nieuw_nummer":
-                    elements.Add(CreateArtikelHeading($"[[ARTIKEL]] {effectieveTitel.ToUpper()}"));
-                    break;
-                case "doornummeren":
-                    elements.Add(CreateArtikelHeading($"[[SUBARTIKEL]] {effectieveTitel}"));
-                    break;
-                case "geen_nummer":
-                default:
-                    elements.Add(CreateBoldParagraph(effectieveTitel));
-                    break;
+                switch (artikel.NummeringType)
+                {
+                    case "nieuw_nummer":
+                        elements.Add(CreateArtikelHeading($"[[ARTIKEL]] {effectieveTitel.ToUpper()}"));
+                        break;
+                    case "doornummeren":
+                        elements.Add(CreateArtikelHeading($"[[SUBARTIKEL]] {effectieveTitel}"));
+                        break;
+                    case "geen_nummer":
+                    default:
+                        elements.Add(CreateBoldParagraph(effectieveTitel));
+                        break;
+                }
             }
 
             // Maak body paragraphs als er tekst is (split op newlines)

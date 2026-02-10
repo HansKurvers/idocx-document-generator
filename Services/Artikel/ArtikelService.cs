@@ -188,6 +188,25 @@ namespace scheidingsdesk_document_generator.Services.Artikel
         }
 
         /// <summary>
+        /// Past alle transformaties toe inclusief loop secties
+        /// </summary>
+        public string VerwerkArtikelTekst(ArtikelData artikel, Dictionary<string, string> replacements, DossierData? dossierData)
+        {
+            var tekst = artikel.EffectieveTekst;
+
+            // 1. Verwerk eerst loop secties (expandeer collecties)
+            tekst = LoopSectionProcessor.Process(tekst, dossierData);
+
+            // 2. Verwerk conditionele blokken
+            tekst = VerwerkConditioneleBlokken(tekst, replacements);
+
+            // 3. Vervang daarna placeholders
+            tekst = VervangPlaceholders(tekst, replacements);
+
+            return tekst;
+        }
+
+        /// <summary>
         /// Evalueert of een conditie waar is op basis van de replacements
         /// Ondersteunt:
         /// - "VeldNaam" → veld heeft een waarde (niet leeg)

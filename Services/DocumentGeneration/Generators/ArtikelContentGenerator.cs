@@ -73,7 +73,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 }
 
                 // Genereer artikel elementen (nummering wordt later toegepast door ArticleNumberingHelper)
-                var artikelElements = GenerateArtikelContent(artikel, replacements, correlationId);
+                var artikelElements = GenerateArtikelContent(artikel, replacements, data, correlationId);
 
                 if (artikelElements.Count > 0)
                 {
@@ -93,12 +93,13 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
         private List<OpenXmlElement> GenerateArtikelContent(
             ArtikelData artikel,
             Dictionary<string, string> replacements,
+            DossierData data,
             string correlationId)
         {
             var elements = new List<OpenXmlElement>();
 
-            // Verwerk artikel tekst (conditionele blokken en placeholders)
-            var verwerkteTekst = _artikelService.VerwerkArtikelTekst(artikel, replacements);
+            // Verwerk artikel tekst (loop secties, conditionele blokken en placeholders)
+            var verwerkteTekst = _artikelService.VerwerkArtikelTekst(artikel, replacements, data);
 
             // Artikel kop met nummering afhankelijk van nummering_type
             var effectieveTitel = _artikelService.VervangPlaceholders(artikel.EffectieveTitel, replacements);

@@ -46,5 +46,17 @@ namespace scheidingsdesk_document_generator.Services.Artikel
         /// <param name="replacements">Placeholder waarden</param>
         /// <returns>De volledig verwerkte tekst</returns>
         string VerwerkArtikelTekst(ArtikelData artikel, Dictionary<string, string> replacements);
+
+        /// <summary>
+        /// Past alle transformaties toe op een artikel tekst inclusief loop secties:
+        /// 1. Verwerkt loop secties ([[#COLLECTIE]]...[[/COLLECTIE]])
+        /// 2. Verwerkt conditionele blokken
+        /// 3. Vervangt placeholders
+        /// </summary>
+        /// <param name="artikel">Het artikel om te verwerken</param>
+        /// <param name="replacements">Placeholder waarden</param>
+        /// <param name="dossierData">Dossier data voor loop sectie verwerking</param>
+        /// <returns>De volledig verwerkte tekst</returns>
+        string VerwerkArtikelTekst(ArtikelData artikel, Dictionary<string, string> replacements, DossierData? dossierData);
     }
 }

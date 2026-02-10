@@ -160,21 +160,16 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             abstractNum.Append(new Nsid { Val = "9002ABCD" });
             abstractNum.Append(new MultiLevelType { Val = MultiLevelValues.SingleLevel });
 
-            // Level 0: Bullet met "•"
+            // Level 0: Bullet met "-"
             var level0 = new Level { LevelIndex = 0 };
             level0.Append(new StartNumberingValue { Val = 1 });
             level0.Append(new NumberingFormat { Val = NumberFormatValues.Bullet });
-            level0.Append(new LevelText { Val = "\u2022" }); // bullet character •
+            level0.Append(new LevelText { Val = "-" });
             level0.Append(new LevelJustification { Val = LevelJustificationValues.Left });
 
             var pPr = new PreviousParagraphProperties();
             pPr.Append(new Indentation { Left = "720", Hanging = "360" });
             level0.Append(pPr);
-
-            // Font voor bullet symbool (Symbol font voor consistent bullet karakter)
-            var rPr = new NumberingSymbolRunProperties();
-            rPr.Append(new RunFonts { Ascii = "Symbol", HighAnsi = "Symbol" });
-            level0.Append(rPr);
 
             abstractNum.Append(level0);
 

@@ -83,6 +83,34 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "RoepnamenMinderjarigeKinderen",
                 DutchLanguageHelper.FormatList(roepnamenMinderjaarigenList));
 
+            // Opsomming van alle kinderen met geboortegegevens (voor considerans)
+            var opsommingLines = kinderen
+                .Select(k =>
+                {
+                    var naam = k.VolledigeNaam;
+                    var geboren = DataFormatter.FormatDateDutchLong(k.GeboorteDatum);
+                    var plaats = k.GeboortePlaats ?? "";
+                    return $"{naam}, geboren op {geboren} te {plaats}";
+                })
+                .ToList();
+            AddPlaceholder(replacements, "KINDEREN_OPSOMMING", string.Join("\n", opsommingLines));
+
+            // Minderjarige kinderen zin
+            if (minderjarigeKinderen.Any())
+            {
+                var zijn_is = minderjarigeKinderen.Count == 1 ? "is" : "zijn";
+                AddPlaceholder(replacements, "MINDERJARIGE_KINDEREN_ZIN",
+                    $"Van wie {DutchLanguageHelper.FormatList(roepnamenMinderjaarigenList)} nog minderjarig {zijn_is}.");
+            }
+            else
+            {
+                AddPlaceholder(replacements, "MINDERJARIGE_KINDEREN_ZIN", "");
+            }
+
+            // dit kind/deze kinderen
+            AddPlaceholder(replacements, "DIT_KIND_DEZE_KINDEREN",
+                kinderen.Count == 1 ? "dit kind" : "deze kinderen");
+
             _logger.LogDebug("Added kind placeholders for {Count} children ({MinorCount} minors)",
                 kinderen.Count, minderjarigeKinderen.Count);
         }

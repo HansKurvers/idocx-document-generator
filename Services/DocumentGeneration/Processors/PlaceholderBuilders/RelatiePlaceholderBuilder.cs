@@ -271,9 +271,12 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             if (kinderen.Count == 0)
                 return "";
 
-            var kinderenTekst = kinderen.Count == 1
-                ? kinderen[0].Roepnaam ?? kinderen[0].Voornamen?.Split(' ').FirstOrDefault() ?? "het kind"
-                : "al hun minderjarige kinderen";
+            // Altijd roepnamen gebruiken — bij een mix van meerderjarige en minderjarige
+            // kinderen zou "al hun kinderen" verwarrend zijn.
+            var roepnamen = kinderen
+                .Select(k => k.Roepnaam ?? k.Voornamen?.Split(' ').FirstOrDefault() ?? k.Achternaam)
+                .ToList();
+            var kinderenTekst = DutchLanguageHelper.FormatList(roepnamen);
 
             var partij1Naam = GetPartijBenaming(partij1, false);
             var partij2Naam = GetPartijBenaming(partij2, false);

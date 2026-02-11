@@ -79,6 +79,7 @@ De Ouderschapsplan Document Generator is een serverless applicatie gebouwd met A
      - Prioriteit: `conditie_config` (AND/OR JSON) > `conditie_veld` (simpele string) > altijd zichtbaar
      - Hergebruikt bestaande `ConditieEvaluator` met volledige dossier context
      - Computed velden beschikbaar: `HeeftKinderen`, `AantalKinderen`, `HeeftAlimentatie`, `IsCoOuderschap`, etc.
+     - **Veld-met-veld vergelijking**: Condities kunnen twee velden met elkaar vergelijken via `vergelijkVeld` (bijv. `DatumAanvangRelatie > GeboorteDatumKind1`)
    - Placeholder vervanging binnen artikel teksten
    - `[[ARTIKELEN]]` placeholder genereert alle actieve artikelen (systeem + eigen)
    - Ondersteunt `[[IF:Veld]]...[[ENDIF:Veld]]` binnen artikelen
@@ -1761,7 +1762,28 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.7.0 (Current) - Geavanceerde Conditionele Artikelen
+### v2.8.0 (Current) - Veld-met-veld Vergelijking
+
+**Nieuwe features:**
+- **Veld-met-veld vergelijking** in conditionele logica:
+  - `vergelijkVeld` property op `Conditie` klasse — vergelijk een veld met een ander veld i.p.v. een vaste waarde
+  - `ConditieEvaluator.EvaluateComparison()` haalt compareValue uit context wanneer `VergelijkVeld` gezet is
+  - `DescribeCondition()` toont `[veldnaam]` bij veld-vergelijking
+  - Beschikbare operators bij veld-vergelijking: `=`, `!=`, `>`, `>=`, `<`, `<=`
+
+**Voorbeeld veld-met-veld conditie:**
+```json
+{ "veld": "DatumAanvangRelatie", "operator": ">", "vergelijkVeld": "GeboorteDatumKind1" }
+```
+
+**Technische wijzigingen:**
+- `Models/ConditieModels.cs` - `VergelijkVeld` property op `Conditie` klasse
+- `Services/DocumentGeneration/Processors/ConditieEvaluator.cs` - Evaluatie + beschrijving met `VergelijkVeld`
+
+**Breaking Changes:**
+- Geen! Bestaande condities zonder `vergelijkVeld` werken ongewijzigd (backward compatible).
+
+### v2.7.0 - Geavanceerde Conditionele Artikelen
 
 **Nieuwe features:**
 - **Geavanceerde artikel condities** - AND/OR logica voor artikel zichtbaarheid:

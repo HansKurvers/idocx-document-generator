@@ -82,6 +82,10 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "GezagPartij", info.GezagPartij?.ToString());
             AddPlaceholder(replacements, "GezagTermijnWeken", info.GezagTermijnWeken?.ToString());
 
+            // Considerans-specifieke gezag zin (formelere stijl)
+            var gezagConsiderans = GetGezagConsideransZin(info.GezagPartij, info.GezagTermijnWeken, partij1, partij2, minderjarigeKinderen);
+            AddPlaceholder(replacements, "OUDERLIJK_GEZAG_CONSIDERANS_ZIN", gezagConsiderans);
+
             // Woonplaats (residence)
             AddPlaceholder(replacements, "WoonplaatsRegeling",
                 GetWoonplaatsRegeling(info.WoonplaatsOptie, info.WoonplaatsPartij1, info.WoonplaatsPartij2,
@@ -254,6 +258,38 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 4 => $"{Capitalize(partij1Naam)} heeft alleen het ouderlijk gezag over {kinderenTekst}. Partijen spreken af dat zij binnen {weken} weken na ondertekening van dit ouderschapsplan gezamenlijk gezag zullen regelen.",
                 5 => $"{Capitalize(partij2Naam)} heeft alleen het ouderlijk gezag over {kinderenTekst}. Partijen spreken af dat zij binnen {weken} weken na ondertekening van dit ouderschapsplan gezamenlijk gezag zullen regelen.",
                 _ => ""
+            };
+        }
+
+        private string GetGezagConsideransZin(
+            int? gezagPartij,
+            int? gezagTermijnWeken,
+            PersonData? partij1,
+            PersonData? partij2,
+            List<ChildData> kinderen)
+        {
+            if (kinderen.Count == 0)
+                return "";
+
+            var kinderenTekst = kinderen.Count == 1
+                ? kinderen[0].Roepnaam ?? kinderen[0].Voornamen?.Split(' ').FirstOrDefault() ?? "het kind"
+                : "al hun minderjarige kinderen";
+
+            var partij1Naam = GetPartijBenaming(partij1, false);
+            var partij2Naam = GetPartijBenaming(partij2, false);
+            var weken = gezagTermijnWeken ?? 2;
+
+            // Default to gezamenlijk gezag (1) if not set
+            var gezag = gezagPartij ?? 1;
+
+            return gezag switch
+            {
+                1 => $"Partijen oefenen over {kinderenTekst} gezamenlijk het ouderlijk gezag uit.",
+                2 => $"{Capitalize(partij1Naam)} oefent alleen het ouderlijk gezag over {kinderenTekst} uit.",
+                3 => $"{Capitalize(partij2Naam)} oefent alleen het ouderlijk gezag over {kinderenTekst} uit.",
+                4 => $"{Capitalize(partij1Naam)} oefent voorlopig alleen het ouderlijk gezag over {kinderenTekst} uit. Partijen zullen binnen {weken} weken het gezamenlijk ouderlijk gezag regelen.",
+                5 => $"{Capitalize(partij2Naam)} oefent voorlopig alleen het ouderlijk gezag over {kinderenTekst} uit. Partijen zullen binnen {weken} weken het gezamenlijk ouderlijk gezag regelen.",
+                _ => $"Partijen oefenen over {kinderenTekst} gezamenlijk het ouderlijk gezag uit."
             };
         }
 

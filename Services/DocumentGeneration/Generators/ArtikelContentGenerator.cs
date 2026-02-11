@@ -16,6 +16,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
     /// </summary>
     public class ArtikelContentGenerator : ITableGenerator
     {
+        private static readonly Regex SubBulletLinePattern = new(@"^  - ", RegexOptions.Compiled);
+        private static readonly Regex IndentedLinePattern = new(@"^  (?!- )", RegexOptions.Compiled);
         private static readonly Regex BulletLinePattern = new(@"^- ", RegexOptions.Compiled);
         private static readonly Regex NumberedLinePattern = new(@"^\d+\.\s", RegexOptions.Compiled);
 
@@ -207,6 +209,18 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 {
                     // Lege regel wordt een spacing paragraph
                     paragraphs.Add(CreateSpacingParagraph());
+                }
+                else if (SubBulletLinePattern.IsMatch(regel))
+                {
+                    // Sub-bullet list item: strip "  - " prefix, voeg [[SUBBULLET]] marker toe
+                    var subBulletTekst = SubBulletLinePattern.Replace(regel, "", 1);
+                    paragraphs.Add(CreateBodyParagraph("[[SUBBULLET]]" + subBulletTekst));
+                }
+                else if (IndentedLinePattern.IsMatch(regel))
+                {
+                    // Ingesprongen tekst zonder bullet: strip 2 spaties, voeg [[INDENT]] marker toe
+                    var indentTekst = regel.Substring(2);
+                    paragraphs.Add(CreateBodyParagraph("[[INDENT]]" + indentTekst));
                 }
                 else if (BulletLinePattern.IsMatch(regel))
                 {

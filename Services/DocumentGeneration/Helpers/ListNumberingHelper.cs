@@ -17,12 +17,20 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
         public const int BulletNumberingInstanceId = 9002;
         public const int NumberedAbstractNumId = 9003;
         public const int NumberedNumberingInstanceId = 9003;
+        public const int SubBulletAbstractNumId = 9004;
+        public const int SubBulletNumberingInstanceId = 9004;
 
         private static readonly Regex BulletPattern =
             new(@"\[\[BULLET\]\]", RegexOptions.Compiled);
 
         private static readonly Regex ListItemPattern =
             new(@"\[\[LISTITEM\]\]", RegexOptions.Compiled);
+
+        private static readonly Regex SubBulletPattern =
+            new(@"\[\[SUBBULLET\]\]", RegexOptions.Compiled);
+
+        private static readonly Regex IndentPattern =
+            new(@"\[\[INDENT\]\]", RegexOptions.Compiled);
 
         // Counter voor restart numbering instances (ThreadStatic voor thread safety)
         [ThreadStatic]
@@ -47,6 +55,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             var numbering = numberingPart.Numbering;
 
             EnsureBulletDefinition(numbering);
+            EnsureSubBulletDefinition(numbering);
             EnsureNumberedDefinition(numbering);
 
             numbering.Save();
@@ -74,6 +83,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             _nextNumberedNumId = 9200;
 
             int bulletCount = 0;
+            int subBulletCount = 0;
+            int indentCount = 0;
             int listItemCount = 0;
             bool inNumberedGroup = false;
             int currentNumberedNumId = NumberedNumberingInstanceId;
@@ -94,6 +105,28 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                     ApplyListNumbering(paragraph, BulletNumberingInstanceId);
 
                     bulletCount++;
+                    inNumberedGroup = false;
+                }
+                else if (SubBulletPattern.IsMatch(text))
+                {
+                    // Verwijder marker tekst
+                    RemoveMarkerText(paragraph, SubBulletPattern);
+
+                    // Pas sub-bullet numbering toe (diepere inspringing)
+                    ApplyListNumbering(paragraph, SubBulletNumberingInstanceId);
+
+                    subBulletCount++;
+                    inNumberedGroup = false;
+                }
+                else if (IndentPattern.IsMatch(text))
+                {
+                    // Verwijder marker tekst
+                    RemoveMarkerText(paragraph, IndentPattern);
+
+                    // Pas alleen inspringing toe (geen bullet)
+                    ApplyIndentation(paragraph);
+
+                    indentCount++;
                     inNumberedGroup = false;
                 }
                 else if (ListItemPattern.IsMatch(text))
@@ -121,7 +154,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             }
 
             logger.LogInformation(
-                $"[{correlationId}] List processing completed. Bullets: {bulletCount}, Numbered items: {listItemCount}");
+                $"[{correlationId}] List processing completed. Bullets: {bulletCount}, Sub-bullets: {subBulletCount}, Indented: {indentCount}, Numbered items: {listItemCount}");
         }
 
         /// <summary>
@@ -184,6 +217,45 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             var numInstance = new NumberingInstance(
                 new AbstractNumId { Val = BulletAbstractNumId }
             ) { NumberID = BulletNumberingInstanceId };
+
+            numbering.Append(numInstance);
+        }
+
+        private static void EnsureSubBulletDefinition(Numbering numbering)
+        {
+            // Check of definitie al bestaat
+            var existing = numbering.Elements<AbstractNum>()
+                .FirstOrDefault(a => a.AbstractNumberId?.Value == SubBulletAbstractNumId);
+            if (existing != null) return;
+
+            var abstractNum = new AbstractNum { AbstractNumberId = SubBulletAbstractNumId };
+            abstractNum.Append(new Nsid { Val = "9004ABCD" });
+            abstractNum.Append(new MultiLevelType { Val = MultiLevelValues.SingleLevel });
+
+            // Level 0: Sub-bullet met "-" op dieper niveau
+            var level0 = new Level { LevelIndex = 0 };
+            level0.Append(new StartNumberingValue { Val = 1 });
+            level0.Append(new NumberingFormat { Val = NumberFormatValues.Bullet });
+            level0.Append(new LevelText { Val = "-" });
+            level0.Append(new LevelJustification { Val = LevelJustificationValues.Left });
+
+            var pPr = new PreviousParagraphProperties();
+            pPr.Append(new Indentation { Left = "1080", Hanging = "360" });
+            level0.Append(pPr);
+
+            abstractNum.Append(level0);
+
+            // Voeg toe NA bestaande AbstractNums
+            var lastAbstractNum = numbering.Elements<AbstractNum>().LastOrDefault();
+            if (lastAbstractNum != null)
+                lastAbstractNum.InsertAfterSelf(abstractNum);
+            else
+                numbering.PrependChild(abstractNum);
+
+            // NumberingInstance
+            var numInstance = new NumberingInstance(
+                new AbstractNumId { Val = SubBulletAbstractNumId }
+            ) { NumberID = SubBulletNumberingInstanceId };
 
             numbering.Append(numInstance);
         }
@@ -272,6 +344,27 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             {
                 pPr.Append(new Indentation { Left = "720", Hanging = "360" });
             }
+        }
+
+        /// <summary>
+        /// Past alleen inspringing toe op een paragraph (zonder bullet of nummering).
+        /// Gebruikt voor ingesprongen tekst met [[INDENT]] marker.
+        /// </summary>
+        private static void ApplyIndentation(Paragraph paragraph)
+        {
+            var pPr = paragraph.ParagraphProperties;
+            if (pPr == null)
+            {
+                pPr = new ParagraphProperties();
+                paragraph.InsertAt(pPr, 0);
+            }
+
+            // Verwijder bestaande indentation
+            var existingInd = pPr.Indentation;
+            existingInd?.Remove();
+
+            // Voeg indentation toe (zelfde niveau als bullet, maar zonder bullet-karakter)
+            pPr.Append(new Indentation { Left = "720" });
         }
     }
 }

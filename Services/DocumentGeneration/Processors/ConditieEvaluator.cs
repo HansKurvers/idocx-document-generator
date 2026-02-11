@@ -137,8 +137,17 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             var contextKey = context.Keys.FirstOrDefault(k => k.Equals(veld, StringComparison.OrdinalIgnoreCase));
             var fieldValue = contextKey != null ? context[contextKey] : null;
 
-            // Get the comparison value
-            var compareValue = GetCompareValue(conditie.Waarde);
+            // Get the comparison value: from another field or from static value
+            object? compareValue;
+            if (!string.IsNullOrEmpty(conditie.VergelijkVeld))
+            {
+                var compareKey = context.Keys.FirstOrDefault(k => k.Equals(conditie.VergelijkVeld, StringComparison.OrdinalIgnoreCase));
+                compareValue = compareKey != null ? context[compareKey] : null;
+            }
+            else
+            {
+                compareValue = GetCompareValue(conditie.Waarde);
+            }
 
             return EvaluateOperator(op, fieldValue, compareValue);
         }
@@ -360,9 +369,17 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             }
             else if (conditie.IsVoorwaarde)
             {
-                var valueStr = conditie.Waarde.HasValue
-                    ? JsonSerializer.Serialize(conditie.Waarde.Value)
-                    : "null";
+                string valueStr;
+                if (!string.IsNullOrEmpty(conditie.VergelijkVeld))
+                {
+                    valueStr = $"[{conditie.VergelijkVeld}]";
+                }
+                else
+                {
+                    valueStr = conditie.Waarde.HasValue
+                        ? JsonSerializer.Serialize(conditie.Waarde.Value)
+                        : "null";
+                }
                 return $"{conditie.Veld} {conditie.VergelijkingsOperator} {valueStr}";
             }
 

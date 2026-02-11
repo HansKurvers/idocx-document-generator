@@ -54,6 +54,9 @@ namespace scheidingsdesk_document_generator.Models
         [JsonPropertyName("waarde")]
         public JsonElement? Waarde { get; set; }
 
+        [JsonPropertyName("vergelijkVeld")]
+        public string? VergelijkVeld { get; set; }
+
         /// <summary>
         /// Check if this is a group condition (AND/OR)
         /// </summary>

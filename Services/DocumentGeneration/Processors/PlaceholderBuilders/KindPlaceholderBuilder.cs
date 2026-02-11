@@ -99,9 +99,10 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             // Minderjarige kinderen zin
             if (minderjarigeKinderen.Any())
             {
-                var zijn_is = minderjarigeKinderen.Count == 1 ? "is" : "zijn";
-                AddPlaceholder(replacements, "MINDERJARIGE_KINDEREN_ZIN",
-                    $"Van wie {DutchLanguageHelper.FormatList(roepnamenMinderjaarigenList)} nog minderjarig {zijn_is}.");
+                var zin = minderjarigeKinderen.Count == 1
+                    ? $"{roepnamenMinderjaarigenList[0]} is thans nog minderjarig."
+                    : $"Van wie {DutchLanguageHelper.FormatList(roepnamenMinderjaarigenList)} nog minderjarig zijn.";
+                AddPlaceholder(replacements, "MINDERJARIGE_KINDEREN_ZIN", zin);
             }
             else
             {

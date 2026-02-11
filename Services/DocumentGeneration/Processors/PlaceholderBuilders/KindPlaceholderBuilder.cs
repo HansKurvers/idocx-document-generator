@@ -90,7 +90,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                     var naam = k.VolledigeNaam;
                     var geboren = DataFormatter.FormatDateDutchLong(k.GeboorteDatum);
                     var plaats = k.GeboortePlaats ?? "";
-                    return $"{naam}, geboren op {geboren} te {plaats}";
+                    var roepnaam = k.Roepnaam ?? k.Voornamen?.Split(' ').FirstOrDefault() ?? naam;
+                    return $"- {naam}, geboren op {geboren} te {plaats}, hierna te noemen {roepnaam}";
                 })
                 .ToList();
             AddPlaceholder(replacements, "KINDEREN_OPSOMMING", string.Join("\n", opsommingLines));

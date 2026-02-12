@@ -156,15 +156,23 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
 
             paragraph.Append(paragraphProps);
 
-            // Run met bold text
-            var run = new Run();
-            var runProps = new RunProperties();
-            runProps.Append(new Bold());
-            runProps.Append(new FontSize() { Val = "24" }); // 12pt
-            run.Append(runProps);
-            run.Append(new Text(text));
+            // Parse inline formatting; heading is already bold so ** markers just get stripped
+            var segments = InlineFormattingParser.Parse(text);
+            foreach (var segment in segments)
+            {
+                var run = new Run();
+                var runProps = new RunProperties();
+                runProps.Append(new Bold());
+                runProps.Append(new FontSize() { Val = "24" }); // 12pt
+                if (segment.IsUnderline)
+                {
+                    runProps.Append(new Underline() { Val = UnderlineValues.Single });
+                }
+                run.Append(runProps);
+                run.Append(new Text(segment.Text) { Space = SpaceProcessingModeValues.Preserve });
+                paragraph.Append(run);
+            }
 
-            paragraph.Append(run);
             return paragraph;
         }
 
@@ -183,13 +191,23 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             });
             paragraph.Append(paragraphProps);
 
-            var run = new Run();
-            var runProps = new RunProperties();
-            runProps.Append(new Bold());
-            runProps.Append(new FontSize() { Val = "24" }); // 12pt
-            run.Append(runProps);
-            run.Append(new Text(text));
-            paragraph.Append(run);
+            // Parse inline formatting; text is already bold so ** markers just get stripped
+            var segments = InlineFormattingParser.Parse(text);
+            foreach (var segment in segments)
+            {
+                var run = new Run();
+                var runProps = new RunProperties();
+                runProps.Append(new Bold());
+                runProps.Append(new FontSize() { Val = "24" }); // 12pt
+                if (segment.IsUnderline)
+                {
+                    runProps.Append(new Underline() { Val = UnderlineValues.Single });
+                }
+                run.Append(runProps);
+                run.Append(new Text(segment.Text) { Space = SpaceProcessingModeValues.Preserve });
+                paragraph.Append(run);
+            }
+
             return paragraph;
         }
 
@@ -266,14 +284,26 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
 
             paragraph.Append(paragraphProps);
 
-            // Run met text
-            var run = new Run();
-            var runProps = new RunProperties();
-            runProps.Append(new FontSize() { Val = "22" }); // 11pt
-            run.Append(runProps);
-            run.Append(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
+            // Parse inline formatting markers (**bold**, __underline__)
+            var segments = InlineFormattingParser.Parse(text);
+            foreach (var segment in segments)
+            {
+                var run = new Run();
+                var runProps = new RunProperties();
+                runProps.Append(new FontSize() { Val = "22" }); // 11pt
+                if (segment.IsBold)
+                {
+                    runProps.Append(new Bold());
+                }
+                if (segment.IsUnderline)
+                {
+                    runProps.Append(new Underline() { Val = UnderlineValues.Single });
+                }
+                run.Append(runProps);
+                run.Append(new Text(segment.Text) { Space = SpaceProcessingModeValues.Preserve });
+                paragraph.Append(run);
+            }
 
-            paragraph.Append(run);
             return paragraph;
         }
 

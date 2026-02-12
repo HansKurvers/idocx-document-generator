@@ -20,6 +20,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
         private static readonly Regex IndentedLinePattern = new(@"^  (?!- )", RegexOptions.Compiled);
         private static readonly Regex BulletLinePattern = new(@"^- ", RegexOptions.Compiled);
         private static readonly Regex NumberedLinePattern = new(@"^\d+\.\s", RegexOptions.Compiled);
+        private static readonly Regex AlignmentPrefixPattern = new(@"^\{(links|rechts|centreren|uitvullen)\}", RegexOptions.Compiled);
 
         private readonly ILogger<ArtikelContentGenerator> _logger;
         private readonly IArtikelService _artikelService;
@@ -223,38 +224,54 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
 
             foreach (var regel in regels)
             {
-                if (string.IsNullOrWhiteSpace(regel))
+                // Parse alignment prefix
+                JustificationValues? alignment = null;
+                var currentRegel = regel;
+                var alignMatch = AlignmentPrefixPattern.Match(currentRegel);
+                if (alignMatch.Success)
+                {
+                    alignment = alignMatch.Groups[1].Value switch
+                    {
+                        "links" => JustificationValues.Left,
+                        "rechts" => JustificationValues.Right,
+                        "centreren" => JustificationValues.Center,
+                        _ => JustificationValues.Both
+                    };
+                    currentRegel = currentRegel.Substring(alignMatch.Length);
+                }
+
+                if (string.IsNullOrWhiteSpace(currentRegel))
                 {
                     // Lege regel wordt een spacing paragraph
                     paragraphs.Add(CreateSpacingParagraph());
                 }
-                else if (SubBulletLinePattern.IsMatch(regel))
+                else if (SubBulletLinePattern.IsMatch(currentRegel))
                 {
                     // Sub-bullet list item: strip "  - " prefix, voeg [[SUBBULLET]] marker toe
-                    var subBulletTekst = SubBulletLinePattern.Replace(regel, "", 1);
-                    paragraphs.Add(CreateBodyParagraph("[[SUBBULLET]]" + subBulletTekst));
+                    var subBulletTekst = SubBulletLinePattern.Replace(currentRegel, "", 1);
+                    paragraphs.Add(CreateBodyParagraph("[[SUBBULLET]]" + subBulletTekst, alignment));
                 }
-                else if (IndentedLinePattern.IsMatch(regel))
+                else if (IndentedLinePattern.IsMatch(currentRegel))
                 {
                     // Ingesprongen tekst zonder bullet: strip 2 spaties, voeg [[INDENT]] marker toe
-                    var indentTekst = regel.Substring(2);
-                    paragraphs.Add(CreateBodyParagraph("[[INDENT]]" + indentTekst));
+                    var indentTekst = currentRegel.Substring(2);
+                    paragraphs.Add(CreateBodyParagraph("[[INDENT]]" + indentTekst, alignment));
                 }
-                else if (BulletLinePattern.IsMatch(regel))
+                else if (BulletLinePattern.IsMatch(currentRegel))
                 {
                     // Bullet list item: strip "- " prefix, voeg [[BULLET]] marker toe
-                    var bulletTekst = BulletLinePattern.Replace(regel, "", 1);
-                    paragraphs.Add(CreateBodyParagraph("[[BULLET]]" + bulletTekst));
+                    var bulletTekst = BulletLinePattern.Replace(currentRegel, "", 1);
+                    paragraphs.Add(CreateBodyParagraph("[[BULLET]]" + bulletTekst, alignment));
                 }
-                else if (NumberedLinePattern.IsMatch(regel))
+                else if (NumberedLinePattern.IsMatch(currentRegel))
                 {
                     // Genummerd list item: strip "1. " prefix, voeg [[LISTITEM]] marker toe
-                    var listTekst = NumberedLinePattern.Replace(regel, "", 1);
-                    paragraphs.Add(CreateBodyParagraph("[[LISTITEM]]" + listTekst));
+                    var listTekst = NumberedLinePattern.Replace(currentRegel, "", 1);
+                    paragraphs.Add(CreateBodyParagraph("[[LISTITEM]]" + listTekst, alignment));
                 }
                 else
                 {
-                    paragraphs.Add(CreateBodyParagraph(regel));
+                    paragraphs.Add(CreateBodyParagraph(currentRegel, alignment));
                 }
             }
 
@@ -264,7 +281,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
         /// <summary>
         /// Maakt een body paragraph met standaard styling
         /// </summary>
-        private Paragraph CreateBodyParagraph(string text)
+        private Paragraph CreateBodyParagraph(string text, JustificationValues? alignment = null)
         {
             var paragraph = new Paragraph();
 
@@ -280,7 +297,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             });
 
             // Justified alignment
-            paragraphProps.Append(new Justification() { Val = JustificationValues.Both });
+            paragraphProps.Append(new Justification() { Val = alignment ?? JustificationValues.Both });
 
             paragraph.Append(paragraphProps);
 

@@ -101,7 +101,8 @@ namespace scheidingsdesk_document_generator.Services.Artikel
         }
 
         /// <summary>
-        /// Vervangt [[Placeholder]] syntax met waarden uit replacements
+        /// Vervangt [[Placeholder]] syntax met waarden uit replacements.
+        /// Ondersteunt modifiers: [[caps:Placeholder]] voor hoofdletter aan begin van zin.
         /// </summary>
         public string VervangPlaceholders(string tekst, Dictionary<string, string> replacements)
         {
@@ -112,21 +113,63 @@ namespace scheidingsdesk_document_generator.Services.Artikel
             {
                 var placeholder = match.Groups[1].Value;
 
+                // Controleer op modifier prefix (bijv. "caps:Placeholder")
+                var modifier = ExtractModifier(ref placeholder);
+
                 // Probeer exacte match
                 if (replacements.TryGetValue(placeholder, out var value))
-                    return value;
+                    return ApplyModifier(value, modifier);
 
                 // Probeer case-insensitive match
                 var key = replacements.Keys.FirstOrDefault(k =>
                     k.Equals(placeholder, StringComparison.OrdinalIgnoreCase));
 
                 if (key != null)
-                    return replacements[key];
+                    return ApplyModifier(replacements[key], modifier);
 
                 // Placeholder niet gevonden, laat staan voor debugging
                 _logger.LogWarning($"Placeholder niet gevonden: [[{placeholder}]]");
                 return match.Value;
             });
+        }
+
+        /// <summary>
+        /// Extraheert een modifier prefix uit de placeholder naam.
+        /// Bijv. "caps:Partij1Benaming" → modifier="caps", placeholder wordt "Partij1Benaming"
+        /// </summary>
+        private static string? ExtractModifier(ref string placeholder)
+        {
+            var colonIndex = placeholder.IndexOf(':');
+            if (colonIndex > 0)
+            {
+                var prefix = placeholder.Substring(0, colonIndex).ToLowerInvariant();
+                if (prefix == "caps" || prefix == "upper" || prefix == "lower")
+                {
+                    placeholder = placeholder.Substring(colonIndex + 1);
+                    return prefix;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Past de modifier toe op een waarde.
+        /// - caps: eerste letter hoofdletter (voor begin van zin)
+        /// - upper: alles hoofdletters
+        /// - lower: alles kleine letters
+        /// </summary>
+        private static string ApplyModifier(string value, string? modifier)
+        {
+            if (modifier == null || string.IsNullOrEmpty(value))
+                return value;
+
+            return modifier switch
+            {
+                "caps" => char.ToUpper(value[0]) + value.Substring(1),
+                "upper" => value.ToUpperInvariant(),
+                "lower" => value.ToLowerInvariant(),
+                _ => value
+            };
         }
 
         /// <summary>

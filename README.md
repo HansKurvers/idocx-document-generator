@@ -795,6 +795,20 @@ De Word template ondersteunt **200+ placeholders** in meerdere formaten: `[[...]
   - `[[GezagZin]]` / `[[GezagRegeling]]` - Complete zin over ouderlijk gezag
   - `[[RelatieAanvangZin]]` - Complete zin over aanvang relatie
   - `[[OuderschapsplanDoelZin]]` - Complete doelzin voor het ouderschapsplan
+- **Placeholder modifiers**: Pas tekst-transformaties toe direct in de template met een modifier prefix:
+
+  | Modifier | Syntax | Voorbeeld | Resultaat |
+  |----------|--------|-----------|-----------|
+  | `caps` | `[[caps:Placeholder]]` | `[[caps:Partij1Benaming]]` | "de vader" → "De vader" |
+  | `upper` | `[[upper:Placeholder]]` | `[[upper:Partij1Benaming]]` | "de vader" → "DE VADER" |
+  | `lower` | `[[lower:Placeholder]]` | `[[lower:PARTIJ1_AANDUIDING]]` | "De Man" → "de man" |
+
+  **Gebruik**: Handig wanneer een placeholder aan het begin van een zin staat en met een hoofdletter moet beginnen, zonder dat er een aparte `Hoofdletter` variant nodig is:
+  ```
+  [[caps:Partij1Benaming]] heeft het gezag over de kinderen.
+  → "De vader heeft het gezag over de kinderen."
+  ```
+  Modifiers werken met elke bestaande placeholder en zijn case-insensitive (`[[CAPS:...]]` = `[[caps:...]]`).
 
 ---
 

@@ -7,6 +7,7 @@ using scheidingsdesk_document_generator.Services.DocumentGeneration.Processors.P
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processors
 {
@@ -174,6 +175,11 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
         #region Private Helper Methods
 
+        // Regex voor modifier placeholders: [[caps:Name]], [[upper:Name]], [[lower:Name]]
+        private static readonly Regex ModifierPlaceholderPattern = new Regex(
+            @"\[\[(caps|upper|lower):([^\]]+)\]\]",
+            RegexOptions.IgnoreCase);
+
         /// <summary>
         /// Process a single paragraph and replace placeholders.
         /// </summary>
@@ -185,17 +191,48 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             // Combine all text to handle placeholders that might be split
             var fullText = string.Join("", texts.Select(t => t.Text));
 
-            // Check if this paragraph contains any placeholders
+            // Check if this paragraph contains any placeholders (standard or modifier)
             bool hasPlaceholders = replacements.Keys.Any(key =>
                 fullText.Contains($"[[{key}]]") ||
                 fullText.Contains($"{{{key}}}") ||
                 fullText.Contains($"<<{key}>>") ||
                 fullText.Contains($"[{key}]"));
+            bool hasModifierPlaceholders = ModifierPlaceholderPattern.IsMatch(fullText);
 
-            if (!hasPlaceholders) return;
+            if (!hasPlaceholders && !hasModifierPlaceholders) return;
 
-            // Apply replacements with different placeholder formats
             var newText = fullText;
+
+            // 1. Verwerk modifier placeholders eerst (bijv. [[caps:Partij1Benaming]])
+            if (hasModifierPlaceholders)
+            {
+                newText = ModifierPlaceholderPattern.Replace(newText, match =>
+                {
+                    var modifier = match.Groups[1].Value.ToLowerInvariant();
+                    var placeholder = match.Groups[2].Value;
+
+                    // Zoek de waarde in replacements
+                    string? value = null;
+                    if (replacements.TryGetValue(placeholder, out var exactValue))
+                    {
+                        value = exactValue;
+                    }
+                    else
+                    {
+                        var key = replacements.Keys.FirstOrDefault(k =>
+                            k.Equals(placeholder, StringComparison.OrdinalIgnoreCase));
+                        if (key != null)
+                            value = replacements[key];
+                    }
+
+                    if (value == null)
+                        return match.Value; // Placeholder niet gevonden, laat staan
+
+                    return ApplyModifier(value, modifier);
+                });
+            }
+
+            // 2. Verwerk standaard placeholders
             foreach (var replacement in replacements)
             {
                 newText = newText.Replace($"[[{replacement.Key}]]", replacement.Value);
@@ -222,6 +259,26 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Past een modifier toe op een placeholder waarde.
+        /// - caps: eerste letter hoofdletter (voor begin van zin)
+        /// - upper: alles hoofdletters
+        /// - lower: alles kleine letters
+        /// </summary>
+        private static string ApplyModifier(string value, string modifier)
+        {
+            if (string.IsNullOrEmpty(value))
+                return value;
+
+            return modifier switch
+            {
+                "caps" => char.ToUpper(value[0]) + value.Substring(1),
+                "upper" => value.ToUpperInvariant(),
+                "lower" => value.ToLowerInvariant(),
+                _ => value
+            };
         }
 
         /// <summary>

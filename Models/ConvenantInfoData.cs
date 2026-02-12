@@ -198,6 +198,7 @@ namespace scheidingsdesk_document_generator.Models
         public string? MediatorNaam { get; set; }
         public string? MediatorPlaats { get; set; }
         public string? Rechtbank { get; set; }
+        public string? RechtbankLocatie { get; set; }
         public string? AdvocaatPartij1 { get; set; }
         public string? AdvocaatPartij2 { get; set; }
         public bool? HeeftVaststellingsovereenkomst { get; set; }

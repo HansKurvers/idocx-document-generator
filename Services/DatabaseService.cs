@@ -1167,6 +1167,14 @@ namespace scheidingsdesk_document_generator.Services
                 KwijtingAkkoord = SafeReadBoolean(reader, "kwijting_akkoord"),
                 Slotbepalingen = SafeReadString(reader, "slotbepalingen"),
 
+                // CONSIDERANS
+                MediatorNaam = SafeReadString(reader, "mediator_naam"),
+                MediatorPlaats = SafeReadString(reader, "mediator_plaats"),
+                Rechtbank = SafeReadString(reader, "rechtbank"),
+                RechtbankLocatie = SafeReadString(reader, "rechtbank_locatie"),
+                AdvocaatPartij1 = SafeReadString(reader, "advocaat_partij1"),
+                AdvocaatPartij2 = SafeReadString(reader, "advocaat_partij2"),
+
                 // META
                 AangemaaktOp = SafeReadDateTime(reader, "aangemaakt_op") ?? DateTime.MinValue,
                 GewijzigdOp = SafeReadDateTime(reader, "gewijzigd_op") ?? DateTime.MinValue

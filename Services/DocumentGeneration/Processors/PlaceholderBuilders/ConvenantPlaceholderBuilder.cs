@@ -436,6 +436,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "MEDIATOR_NAAM", info.MediatorNaam ?? "");
             AddPlaceholder(replacements, "MEDIATOR_PLAATS", info.MediatorPlaats ?? "");
             AddPlaceholder(replacements, "RECHTBANK", info.Rechtbank ?? "");
+            AddPlaceholder(replacements, "RECHTBANK_LOCATIE", info.RechtbankLocatie ?? "");
             AddPlaceholder(replacements, "ADVOCAAT_PARTIJ1", info.AdvocaatPartij1 ?? "");
             AddPlaceholder(replacements, "ADVOCAAT_PARTIJ2", info.AdvocaatPartij2 ?? "");
 

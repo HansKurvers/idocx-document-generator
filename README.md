@@ -1776,7 +1776,24 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.8.0 (Current) - Veld-met-veld Vergelijking
+### v2.9.0 (Current) - Considerans Data Sync & RECHTBANK_LOCATIE
+
+**Nieuwe features:**
+- **Considerans-velden uit `convenant_info`**: Mediator-, rechtbank- en advocaat-gegevens worden nu gelezen uit `dbo.convenant_info` (voorheen waren deze velden niet gemapped, wat leidde tot lege placeholders in gegenereerde documenten)
+- **`RECHTBANK_LOCATIE` placeholder**: Nieuwe placeholder voor de zittingsplaats van de rechtbank
+
+**Technische wijzigingen:**
+- `Models/ConvenantInfoData.cs` — `RechtbankLocatie` property toegevoegd
+- `Services/DatabaseService.cs` — Considerans-velden (mediator_naam, mediator_plaats, rechtbank, rechtbank_locatie, advocaat_partij1, advocaat_partij2) worden nu gemapped vanuit de database
+- `ConvenantPlaceholderBuilder.cs` — `RECHTBANK_LOCATIE` placeholder toegevoegd
+
+**Database migratie vereist:**
+- `20260212_convenant_info_considerans_kolommen.sql` — 6 nieuwe kolommen op `dbo.convenant_info` + backfill vanuit `dbo.dossiers`
+
+**Breaking Changes:**
+- Geen! `SafeRead` methoden handelen ontbrekende kolommen gracefully af (backward compatible).
+
+### v2.8.0 - Veld-met-veld Vergelijking
 
 **Nieuwe features:**
 - **Veld-met-veld vergelijking** in conditionele logica:

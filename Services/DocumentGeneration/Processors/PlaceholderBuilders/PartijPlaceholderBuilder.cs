@@ -68,6 +68,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, $"{prefix}Email", person.Email);
             AddPlaceholder(replacements, $"{prefix}Geboortedatum", DataFormatter.FormatDate(person.GeboorteDatum));
 
+            // Gender
+            AddPlaceholder(replacements, $"{prefix}Geslacht", FormatGeslacht(person.Geslacht));
+
             // Combined address
             AddPlaceholder(replacements, $"{prefix}VolledigAdres",
                 DataFormatter.FormatAddress(person.Adres, person.Postcode, person.Plaats));
@@ -122,6 +125,17 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 // Not anonymous: use roepnaam
                 return person.Roepnaam ?? person.Voornamen?.Split(' ')[0] ?? "";
             }
+        }
+
+        private static string FormatGeslacht(string? geslacht)
+        {
+            var g = geslacht?.Trim().ToLowerInvariant();
+            return g switch
+            {
+                "m" or "man" => "Man",
+                "v" or "vrouw" => "Vrouw",
+                _ => "Anders"
+            };
         }
 
         private string Capitalize(string? text)

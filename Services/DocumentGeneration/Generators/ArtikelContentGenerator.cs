@@ -165,6 +165,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             {
                 var run = new Run();
                 var runProps = new RunProperties();
+                runProps.Append(new RunFonts() { Ascii = "Arial", HighAnsi = "Arial", ComplexScript = "Arial" });
                 runProps.Append(new Bold());
                 runProps.Append(new FontSize() { Val = "24" }); // 12pt
                 if (segment.IsItalic)
@@ -204,8 +205,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             {
                 var run = new Run();
                 var runProps = new RunProperties();
+                runProps.Append(new RunFonts() { Ascii = "Arial", HighAnsi = "Arial", ComplexScript = "Arial" });
                 runProps.Append(new Bold());
-                runProps.Append(new FontSize() { Val = "24" }); // 12pt
+                runProps.Append(new FontSize() { Val = "22" }); // 11pt
                 if (segment.IsItalic)
                 {
                     runProps.Append(new Italic());
@@ -315,7 +317,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             // Spacing voor body text
             paragraphProps.Append(new SpacingBetweenLines()
             {
-                After = "60",   // 3pt ruimte onder
+                After = "0",    // geen ruimte onder
                 Line = "276",   // 1.15 line spacing
                 LineRule = LineSpacingRuleValues.Auto
             });
@@ -339,6 +341,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             {
                 var run = new Run();
                 var runProps = new RunProperties();
+                runProps.Append(new RunFonts() { Ascii = "Arial", HighAnsi = "Arial", ComplexScript = "Arial" });
                 runProps.Append(new FontSize() { Val = fontSizeVal });
                 if (segment.IsBold)
                 {
@@ -404,6 +407,14 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             var paragraphProps = new ParagraphProperties();
             paragraphProps.Append(new SpacingBetweenLines() { After = "0" });
             paragraph.Append(paragraphProps);
+
+            // Lege run met Arial zodat cursor in lege regels ook Arial gebruikt
+            var run = new Run();
+            var runProps = new RunProperties();
+            runProps.Append(new RunFonts() { Ascii = "Arial", HighAnsi = "Arial", ComplexScript = "Arial" });
+            run.Append(runProps);
+            paragraph.Append(run);
+
             return paragraph;
         }
     }

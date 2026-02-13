@@ -328,6 +328,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
 
             // Run properties
             var styleRPr = new StyleRunProperties();
+            styleRPr.Append(new RunFonts() { Ascii = "Arial", HighAnsi = "Arial", ComplexScript = "Arial" });
             styleRPr.Append(new Bold());
             styleRPr.Append(new FontSize() { Val = "24" }); // 12pt
             heading1Style.Append(styleRPr);

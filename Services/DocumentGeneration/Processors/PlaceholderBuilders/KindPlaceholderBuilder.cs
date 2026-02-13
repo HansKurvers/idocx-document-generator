@@ -85,13 +85,14 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             // Opsomming van alle kinderen met geboortegegevens (voor considerans)
             var opsommingLines = kinderen
-                .Select(k =>
+                .Select((k, index) =>
                 {
                     var naam = k.VolledigeNaam;
                     var geboren = DataFormatter.FormatDateDutchLong(k.GeboorteDatum);
                     var plaats = k.GeboortePlaats ?? "";
                     var roepnaam = k.Roepnaam ?? k.Voornamen?.Split(' ').FirstOrDefault() ?? naam;
-                    return $"[[SUBBULLET]]{naam}, geboren op {geboren} te {plaats}, hierna te noemen {roepnaam}";
+                    var leesteken = index < kinderen.Count - 1 ? ";" : ".";
+                    return $"[[SUBBULLET]]{naam}, geboren op {geboren} te {plaats}, hierna te noemen {roepnaam}{leesteken}";
                 })
                 .ToList();
             AddPlaceholder(replacements, "KINDEREN_OPSOMMING", string.Join("\n", opsommingLines));

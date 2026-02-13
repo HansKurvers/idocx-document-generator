@@ -344,10 +344,10 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             );
             pPr.InsertAt(numPr, 0);
 
-            // Overschrijf bestaande indentation voor consistente opmaak
+            // Verwijder bestaande indentation — laat Word's numbering definitie
+            // de inspringing bepalen (bullet=720, sub-bullet=1080, numbered=720)
             var existingInd = pPr.Indentation;
             existingInd?.Remove();
-            pPr.Append(new Indentation { Left = "720", Hanging = "360" });
         }
 
         /// <summary>

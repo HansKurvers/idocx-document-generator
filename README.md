@@ -1171,6 +1171,26 @@ Deze placeholders worden **automatisch** aangepast op basis van het aantal minde
 - 1 jongen: "[[ons kind/onze kinderen]] [[heeft/hebben]]" → "ons kind heeft"
 - 2 kinderen: "[[ons kind/onze kinderen]] [[heeft/hebben]]" → "onze kinderen hebben"
 
+#### Collectie-grammatica (op basis van JSON-collecties)
+
+Naast kinderen-grammatica worden ook enkelvoud/meervoud regels gegenereerd op basis van het aantal items in JSON-collecties (bankrekeningen, voertuigen, etc.):
+
+| Collectie | Grammatica placeholders |
+|-----------|------------------------|
+| `BANKREKENINGEN_KINDEREN` / `BANKREKENINGEN` | `[[bankrekening/bankrekeningen]]`, `[[de bankrekening/de bankrekeningen]]`, `[[saldo/saldi]]`, `[[het saldo/de saldi]]`, `[[rekeningnummer/rekeningnummers]]`, `[[valt/vallen]]`, `[[staat/staan]]`, `[[blijft/blijven]]`, `[[zal/zullen]]` |
+| `BELEGGINGEN` | `[[belegging/beleggingen]]`, `[[de belegging/de beleggingen]]` |
+| `VOERTUIGEN` | `[[voertuig/voertuigen]]`, `[[het voertuig/de voertuigen]]` |
+| `VERZEKERINGEN` | `[[verzekering/verzekeringen]]`, `[[de verzekering/de verzekeringen]]`, `[[polis/polissen]]`, `[[de polis/de polissen]]` |
+| `SCHULDEN` | `[[schuld/schulden]]`, `[[de schuld/de schulden]]` |
+| `VORDERINGEN` | `[[vordering/vorderingen]]`, `[[de vordering/de vorderingen]]` |
+| `PENSIOENEN` | `[[pensioen/pensioenen]]`, `[[het pensioen/de pensioenen]]` |
+
+**Prioriteit bij gedeelde sleutels:** Collectie-grammatica wordt NA kinderen-grammatica berekend en overschrijft gedeelde sleutels. `[[blijft/blijven]]` en `[[zal/zullen]]` worden dus bepaald door het bankrekening-aantal wanneer er bankrekeningen zijn, anders door het kinderen-aantal.
+
+**Voorbeeld:**
+- 1 bankrekening: "De [[bankrekening/bankrekeningen]] [[blijft/blijven]] bestaan" → "De bankrekening blijft bestaan"
+- 3 bankrekeningen: "De [[bankrekening/bankrekeningen]] [[zal/zullen]] worden opgeheven" → "De bankrekeningen zullen worden opgeheven"
+
 ### Conditionele Secties
 
 De template ondersteunt conditionele secties die alleen worden opgenomen als het veld een waarde heeft:
@@ -1863,12 +1883,13 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.11.0 (Current) - Generiek loop-mechanisme voor JSON-collecties
+### v2.11.0 (Current) - Generiek loop-mechanisme voor JSON-collecties + collectie-grammatica
 
 **Nieuwe features:**
 - **8 nieuwe loop-collecties**: `BANKREKENINGEN_KINDEREN`, `BANKREKENINGEN`, `BELEGGINGEN`, `VOERTUIGEN`, `VERZEKERINGEN`, `SCHULDEN`, `VORDERINGEN`, `PENSIOENEN` — itereer over dynamische lijsten in artikel templates met `[[#COLLECTIE]]...[[/COLLECTIE]]` syntax
 - **Collection Registry Pattern**: Declaratieve registratie van collecties — nieuwe collectie toevoegen = 1 registratie + 1 mapper, geen bestaande code wijzigen
 - **Automatische waarde-vertaling**: Tenaamstelling-codes worden vertaald naar partijnamen, "anders"-velden worden automatisch opgelost, snake_case wordt gehumaniseerd, IBAN's geformateerd
+- **Collectie-grammatica**: Automatisch enkelvoud/meervoud op basis van collectie-aantallen — `[[bankrekening/bankrekeningen]]`, `[[saldo/saldi]]`, `[[valt/vallen]]`, `[[staat/staan]]`, `[[blijft/blijven]]`, `[[zal/zullen]]` en meer voor alle 8 collecties
 
 **Per-collectie variabelen:**
 - `BANKREKENING_IBAN`, `_TENAAMSTELLING`, `_BANKNAAM`, `_SALDO`, `_STATUS`
@@ -1881,10 +1902,13 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 **Technische wijzigingen:**
 - `Services/DocumentGeneration/Processors/LoopSectionProcessor.cs` — Collection Registry, JSON parsing, 8 mappers, helpers (TranslateTenaamstelling, ResolveEffectiveValue, HumanizeSnakeCase, FormatIBAN)
-- `Tests/Processors/LoopSectionProcessorTests.cs` — 27 nieuwe unit tests (totaal 201 tests, 0 failures)
+- `Services/DocumentGeneration/Helpers/GrammarRulesBuilder.cs` — `AddCollectionGrammarRules()` met declaratieve registratie per collectie, `CountJsonArrayItems()` helper
+- `Services/DocumentGeneration/DocumentGenerationService.cs` — Aanroep `AddCollectionGrammarRules()` na kinderen-grammatica
+- `Tests/Processors/LoopSectionProcessorTests.cs` — 27 nieuwe unit tests
+- `Tests/Helpers/GrammarRulesBuilderTests.cs` — 19 nieuwe unit tests (totaal 219 tests, 0 failures)
 
 **Breaking Changes:**
-- Geen! Bestaande kinderen-collecties werken ongewijzigd. ResolveCollection geeft nu expliciet null terug voor onbekende namen zodat JSON-collecties als fallback werken.
+- `[[blijft/blijven]]` en `[[zal/zullen]]` worden nu overschreven door collectie-grammatica wanneer er bankrekeningen bestaan (gebaseerd op bankrekening-aantal i.p.v. kinderen-aantal). Zonder bankrekeningen geldt de kinderen-variant.
 
 ### v2.10.0 - SoortProcedure placeholder + snake_case→PascalCase naming bridge
 

@@ -371,8 +371,10 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             var parentRun = firstText?.Parent as Run;
             var runProperties = parentRun?.RunProperties?.CloneNode(true) as RunProperties;
 
-            // Copy paragraph properties from the original paragraph
+            // Copy paragraph properties from the original paragraph, but strip numbering
+            // (list markers like [[BULLET]] will add their own numbering via ListNumberingHelper)
             var originalParagraphProperties = paragraph.ParagraphProperties?.CloneNode(true) as ParagraphProperties;
+            originalParagraphProperties?.NumberingProperties?.Remove();
 
             // Split the text by newlines
             var lines = newText.Split(new[] { "\n" }, StringSplitOptions.None);

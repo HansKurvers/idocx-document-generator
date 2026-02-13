@@ -98,9 +98,6 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
 
                 if (BulletPattern.IsMatch(text))
                 {
-                    // Verwijder marker tekst
-                    RemoveMarkerText(paragraph, BulletPattern);
-
                     // Pas bullet numbering toe
                     ApplyListNumbering(paragraph, BulletNumberingInstanceId);
 
@@ -109,9 +106,6 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                 }
                 else if (SubBulletPattern.IsMatch(text))
                 {
-                    // Verwijder marker tekst
-                    RemoveMarkerText(paragraph, SubBulletPattern);
-
                     // Pas sub-bullet numbering toe (diepere inspringing)
                     ApplyListNumbering(paragraph, SubBulletNumberingInstanceId);
 
@@ -120,9 +114,6 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                 }
                 else if (IndentPattern.IsMatch(text))
                 {
-                    // Verwijder marker tekst
-                    RemoveMarkerText(paragraph, IndentPattern);
-
                     // Pas alleen inspringing toe (geen bullet)
                     ApplyIndentation(paragraph);
 
@@ -138,9 +129,6 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                         inNumberedGroup = true;
                     }
 
-                    // Verwijder marker tekst
-                    RemoveMarkerText(paragraph, ListItemPattern);
-
                     // Pas genummerde numbering toe
                     ApplyListNumbering(paragraph, currentNumberedNumId);
 
@@ -150,7 +138,12 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                 {
                     // Niet-lijst paragraaf: breek genummerde groep af
                     inNumberedGroup = false;
+                    continue;
                 }
+
+                // Verwijder ALLE list markers uit de paragraaf (voorkomt restanten
+                // wanneer meerdere markers in dezelfde paragraaf staan)
+                RemoveAllListMarkers(paragraph);
             }
 
             logger.LogInformation(
@@ -297,6 +290,19 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             ) { NumberID = NumberedNumberingInstanceId };
 
             numbering.Append(numInstance);
+        }
+
+        /// <summary>
+        /// Verwijdert ALLE bekende list markers uit een paragraaf.
+        /// Voorkomt dat restanten als letterlijke tekst verschijnen wanneer
+        /// meerdere markers in dezelfde paragraaf staan (bijv. [[INDENT]] + [[BULLET]]).
+        /// </summary>
+        private static void RemoveAllListMarkers(Paragraph paragraph)
+        {
+            RemoveMarkerText(paragraph, BulletPattern);
+            RemoveMarkerText(paragraph, SubBulletPattern);
+            RemoveMarkerText(paragraph, IndentPattern);
+            RemoveMarkerText(paragraph, ListItemPattern);
         }
 
         private static string GetParagraphText(Paragraph paragraph)

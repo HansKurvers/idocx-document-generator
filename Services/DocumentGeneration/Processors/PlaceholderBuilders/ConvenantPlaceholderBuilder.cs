@@ -198,22 +198,22 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "PERIODE_DOORBETALEN_1160", info.PeriodeDoorbetalen1160 ?? "zes maanden");
 
             // Condition fields for article selection
-            AddPlaceholder(replacements, "duurzaam_gescheiden", info.DuurzaamGescheiden == true ? "true" : "");
-            AddPlaceholder(replacements, "alimentatie_berekening_aanhechten", info.AlimentatieBerekeningAanhechten == true ? "true" : "");
+            AddPlaceholder(replacements, "duurzaam_gescheiden", info.DuurzaamGescheiden == true ? "true" : "false");
+            AddPlaceholder(replacements, "alimentatie_berekening_aanhechten", info.AlimentatieBerekeningAanhechten == true ? "true" : "false");
             AddPlaceholder(replacements, "berekening_methode", info.BerekeningMethode ?? "");
             AddPlaceholder(replacements, "verdiencapaciteit_type", info.VerdiencapaciteitType ?? "");
             AddPlaceholder(replacements, "partneralimentatie_betaler", info.PartneralimentatieBetaler ?? "");
-            AddPlaceholder(replacements, "partneralimentatie_van_toepassing", !string.IsNullOrEmpty(info.PartneralimentatieBetaler) && info.PartneralimentatieBetaler != "geen" ? "true" : "");
+            AddPlaceholder(replacements, "partneralimentatie_van_toepassing", !string.IsNullOrEmpty(info.PartneralimentatieBetaler) && info.PartneralimentatieBetaler != "geen" ? "true" : "false");
             AddPlaceholder(replacements, "afstand_recht", info.AfstandRecht ?? "");
-            AddPlaceholder(replacements, "jusvergelijking", info.Jusvergelijking == true ? "true" : "");
-            AddPlaceholder(replacements, "bijdrage_hypotheekrente", info.BijdrageHypotheekrente == true ? "true" : "");
-            AddPlaceholder(replacements, "partneralimentatie_afkopen", info.PartneralimentatieAfkopen == true ? "true" : "");
+            AddPlaceholder(replacements, "jusvergelijking", info.Jusvergelijking == true ? "true" : "false");
+            AddPlaceholder(replacements, "bijdrage_hypotheekrente", info.BijdrageHypotheekrente == true ? "true" : "false");
+            AddPlaceholder(replacements, "partneralimentatie_afkopen", info.PartneralimentatieAfkopen == true ? "true" : "false");
             AddPlaceholder(replacements, "afkoop_type", info.AfkoopType ?? "");
             AddPlaceholder(replacements, "niet_wijzigingsbeding", info.NietWijzigingsbeding ?? "");
             AddPlaceholder(replacements, "indexering_type", info.IndexeringType ?? "");
             AddPlaceholder(replacements, "wettelijke_termijn", info.WettelijkeTermijn ?? "");
             AddPlaceholder(replacements, "verlenging_termijn", info.VerlengingTermijn ?? "");
-            AddPlaceholder(replacements, "afwijking_1160", info.Afwijking1160 == true ? "true" : "");
+            AddPlaceholder(replacements, "afwijking_1160", info.Afwijking1160 == true ? "true" : "false");
             AddPlaceholder(replacements, "hoe_afwijken_1160", info.HoeAfwijken1160 ?? "");
         }
 
@@ -448,11 +448,11 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             // Condition fields
             AddPlaceholder(replacements, "is_mediation", info.IsMediation == true ? "true" : "false");
-            AddPlaceholder(replacements, "heeft_vaststellingsovereenkomst", info.HeeftVaststellingsovereenkomst == true ? "true" : "");
-            AddPlaceholder(replacements, "heeft_kinderen_uit_huwelijk", info.HeeftKinderenUitHuwelijk == true ? "true" : "");
-            AddPlaceholder(replacements, "heeft_kinderen_voor_huwelijk", info.HeeftKinderenVoorHuwelijk == true ? "true" : "");
-            AddPlaceholder(replacements, "heeft_spaarrekeningen_kinderen", info.HeeftSpaarrekeningenKinderen == true ? "true" : "");
-            AddPlaceholder(replacements, "heeft_kinderen", data.Kinderen.Any() ? "true" : "");
+            AddPlaceholder(replacements, "heeft_vaststellingsovereenkomst", info.HeeftVaststellingsovereenkomst == true ? "true" : "false");
+            AddPlaceholder(replacements, "heeft_kinderen_uit_huwelijk", info.HeeftKinderenUitHuwelijk == true ? "true" : "false");
+            AddPlaceholder(replacements, "heeft_kinderen_voor_huwelijk", info.HeeftKinderenVoorHuwelijk == true ? "true" : "false");
+            AddPlaceholder(replacements, "heeft_spaarrekeningen_kinderen", info.HeeftSpaarrekeningenKinderen == true ? "true" : "false");
+            AddPlaceholder(replacements, "heeft_kinderen", data.Kinderen.Any() ? "true" : "false");
 
             // Minderjarige kinderen
             var minderjarigen = data.Kinderen.Where(k => IsMinderjarig(k)).ToList();

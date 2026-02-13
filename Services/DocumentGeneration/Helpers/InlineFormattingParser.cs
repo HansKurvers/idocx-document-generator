@@ -7,17 +7,25 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
     {
         public string Text { get; set; } = string.Empty;
         public bool IsBold { get; set; }
+        public bool IsItalic { get; set; }
         public bool IsUnderline { get; set; }
     }
 
     public static class InlineFormattingParser
     {
-        private static readonly Regex InlinePattern = new(
+        // First pass: match **bold** and __underline__
+        private static readonly Regex BoldUnderlinePattern = new(
             @"(\*\*(?:(?!\*\*).)+?\*\*|__(?:(?!__).)+?__)",
             RegexOptions.Compiled);
 
+        // Second pass: match *italic* in remaining plain text
+        private static readonly Regex ItalicPattern = new(
+            @"\*([^*]+?)\*",
+            RegexOptions.Compiled);
+
         /// <summary>
-        /// Parses text containing **bold** and __underline__ markers into formatted segments.
+        /// Parses text containing **bold**, *italic* and __underline__ markers into formatted segments.
+        /// Two-pass strategy: first bold/underline, then italic in remaining plain text.
         /// </summary>
         public static List<FormattedSegment> Parse(string text)
         {
@@ -28,20 +36,17 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                 return segments;
             }
 
+            // First pass: extract bold and underline, collect plain text segments
             int lastIndex = 0;
-            var matches = InlinePattern.Matches(text);
+            var firstPassMatches = BoldUnderlinePattern.Matches(text);
 
-            foreach (Match match in matches)
+            foreach (Match match in firstPassMatches)
             {
-                // Add plain text before this match
+                // Plain text before this match - will be processed for italic
                 if (match.Index > lastIndex)
                 {
-                    segments.Add(new FormattedSegment
-                    {
-                        Text = text.Substring(lastIndex, match.Index - lastIndex),
-                        IsBold = false,
-                        IsUnderline = false
-                    });
+                    var plainText = text.Substring(lastIndex, match.Index - lastIndex);
+                    segments.AddRange(ParseItalic(plainText));
                 }
 
                 var matchedText = match.Value;
@@ -52,6 +57,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                     {
                         Text = matchedText.Substring(2, matchedText.Length - 4),
                         IsBold = true,
+                        IsItalic = false,
                         IsUnderline = false
                     });
                 }
@@ -61,6 +67,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                     {
                         Text = matchedText.Substring(2, matchedText.Length - 4),
                         IsBold = false,
+                        IsItalic = false,
                         IsUnderline = true
                     });
                 }
@@ -68,24 +75,80 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                 lastIndex = match.Index + match.Length;
             }
 
-            // Add remaining plain text after last match
+            // Remaining plain text after last bold/underline match
             if (lastIndex < text.Length)
             {
-                segments.Add(new FormattedSegment
-                {
-                    Text = text.Substring(lastIndex),
-                    IsBold = false,
-                    IsUnderline = false
-                });
+                var remainingText = text.Substring(lastIndex);
+                segments.AddRange(ParseItalic(remainingText));
             }
 
-            // If no matches were found, return the whole text as a single plain segment
+            // If no matches were found at all, parse the whole text for italic
+            if (segments.Count == 0)
+            {
+                segments.AddRange(ParseItalic(text));
+            }
+
+            // If still empty (no formatting at all), return as single plain segment
             if (segments.Count == 0)
             {
                 segments.Add(new FormattedSegment
                 {
                     Text = text,
                     IsBold = false,
+                    IsItalic = false,
+                    IsUnderline = false
+                });
+            }
+
+            return segments;
+        }
+
+        /// <summary>
+        /// Parses *italic* markers in plain text segments.
+        /// </summary>
+        private static List<FormattedSegment> ParseItalic(string text)
+        {
+            var segments = new List<FormattedSegment>();
+
+            if (string.IsNullOrEmpty(text))
+            {
+                return segments;
+            }
+
+            int lastIndex = 0;
+            var matches = ItalicPattern.Matches(text);
+
+            foreach (Match match in matches)
+            {
+                if (match.Index > lastIndex)
+                {
+                    segments.Add(new FormattedSegment
+                    {
+                        Text = text.Substring(lastIndex, match.Index - lastIndex),
+                        IsBold = false,
+                        IsItalic = false,
+                        IsUnderline = false
+                    });
+                }
+
+                segments.Add(new FormattedSegment
+                {
+                    Text = match.Groups[1].Value,
+                    IsBold = false,
+                    IsItalic = true,
+                    IsUnderline = false
+                });
+
+                lastIndex = match.Index + match.Length;
+            }
+
+            if (lastIndex < text.Length)
+            {
+                segments.Add(new FormattedSegment
+                {
+                    Text = text.Substring(lastIndex),
+                    IsBold = false,
+                    IsItalic = false,
                     IsUnderline = false
                 });
             }

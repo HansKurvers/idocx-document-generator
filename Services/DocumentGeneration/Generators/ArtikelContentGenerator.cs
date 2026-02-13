@@ -21,6 +21,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
         private static readonly Regex BulletLinePattern = new(@"^- ", RegexOptions.Compiled);
         private static readonly Regex NumberedLinePattern = new(@"^\d+\.\s", RegexOptions.Compiled);
         private static readonly Regex AlignmentPrefixPattern = new(@"^\{(links|rechts|centreren|uitvullen)\}", RegexOptions.Compiled);
+        private static readonly Regex FontSizePrefixPattern = new(@"^\{(groot|klein)\}", RegexOptions.Compiled);
+        private static readonly Regex HorizontalRulePattern = new(@"^-{3,}$", RegexOptions.Compiled);
 
         private readonly ILogger<ArtikelContentGenerator> _logger;
         private readonly IArtikelService _artikelService;
@@ -165,6 +167,10 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 var runProps = new RunProperties();
                 runProps.Append(new Bold());
                 runProps.Append(new FontSize() { Val = "24" }); // 12pt
+                if (segment.IsItalic)
+                {
+                    runProps.Append(new Italic());
+                }
                 if (segment.IsUnderline)
                 {
                     runProps.Append(new Underline() { Val = UnderlineValues.Single });
@@ -200,6 +206,10 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 var runProps = new RunProperties();
                 runProps.Append(new Bold());
                 runProps.Append(new FontSize() { Val = "24" }); // 12pt
+                if (segment.IsItalic)
+                {
+                    runProps.Append(new Italic());
+                }
                 if (segment.IsUnderline)
                 {
                     runProps.Append(new Underline() { Val = UnderlineValues.Single });
@@ -240,7 +250,21 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                     currentRegel = currentRegel.Substring(alignMatch.Length);
                 }
 
-                if (string.IsNullOrWhiteSpace(currentRegel))
+                // Parse font size prefix (after alignment)
+                string? fontSize = null;
+                var fontMatch = FontSizePrefixPattern.Match(currentRegel);
+                if (fontMatch.Success)
+                {
+                    fontSize = fontMatch.Groups[1].Value;
+                    currentRegel = currentRegel.Substring(fontMatch.Length);
+                }
+
+                // Check for horizontal rule (--- only)
+                if (HorizontalRulePattern.IsMatch(currentRegel.Trim()))
+                {
+                    paragraphs.Add(CreateHorizontalRuleParagraph());
+                }
+                else if (string.IsNullOrWhiteSpace(currentRegel))
                 {
                     // Lege regel wordt een spacing paragraph
                     paragraphs.Add(CreateSpacingParagraph());
@@ -249,29 +273,29 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 {
                     // Sub-bullet list item: strip "  - " prefix, voeg [[SUBBULLET]] marker toe
                     var subBulletTekst = SubBulletLinePattern.Replace(currentRegel, "", 1);
-                    paragraphs.Add(CreateBodyParagraph("[[SUBBULLET]]" + subBulletTekst, alignment));
+                    paragraphs.Add(CreateBodyParagraph("[[SUBBULLET]]" + subBulletTekst, alignment, fontSize));
                 }
                 else if (IndentedLinePattern.IsMatch(currentRegel))
                 {
                     // Ingesprongen tekst zonder bullet: strip 2 spaties, voeg [[INDENT]] marker toe
                     var indentTekst = currentRegel.Substring(2);
-                    paragraphs.Add(CreateBodyParagraph("[[INDENT]]" + indentTekst, alignment));
+                    paragraphs.Add(CreateBodyParagraph("[[INDENT]]" + indentTekst, alignment, fontSize));
                 }
                 else if (BulletLinePattern.IsMatch(currentRegel))
                 {
                     // Bullet list item: strip "- " prefix, voeg [[BULLET]] marker toe
                     var bulletTekst = BulletLinePattern.Replace(currentRegel, "", 1);
-                    paragraphs.Add(CreateBodyParagraph("[[BULLET]]" + bulletTekst, alignment));
+                    paragraphs.Add(CreateBodyParagraph("[[BULLET]]" + bulletTekst, alignment, fontSize));
                 }
                 else if (NumberedLinePattern.IsMatch(currentRegel))
                 {
                     // Genummerd list item: strip "1. " prefix, voeg [[LISTITEM]] marker toe
                     var listTekst = NumberedLinePattern.Replace(currentRegel, "", 1);
-                    paragraphs.Add(CreateBodyParagraph("[[LISTITEM]]" + listTekst, alignment));
+                    paragraphs.Add(CreateBodyParagraph("[[LISTITEM]]" + listTekst, alignment, fontSize));
                 }
                 else
                 {
-                    paragraphs.Add(CreateBodyParagraph(currentRegel, alignment));
+                    paragraphs.Add(CreateBodyParagraph(currentRegel, alignment, fontSize));
                 }
             }
 
@@ -281,7 +305,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
         /// <summary>
         /// Maakt een body paragraph met standaard styling
         /// </summary>
-        private Paragraph CreateBodyParagraph(string text, JustificationValues? alignment = null)
+        private Paragraph CreateBodyParagraph(string text, JustificationValues? alignment = null, string? fontSize = null)
         {
             var paragraph = new Paragraph();
 
@@ -301,16 +325,28 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
 
             paragraph.Append(paragraphProps);
 
-            // Parse inline formatting markers (**bold**, __underline__)
+            // Determine font size in half-points
+            string fontSizeVal = fontSize switch
+            {
+                "groot" => "28",  // 14pt
+                "klein" => "18",  // 9pt
+                _ => "22"         // 11pt (default)
+            };
+
+            // Parse inline formatting markers (**bold**, *italic*, __underline__)
             var segments = InlineFormattingParser.Parse(text);
             foreach (var segment in segments)
             {
                 var run = new Run();
                 var runProps = new RunProperties();
-                runProps.Append(new FontSize() { Val = "22" }); // 11pt
+                runProps.Append(new FontSize() { Val = fontSizeVal });
                 if (segment.IsBold)
                 {
                     runProps.Append(new Bold());
+                }
+                if (segment.IsItalic)
+                {
+                    runProps.Append(new Italic());
                 }
                 if (segment.IsUnderline)
                 {
@@ -320,6 +356,41 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
                 run.Append(new Text(segment.Text) { Space = SpaceProcessingModeValues.Preserve });
                 paragraph.Append(run);
             }
+
+            return paragraph;
+        }
+
+        /// <summary>
+        /// Maakt een horizontale lijn als paragraph met bottom border
+        /// </summary>
+        private Paragraph CreateHorizontalRuleParagraph()
+        {
+            var paragraph = new Paragraph();
+            var paragraphProps = new ParagraphProperties();
+
+            paragraphProps.Append(new SpacingBetweenLines()
+            {
+                Before = "120",
+                After = "120"
+            });
+
+            // Bottom border simuleert een horizontale lijn
+            var borders = new ParagraphBorders();
+            borders.Append(new BottomBorder()
+            {
+                Val = BorderValues.Single,
+                Size = 6,
+                Space = 1,
+                Color = "auto"
+            });
+            paragraphProps.Append(borders);
+
+            paragraph.Append(paragraphProps);
+
+            // Lege run om de paragraph geldig te maken
+            var run = new Run();
+            run.Append(new Text("") { Space = SpaceProcessingModeValues.Preserve });
+            paragraph.Append(run);
 
             return paragraph;
         }

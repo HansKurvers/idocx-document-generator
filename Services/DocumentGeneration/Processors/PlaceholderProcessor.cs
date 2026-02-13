@@ -246,8 +246,16 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 // Check if the new text contains line breaks
                 if (newText.Contains("\n"))
                 {
-                    // Handle line breaks by creating proper Word line breaks
-                    ReplaceTextWithLineBreaks(paragraph, texts, newText);
+                    if (ContainsListMarkers(newText))
+                    {
+                        // List markers require separate paragraphs for Word bullet formatting
+                        ReplaceTextWithParagraphs(paragraph, texts, newText);
+                    }
+                    else
+                    {
+                        // Handle line breaks by creating proper Word line breaks
+                        ReplaceTextWithLineBreaks(paragraph, texts, newText);
+                    }
                 }
                 else
                 {
@@ -338,6 +346,93 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             if (parentRun != null && !parentRun.Descendants<Text>().Any())
             {
                 parentRun.Remove();
+            }
+        }
+
+        /// <summary>
+        /// Checks if text contains list markers ([[BULLET]], [[LISTITEM]], [[SUBBULLET]], [[INDENT]]).
+        /// </summary>
+        private static bool ContainsListMarkers(string text)
+        {
+            return text.Contains("[[BULLET]]") ||
+                   text.Contains("[[LISTITEM]]") ||
+                   text.Contains("[[SUBBULLET]]") ||
+                   text.Contains("[[INDENT]]");
+        }
+
+        /// <summary>
+        /// Replaces text with separate paragraphs for each line.
+        /// Required for list markers because Word bullets need individual paragraphs.
+        /// </summary>
+        private void ReplaceTextWithParagraphs(Paragraph paragraph, List<Text> originalTexts, string newText)
+        {
+            // Get run properties from the first text element
+            var firstText = originalTexts.FirstOrDefault();
+            var parentRun = firstText?.Parent as Run;
+            var runProperties = parentRun?.RunProperties?.CloneNode(true) as RunProperties;
+
+            // Copy paragraph properties from the original paragraph
+            var originalParagraphProperties = paragraph.ParagraphProperties?.CloneNode(true) as ParagraphProperties;
+
+            // Split the text by newlines
+            var lines = newText.Split(new[] { "\n" }, StringSplitOptions.None);
+
+            // Use the current paragraph for the first line
+            // Remove all original text elements
+            foreach (var text in originalTexts)
+            {
+                text.Remove();
+            }
+
+            // Remove the original parent run if it's now empty
+            if (parentRun != null && !parentRun.Descendants<Text>().Any())
+            {
+                parentRun.Remove();
+            }
+
+            // Set the first line in the current paragraph
+            var firstRun = new Run();
+            if (runProperties != null)
+            {
+                firstRun.RunProperties = runProperties.CloneNode(true) as RunProperties;
+            }
+            var firstTextElement = new Text(lines[0]);
+            if (lines[0].StartsWith(" ") || lines[0].EndsWith(" "))
+            {
+                firstTextElement.Space = SpaceProcessingModeValues.Preserve;
+            }
+            firstRun.Append(firstTextElement);
+            paragraph.Append(firstRun);
+
+            // Create new paragraphs for subsequent lines and insert after the current paragraph
+            var insertAfter = paragraph;
+            for (int i = 1; i < lines.Length; i++)
+            {
+                var newParagraph = new Paragraph();
+
+                // Copy paragraph properties from original
+                if (originalParagraphProperties != null)
+                {
+                    newParagraph.ParagraphProperties = originalParagraphProperties.CloneNode(true) as ParagraphProperties;
+                }
+
+                var newRun = new Run();
+                if (runProperties != null)
+                {
+                    newRun.RunProperties = runProperties.CloneNode(true) as RunProperties;
+                }
+
+                var textElement = new Text(lines[i]);
+                if (lines[i].StartsWith(" ") || lines[i].EndsWith(" "))
+                {
+                    textElement.Space = SpaceProcessingModeValues.Preserve;
+                }
+                newRun.Append(textElement);
+                newParagraph.Append(newRun);
+
+                // Insert the new paragraph after the previous one
+                insertAfter.InsertAfterSelf(newParagraph);
+                insertAfter = newParagraph;
             }
         }
 

@@ -1776,7 +1776,25 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.9.0 (Current) - Considerans Data Sync & RECHTBANK_LOCATIE
+### v2.10.0 (Current) - SoortProcedure placeholder + snake_case→PascalCase naming bridge
+
+**Nieuwe features:**
+- **`SoortProcedure` placeholder**: Dossier-veld `soort_procedure` is nu beschikbaar als placeholder (`[[SoortProcedure]]`) en als conditie-veld voor artikel-filtering
+- **Snake_case→PascalCase naming bridge**: `BuildEvaluationContext()` voegt automatisch PascalCase aliases toe voor alle snake_case conditie-velden uit PlaceholderBuilders. Admin conditie-velden (PascalCase, bijv. `DuurzaamGescheiden`) matchen nu correct met snake_case placeholders (`duurzaam_gescheiden`) uit `ConvenantPlaceholderBuilder`
+
+**Achtergrond naming bridge:**
+De `ConvenantPlaceholderBuilder` voegt conditie-velden toe in snake_case (`duurzaam_gescheiden`, `woning_soort`, `partneralimentatie_betaler`, etc.), maar admin conditie-velden in de `placeholder_catalogus` gebruiken PascalCase (`DuurzaamGescheiden`, `WoningSoort`, `PartneralimentatieBetaler`). De evaluation context is case-insensitive, maar `duurzaam_gescheiden` ≠ `DuurzaamGescheiden` vanwege de underscores. De `SnakeCaseToPascalCase()` normalisatie lost dit op voor 25+ convenant conditie-velden.
+
+**Technische wijzigingen:**
+- `Models/DossierData.cs` — `SoortProcedure` property
+- `Services/DatabaseService.cs` — `soort_procedure` in SQL query + hydratatie
+- `Services/DocumentGeneration/Processors/PlaceholderBuilders/DossierPlaceholderBuilder.cs` — `SoortProcedure` placeholder
+- `Services/DocumentGeneration/Processors/ConditieEvaluator.cs` — `SnakeCaseToPascalCase()` helper + normalisatie in `BuildEvaluationContext()`
+
+**Breaking Changes:**
+- Geen! Bestaande snake_case placeholders blijven werken, PascalCase aliases worden alleen toegevoegd als ze nog niet bestaan.
+
+### v2.9.0 - Considerans Data Sync & RECHTBANK_LOCATIE
 
 **Nieuwe features:**
 - **Considerans-velden uit `convenant_info`**: Mediator-, rechtbank- en advocaat-gegevens worden nu gelezen uit `dbo.convenant_info` (voorheen waren deze velden niet gemapped, wat leidde tot lege placeholders in gegenereerde documenten)

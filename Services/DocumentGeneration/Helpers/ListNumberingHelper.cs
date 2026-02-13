@@ -225,12 +225,17 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             abstractNum.Append(new Nsid { Val = "9004ABCD" });
             abstractNum.Append(new MultiLevelType { Val = MultiLevelValues.SingleLevel });
 
-            // Level 0: Sub-bullet met "-" op dieper niveau
+            // Level 0: Sub-bullet met "•" op dieper niveau
             var level0 = new Level { LevelIndex = 0 };
             level0.Append(new StartNumberingValue { Val = 1 });
             level0.Append(new NumberingFormat { Val = NumberFormatValues.Bullet });
-            level0.Append(new LevelText { Val = "-" });
+            level0.Append(new LevelText { Val = "\u2022" }); // • bullet point
             level0.Append(new LevelJustification { Val = LevelJustificationValues.Left });
+
+            // Font voor bullet karakter
+            var rPr = new NumberingSymbolRunProperties();
+            rPr.Append(new RunFonts { Ascii = "Arial", HighAnsi = "Arial" });
+            level0.Append(rPr);
 
             var pPr = new PreviousParagraphProperties();
             pPr.Append(new Indentation { Left = "1080", Hanging = "360" });
@@ -344,12 +349,10 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             );
             pPr.InsertAt(numPr, 0);
 
-            // Voeg indentation toe als die er nog niet is
+            // Overschrijf bestaande indentation voor consistente opmaak
             var existingInd = pPr.Indentation;
-            if (existingInd == null)
-            {
-                pPr.Append(new Indentation { Left = "720", Hanging = "360" });
-            }
+            existingInd?.Remove();
+            pPr.Append(new Indentation { Left = "720", Hanging = "360" });
         }
 
         /// <summary>

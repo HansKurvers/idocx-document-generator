@@ -454,7 +454,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             var idPart = code.Replace("kind_", "");
             if (int.TryParse(idPart, out var kindId))
             {
-                var kind = data.Kinderen?.FirstOrDefault(k => k.Id == kindId);
+                var kind = data.Kinderen?.FirstOrDefault(k => k.DossierKindId == kindId || k.Id == kindId);
                 if (kind != null)
                     return kind.Naam ?? "het kind";
             }

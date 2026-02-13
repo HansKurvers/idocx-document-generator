@@ -5,6 +5,7 @@ namespace scheidingsdesk_document_generator.Models
     public class ChildData
     {
         public int Id { get; set; }
+        public int? DossierKindId { get; set; }
         public string? Voorletters { get; set; }
         public string? Voornamen { get; set; }
         public string? Roepnaam { get; set; }

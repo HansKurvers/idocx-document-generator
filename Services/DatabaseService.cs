@@ -63,7 +63,7 @@ namespace scheidingsdesk_document_generator.Services
                     ORDER BY dp.rol_id;
 
                     -- Result set 3: Children
-                    SELECT p.id, p.voorletters, p.voornamen, p.roepnaam, p.geslacht, 
+                    SELECT p.id, dk.id as dossier_kind_id, p.voorletters, p.voornamen, p.roepnaam, p.geslacht,
                            p.tussenvoegsel, p.achternaam, p.adres, p.postcode, p.plaats,
                            p.geboorteplaats, p.geboorte_datum, p.nationaliteit_1, p.nationaliteit_2,
                            p.telefoon, p.email, p.beroep
@@ -852,6 +852,7 @@ namespace scheidingsdesk_document_generator.Services
             return new ChildData
             {
                 Id = (int)reader["id"],
+                DossierKindId = reader["dossier_kind_id"] == DBNull.Value ? null : (int?)reader["dossier_kind_id"],
                 Voorletters = reader["voorletters"] == DBNull.Value ? null : ConvertToString(reader["voorletters"]),
                 Voornamen = reader["voornamen"] == DBNull.Value ? null : ConvertToString(reader["voornamen"]),
                 Roepnaam = reader["roepnaam"] == DBNull.Value ? null : ConvertToString(reader["roepnaam"]),

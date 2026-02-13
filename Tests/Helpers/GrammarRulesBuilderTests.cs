@@ -415,4 +415,335 @@ public class GrammarRulesBuilderTests
     }
 
     #endregion
+
+    #region AddCollectionGrammarRules Tests
+
+    [Fact]
+    public void AddCollectionGrammarRules_EenBankrekening_ReturnsSingular()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            CommunicatieAfspraken = new CommunicatieAfsprakenData
+            {
+                BankrekeningKinderen = @"[{""iban"":""NL91ABNA0417164300"",""tenaamstelling"":""ouder_1"",""bankNaam"":""ABN AMRO""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.Equal("bankrekening", rules["bankrekening/bankrekeningen"]);
+        Assert.Equal("saldo", rules["saldo/saldi"]);
+        Assert.Equal("het saldo", rules["het saldo/de saldi"]);
+        Assert.Equal("rekeningnummer", rules["rekeningnummer/rekeningnummers"]);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_TweeBankrekeningen_ReturnsPlural()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            CommunicatieAfspraken = new CommunicatieAfsprakenData
+            {
+                BankrekeningKinderen = @"[{""iban"":""NL91ABNA0417164300""},{""iban"":""NL12RABO0123456789""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.Equal("bankrekeningen", rules["bankrekening/bankrekeningen"]);
+        Assert.Equal("saldi", rules["saldo/saldi"]);
+        Assert.Equal("de saldi", rules["het saldo/de saldi"]);
+        Assert.Equal("rekeningnummers", rules["rekeningnummer/rekeningnummers"]);
+        Assert.Equal("vallen", rules["valt/vallen"]);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_EenBankrekening_ValtEnkelvoud()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            CommunicatieAfspraken = new CommunicatieAfsprakenData
+            {
+                BankrekeningKinderen = @"[{""iban"":""NL91ABNA0417164300""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.Equal("valt", rules["valt/vallen"]);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_LegeCollectie_VoegtGeenRegelssToe()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            CommunicatieAfspraken = new CommunicatieAfsprakenData
+            {
+                BankrekeningKinderen = "[]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.DoesNotContain("bankrekening/bankrekeningen", rules.Keys);
+        Assert.DoesNotContain("saldo/saldi", rules.Keys);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_NullJson_VoegtGeenRegelsToe()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData(); // Geen CommunicatieAfspraken
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.DoesNotContain("bankrekening/bankrekeningen", rules.Keys);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_Voertuigen_EnkelvoudMeervoud()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            ConvenantInfo = new ConvenantInfoData
+            {
+                Voertuigen = @"[{""soort"":""personenauto""},{""soort"":""motor""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.Equal("voertuigen", rules["voertuig/voertuigen"]);
+        Assert.Equal("de voertuigen", rules["het voertuig/de voertuigen"]);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_Pensioenen_EnkelvoudMeervoud()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            ConvenantInfo = new ConvenantInfoData
+            {
+                Pensioenen = @"[{""pensioenmaatschappij"":""abp""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.Equal("pensioen", rules["pensioen/pensioenen"]);
+        Assert.Equal("het pensioen", rules["het pensioen/de pensioenen"]);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_Schulden_Meervoud()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            ConvenantInfo = new ConvenantInfoData
+            {
+                Schulden = @"[{""soort"":""studieschuld""},{""soort"":""lening_familie""},{""soort"":""creditcard""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.Equal("schulden", rules["schuld/schulden"]);
+        Assert.Equal("de schulden", rules["de schuld/de schulden"]);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_Verzekeringen_MetPolissen()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            ConvenantInfo = new ConvenantInfoData
+            {
+                Verzekeringen = @"[{""soort"":""lijfrente""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.Equal("verzekering", rules["verzekering/verzekeringen"]);
+        Assert.Equal("polis", rules["polis/polissen"]);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_MeerdereCollecties_Tegelijk()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            CommunicatieAfspraken = new CommunicatieAfsprakenData
+            {
+                BankrekeningKinderen = @"[{""iban"":""NL91ABNA""}]"
+            },
+            ConvenantInfo = new ConvenantInfoData
+            {
+                Voertuigen = @"[{""soort"":""auto""},{""soort"":""motor""}]",
+                Pensioenen = @"[{""maatschappij"":""abp""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.Equal("bankrekening", rules["bankrekening/bankrekeningen"]); // 1 item
+        Assert.Equal("voertuigen", rules["voertuig/voertuigen"]); // 2 items
+        Assert.Equal("pensioen", rules["pensioen/pensioenen"]); // 1 item
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_GedeeldeSleutel_EersteCollectieWint()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            // BANKREKENINGEN_KINDEREN: 1 item (enkelvoud)
+            CommunicatieAfspraken = new CommunicatieAfsprakenData
+            {
+                BankrekeningKinderen = @"[{""iban"":""NL91ABNA""}]"
+            },
+            // BANKREKENINGEN: 3 items (meervoud)
+            ConvenantInfo = new ConvenantInfoData
+            {
+                Bankrekeningen = @"[{""iban"":""A""},{""iban"":""B""},{""iban"":""C""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        // BANKREKENINGEN_KINDEREN staat eerst in de registry → enkelvoud wint
+        Assert.Equal("bankrekening", rules["bankrekening/bankrekeningen"]);
+        Assert.Equal("saldo", rules["saldo/saldi"]);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_OngeldigeJson_WerdtOvergeslagen()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            ConvenantInfo = new ConvenantInfoData
+            {
+                Voertuigen = "geen geldige json"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.DoesNotContain("voertuig/voertuigen", rules.Keys);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_EenBankrekening_StaatEnkelvoud()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            CommunicatieAfspraken = new CommunicatieAfsprakenData
+            {
+                BankrekeningKinderen = @"[{""iban"":""NL91ABNA0417164300""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.Equal("staat", rules["staat/staan"]);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_TweeBankrekeningen_StaanMeervoud()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            CommunicatieAfspraken = new CommunicatieAfsprakenData
+            {
+                BankrekeningKinderen = @"[{""iban"":""NL91ABNA""},{""iban"":""NL12RABO""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.Equal("staan", rules["staat/staan"]);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_EenBankrekening_RekeningBlijftEnkelvoud()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            CommunicatieAfspraken = new CommunicatieAfsprakenData
+            {
+                BankrekeningKinderen = @"[{""iban"":""NL91ABNA0417164300""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.Equal("rekening blijft", rules["rekening blijft/rekeningen blijven"]);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_TweeBankrekeningen_RekeningenBlijvenMeervoud()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            CommunicatieAfspraken = new CommunicatieAfsprakenData
+            {
+                BankrekeningKinderen = @"[{""iban"":""NL91ABNA""},{""iban"":""NL12RABO""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.Equal("rekeningen blijven", rules["rekening blijft/rekeningen blijven"]);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_EenBankrekening_RekeningZalEnkelvoud()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            CommunicatieAfspraken = new CommunicatieAfsprakenData
+            {
+                BankrekeningKinderen = @"[{""iban"":""NL91ABNA0417164300""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.Equal("rekening zal", rules["rekening zal/rekeningen zullen"]);
+    }
+
+    [Fact]
+    public void AddCollectionGrammarRules_TweeBankrekeningen_RekeningenZullenMeervoud()
+    {
+        var rules = new Dictionary<string, string>();
+        var data = new DossierData
+        {
+            CommunicatieAfspraken = new CommunicatieAfsprakenData
+            {
+                BankrekeningKinderen = @"[{""iban"":""NL91ABNA""},{""iban"":""NL12RABO""}]"
+            }
+        };
+
+        _builder.AddCollectionGrammarRules(rules, data, "test-123");
+
+        Assert.Equal("rekeningen zullen", rules["rekening zal/rekeningen zullen"]);
+    }
+
+    #endregion
 }

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using scheidingsdesk_document_generator.Models;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
 {
@@ -257,6 +258,118 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             _logger.LogInformation($"[{correlationId}] Created {rules.Count} simple grammar rules");
 
             return rules;
+        }
+
+        /// <summary>
+        /// Voegt grammatica regels toe op basis van het aantal items in JSON-collecties.
+        /// Bijv. 1 bankrekening → "bankrekening", 2+ → "bankrekeningen".
+        /// Wordt aangeroepen NA BuildRules zodat kinderen-regels al bestaan.
+        /// Collectie met 0 items wordt overgeslagen (geen grammatica toegevoegd).
+        /// Bij gedeelde sleutels (bijv. "bankrekening/bankrekeningen") wint de eerste collectie met items.
+        /// </summary>
+        public void AddCollectionGrammarRules(Dictionary<string, string> rules, DossierData data, string correlationId)
+        {
+            // Declaratieve registratie: JSON-bron + enkelvoud/meervoud paren
+            var collectionGrammars = new (string Name, string? Json, (string Singular, string Plural)[] Pairs)[]
+            {
+                ("BANKREKENINGEN_KINDEREN", data.CommunicatieAfspraken?.BankrekeningKinderen, new[]
+                {
+                    ("bankrekening", "bankrekeningen"),
+                    ("de bankrekening", "de bankrekeningen"),
+                    ("saldo", "saldi"),
+                    ("het saldo", "de saldi"),
+                    ("rekeningnummer", "rekeningnummers"),
+                    ("valt", "vallen"),
+                    ("staat", "staan"),
+                    ("rekening blijft", "rekeningen blijven"),
+                    ("rekening zal", "rekeningen zullen"),
+                }),
+                ("BANKREKENINGEN", data.ConvenantInfo?.Bankrekeningen, new[]
+                {
+                    ("bankrekening", "bankrekeningen"),
+                    ("de bankrekening", "de bankrekeningen"),
+                    ("saldo", "saldi"),
+                    ("het saldo", "de saldi"),
+                    ("valt", "vallen"),
+                    ("staat", "staan"),
+                    ("rekening blijft", "rekeningen blijven"),
+                    ("rekening zal", "rekeningen zullen"),
+                }),
+                ("BELEGGINGEN", data.ConvenantInfo?.Beleggingen, new[]
+                {
+                    ("belegging", "beleggingen"),
+                    ("de belegging", "de beleggingen"),
+                }),
+                ("VOERTUIGEN", data.ConvenantInfo?.Voertuigen, new[]
+                {
+                    ("voertuig", "voertuigen"),
+                    ("het voertuig", "de voertuigen"),
+                }),
+                ("VERZEKERINGEN", data.ConvenantInfo?.Verzekeringen, new[]
+                {
+                    ("verzekering", "verzekeringen"),
+                    ("de verzekering", "de verzekeringen"),
+                    ("polis", "polissen"),
+                    ("de polis", "de polissen"),
+                }),
+                ("SCHULDEN", data.ConvenantInfo?.Schulden, new[]
+                {
+                    ("schuld", "schulden"),
+                    ("de schuld", "de schulden"),
+                }),
+                ("VORDERINGEN", data.ConvenantInfo?.Vorderingen, new[]
+                {
+                    ("vordering", "vorderingen"),
+                    ("de vordering", "de vorderingen"),
+                }),
+                ("PENSIOENEN", data.ConvenantInfo?.Pensioenen, new[]
+                {
+                    ("pensioen", "pensioenen"),
+                    ("het pensioen", "de pensioenen"),
+                }),
+            };
+
+            int addedCount = 0;
+
+            foreach (var (name, json, pairs) in collectionGrammars)
+            {
+                var count = CountJsonArrayItems(json);
+                if (count == 0) continue;
+
+                bool isPlural = count > 1;
+
+                foreach (var (singular, plural) in pairs)
+                {
+                    var key = $"{singular}/{plural}";
+                    if (!rules.ContainsKey(key))
+                    {
+                        rules[key] = isPlural ? plural : singular;
+                        addedCount++;
+                    }
+                }
+            }
+
+            _logger.LogInformation($"[{correlationId}] Added {addedCount} collection grammar rules");
+        }
+
+        /// <summary>
+        /// Telt het aantal items in een JSON array string.
+        /// Returns 0 bij null, lege string, of ongeldige JSON.
+        /// </summary>
+        private static int CountJsonArrayItems(string? json)
+        {
+            if (string.IsNullOrEmpty(json)) return 0;
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                return doc.RootElement.ValueKind == JsonValueKind.Array
+                    ? doc.RootElement.GetArrayLength()
+                    : 0;
+            }
+            catch (JsonException)
+            {
+                return 0;
+            }
         }
     }
 }

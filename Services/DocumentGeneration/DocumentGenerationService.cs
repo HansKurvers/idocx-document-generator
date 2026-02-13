@@ -82,6 +82,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration
             // Step 3: Build grammar rules
             _logger.LogInformation($"[{correlationId}] Step 3: Building grammar rules");
             var grammarRules = _grammarRulesBuilder.BuildRules(dossierData.Kinderen, correlationId);
+            _grammarRulesBuilder.AddCollectionGrammarRules(grammarRules, dossierData, correlationId);
 
             // Step 4: Build all placeholder replacements
             _logger.LogInformation($"[{correlationId}] Step 4: Building placeholder replacements");

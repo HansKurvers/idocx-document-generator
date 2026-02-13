@@ -3,6 +3,7 @@ using scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processors
@@ -13,8 +14,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
     ///
     /// Gedrag:
     /// - Collectie leeg → blok verwijderen
-    /// - Blok bevat per-kind variabelen (KIND_*) → itereren per kind
-    /// - Blok bevat GEEN per-kind variabelen → blok eenmalig tonen (conditioneel gedrag)
+    /// - Kinderen-collecties: blok bevat per-kind variabelen (KIND_*) → itereren per kind
+    /// - JSON-collecties: blok bevat per-item variabelen (PREFIX_*) → itereren per item
+    /// - Blok bevat GEEN per-item variabelen → blok eenmalig tonen (conditioneel gedrag)
     /// </summary>
     public static class LoopSectionProcessor
     {
@@ -37,6 +39,63 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
         private static readonly Regex KindVariabelPattern = new(
             @"\[\[(KIND_\w+)\]\]",
             RegexOptions.IgnoreCase);
+
+        #region JSON Collection Registry
+
+        /// <summary>
+        /// Declaratieve definitie van een JSON-collectie.
+        /// Nieuwe collectie toevoegen = nieuwe registratie, geen bestaande code wijzigen.
+        /// </summary>
+        private record CollectionDefinition(
+            string Name,
+            string VariablePrefix,
+            Func<DossierData, string?> GetJson,
+            Func<JsonElement, DossierData, Dictionary<string, string>> MapItem
+        );
+
+        private class JsonCollectionResult
+        {
+            public string Prefix { get; init; } = "";
+            public List<Dictionary<string, string>> Items { get; init; } = new();
+        }
+
+        private static readonly CollectionDefinition[] JsonCollections = new[]
+        {
+            new CollectionDefinition(
+                "BANKREKENINGEN_KINDEREN", "BANKREKENING",
+                d => d.CommunicatieAfspraken?.BankrekeningKinderen,
+                MapBankrekeningKinderen),
+            new CollectionDefinition(
+                "BANKREKENINGEN", "BANKREKENING",
+                d => d.ConvenantInfo?.Bankrekeningen,
+                MapBankrekening),
+            new CollectionDefinition(
+                "BELEGGINGEN", "BELEGGING",
+                d => d.ConvenantInfo?.Beleggingen,
+                MapBelegging),
+            new CollectionDefinition(
+                "VOERTUIGEN", "VOERTUIG",
+                d => d.ConvenantInfo?.Voertuigen,
+                MapVoertuig),
+            new CollectionDefinition(
+                "VERZEKERINGEN", "VERZEKERING",
+                d => d.ConvenantInfo?.Verzekeringen,
+                MapVerzekering),
+            new CollectionDefinition(
+                "SCHULDEN", "SCHULD",
+                d => d.ConvenantInfo?.Schulden,
+                MapSchuld),
+            new CollectionDefinition(
+                "VORDERINGEN", "VORDERING",
+                d => d.ConvenantInfo?.Vorderingen,
+                MapVordering),
+            new CollectionDefinition(
+                "PENSIOENEN", "PENSIOEN",
+                d => d.ConvenantInfo?.Pensioenen,
+                MapPensioen),
+        };
+
+        #endregion
 
         /// <summary>
         /// Verwerkt alle loop secties in de tekst.
@@ -61,25 +120,33 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                     var collectieNaam = match.Groups[1].Value;
                     var blokInhoud = match.Groups[2].Value;
 
+                    // 1. Kinderen-collecties (bestaande logica)
                     var kinderen = ResolveCollection(collectieNaam, dossierData);
-
-                    // Collectie leeg → blok verwijderen
-                    if (kinderen == null || kinderen.Count == 0)
-                        return "";
-
-                    // Check of het blok per-kind variabelen bevat
-                    var heeftKindVariabelen = KindVariabelPattern.IsMatch(blokInhoud);
-
-                    if (heeftKindVariabelen)
+                    if (kinderen != null)
                     {
-                        // Itereren per kind
-                        return ExpandPerKind(blokInhoud, kinderen, dossierData);
+                        if (kinderen.Count == 0)
+                            return "";
+
+                        var heeftKindVariabelen = KindVariabelPattern.IsMatch(blokInhoud);
+                        return heeftKindVariabelen
+                            ? ExpandPerKind(blokInhoud, kinderen, dossierData)
+                            : blokInhoud.Trim();
                     }
-                    else
+
+                    // 2. Generieke JSON-collecties
+                    var jsonResult = ResolveJsonCollection(collectieNaam, dossierData);
+                    if (jsonResult != null)
                     {
-                        // Conditioneel: collectie is niet leeg, toon blok eenmalig
-                        return blokInhoud.Trim();
+                        if (jsonResult.Items.Count == 0)
+                            return "";
+
+                        return HasCollectionVariables(blokInhoud, jsonResult.Prefix)
+                            ? ExpandPerItem(blokInhoud, jsonResult.Items, jsonResult.Prefix)
+                            : blokInhoud.Trim();
                     }
+
+                    // 3. Onbekende collectie → blok verwijderen
+                    return "";
                 });
                 iteration++;
             }
@@ -90,33 +157,37 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             return currentTekst;
         }
 
+        #region Kinderen Collections
+
         /// <summary>
         /// Resolveert een collectienaam naar een lijst kinderen uit de dossierdata.
+        /// Returns null voor onbekende collectienamen (geen kinderen-collectie).
         /// </summary>
         private static List<ChildData>? ResolveCollection(string collectieNaam, DossierData dossierData)
         {
-            var kinderen = dossierData.Kinderen;
-            if (kinderen == null || kinderen.Count == 0)
-                return null;
-
             switch (collectieNaam.ToUpperInvariant())
             {
                 case "KINDEREN_UIT_HUWELIJK":
-                    return FilterKinderenUitHuwelijk(kinderen, dossierData);
-
                 case "KINDEREN_VOOR_HUWELIJK":
-                    return FilterKinderenVoorHuwelijk(kinderen, dossierData);
-
                 case "MINDERJARIGE_KINDEREN":
-                    return kinderen.Where(k => k.Leeftijd.HasValue && k.Leeftijd.Value < 18).ToList();
-
                 case "ALLE_KINDEREN":
-                    return kinderen;
-
+                    break; // Known kinderen collection, continue below
                 default:
-                    // Onbekende collectie → null (blok verwijderen)
-                    return null;
+                    return null; // Not a kinderen collection → try JSON
             }
+
+            var kinderen = dossierData.Kinderen;
+            if (kinderen == null || kinderen.Count == 0)
+                return new List<ChildData>();
+
+            return collectieNaam.ToUpperInvariant() switch
+            {
+                "KINDEREN_UIT_HUWELIJK" => FilterKinderenUitHuwelijk(kinderen, dossierData),
+                "KINDEREN_VOOR_HUWELIJK" => FilterKinderenVoorHuwelijk(kinderen, dossierData),
+                "MINDERJARIGE_KINDEREN" => kinderen.Where(k => k.Leeftijd.HasValue && k.Leeftijd.Value < 18).ToList(),
+                "ALLE_KINDEREN" => kinderen,
+                _ => new List<ChildData>()
+            };
         }
 
         /// <summary>
@@ -217,5 +288,276 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             return kind.Achternaam;
         }
+
+        #endregion
+
+        #region JSON Collection Processing
+
+        /// <summary>
+        /// Zoekt een collectienaam op in de JSON-registry en parst de JSON data.
+        /// Returns null als de collectienaam niet in de registry staat.
+        /// </summary>
+        private static JsonCollectionResult? ResolveJsonCollection(string collectieNaam, DossierData dossierData)
+        {
+            var upper = collectieNaam.ToUpperInvariant();
+            var def = Array.Find(JsonCollections, c => c.Name == upper);
+            if (def == null)
+                return null;
+
+            var json = def.GetJson(dossierData);
+            if (string.IsNullOrEmpty(json))
+                return new JsonCollectionResult { Prefix = def.VariablePrefix };
+
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var items = doc.RootElement.EnumerateArray()
+                    .Select(item => def.MapItem(item, dossierData))
+                    .ToList();
+                return new JsonCollectionResult { Prefix = def.VariablePrefix, Items = items };
+            }
+            catch (JsonException)
+            {
+                return new JsonCollectionResult { Prefix = def.VariablePrefix };
+            }
+        }
+
+        /// <summary>
+        /// Checkt of een blok variabelen met het gegeven prefix bevat.
+        /// Bijv. prefix "BANKREKENING" matcht [[BANKREKENING_IBAN]], [[BANKREKENING_SALDO]], etc.
+        /// </summary>
+        private static bool HasCollectionVariables(string blokInhoud, string prefix)
+        {
+            var pattern = @"\[\[" + Regex.Escape(prefix) + @"_\w+\]\]";
+            return Regex.IsMatch(blokInhoud, pattern, RegexOptions.IgnoreCase);
+        }
+
+        /// <summary>
+        /// Expandeert een blok per item, vervangt PREFIX_* variabelen met item-specifieke waarden.
+        /// Generieke versie van ExpandPerKind voor Dictionary-based items.
+        /// </summary>
+        private static string ExpandPerItem(string blokInhoud, List<Dictionary<string, string>> items, string prefix)
+        {
+            var pattern = new Regex(@"\[\[(" + Regex.Escape(prefix) + @"_\w+)\]\]", RegexOptions.IgnoreCase);
+            var regels = new List<string>();
+
+            foreach (var item in items)
+            {
+                var regel = blokInhoud.Trim();
+                regel = pattern.Replace(regel, match =>
+                {
+                    var variabele = match.Groups[1].Value.ToUpperInvariant();
+                    return item.TryGetValue(variabele, out var waarde) ? waarde : match.Value;
+                });
+                regels.Add(regel);
+            }
+
+            return string.Join("\n", regels);
+        }
+
+        #endregion
+
+        #region JSON Helpers
+
+        private static string GetString(JsonElement item, string propertyName)
+        {
+            return item.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.String
+                ? prop.GetString() ?? ""
+                : "";
+        }
+
+        private static decimal? GetDecimal(JsonElement item, string propertyName)
+        {
+            if (!item.TryGetProperty(propertyName, out var prop))
+                return null;
+            return prop.ValueKind == JsonValueKind.Number ? prop.GetDecimal() : null;
+        }
+
+        /// <summary>
+        /// Formatteert een IBAN met spaties elke 4 tekens.
+        /// "NL91ABNA0417164300" → "NL91 ABNA 0417 1643 00"
+        /// </summary>
+        private static string FormatIBAN(string? iban)
+        {
+            if (string.IsNullOrEmpty(iban))
+                return "";
+            var clean = iban.Replace(" ", "");
+            return string.Join(" ", Enumerable.Range(0, (clean.Length + 3) / 4)
+                .Select(i => clean.Substring(i * 4, Math.Min(4, clean.Length - i * 4))));
+        }
+
+        /// <summary>
+        /// Converteert snake_case naar leesbare tekst.
+        /// "doorlopend_krediet" → "Doorlopend krediet"
+        /// </summary>
+        private static string HumanizeSnakeCase(string? value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "";
+            var result = value.Replace("_", " ").Trim();
+            if (result.Length == 0) return "";
+            return char.ToUpper(result[0]) + result.Substring(1);
+        }
+
+        /// <summary>
+        /// Resolvet de effectieve waarde: als hoofd-veld gelijk is aan de trigger (standaard "anders"),
+        /// gebruik het anders-veld. Anders: HumanizeSnakeCase op het hoofd-veld.
+        /// </summary>
+        private static string ResolveEffectiveValue(JsonElement item, string field, string andersField, string triggerValue = "anders")
+        {
+            var value = GetString(item, field);
+            if (string.Equals(value, triggerValue, StringComparison.OrdinalIgnoreCase))
+            {
+                var anders = GetString(item, andersField);
+                return !string.IsNullOrEmpty(anders) ? anders : "";
+            }
+            return HumanizeSnakeCase(value);
+        }
+
+        /// <summary>
+        /// Vertaalt tenaamstelling/partij codes naar leesbare namen.
+        /// "partij1" → naam partij 1, "beiden"/"gezamenlijk" → "beide partijen", etc.
+        /// </summary>
+        private static string TranslateTenaamstelling(JsonElement item, string field, string andersField, DossierData data)
+        {
+            var code = GetString(item, field);
+            if (string.IsNullOrEmpty(code))
+                return "";
+
+            if (string.Equals(code, "anders", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(code, "afwijken", StringComparison.OrdinalIgnoreCase))
+            {
+                var anders = GetString(item, andersField);
+                return !string.IsNullOrEmpty(anders) ? anders : "";
+            }
+
+            return code.ToLowerInvariant() switch
+            {
+                "partij1" or "ouder_1" => GetPartijNaam(data.Partij1),
+                "partij2" or "ouder_2" => GetPartijNaam(data.Partij2),
+                "gezamenlijk" or "beiden" or "ouders_gezamenlijk" => "beide partijen",
+                "kinderen_alle" => "alle kinderen",
+                "aflossen" => "af te lossen",
+                var l when l.StartsWith("kind_") => ResolveKindNaam(l, data),
+                _ => HumanizeSnakeCase(code)
+            };
+        }
+
+        private static string GetPartijNaam(PersonData? partij)
+        {
+            if (partij == null) return "";
+            return DataFormatter.FormatFullName(partij.Voornamen, partij.Tussenvoegsel, partij.Achternaam);
+        }
+
+        private static string ResolveKindNaam(string code, DossierData data)
+        {
+            var idPart = code.Replace("kind_", "");
+            if (int.TryParse(idPart, out var kindId))
+            {
+                var kind = data.Kinderen?.FirstOrDefault(k => k.Id == kindId);
+                if (kind != null)
+                    return kind.Voornamen ?? kind.Naam ?? "het kind";
+            }
+            return "het kind";
+        }
+
+        #endregion
+
+        #region Per-Collection Mappers
+
+        private static Dictionary<string, string> MapBankrekeningKinderen(JsonElement item, DossierData data)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["BANKREKENING_IBAN"] = FormatIBAN(GetString(item, "iban")),
+                ["BANKREKENING_TENAAMSTELLING"] = TranslateTenaamstelling(item, "tenaamstelling", "tenaamstellingAnders", data),
+                ["BANKREKENING_BANKNAAM"] = GetString(item, "bankNaam")
+            };
+        }
+
+        private static Dictionary<string, string> MapBankrekening(JsonElement item, DossierData data)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["BANKREKENING_IBAN"] = FormatIBAN(GetString(item, "iban")),
+                ["BANKREKENING_TENAAMSTELLING"] = TranslateTenaamstelling(item, "tenaamstelling", "tenaamstellingAnders", data),
+                ["BANKREKENING_BANKNAAM"] = GetString(item, "bankNaam"),
+                ["BANKREKENING_SALDO"] = DataFormatter.FormatCurrency(GetDecimal(item, "saldo")),
+                ["BANKREKENING_STATUS"] = HumanizeSnakeCase(GetString(item, "statusVermogen"))
+            };
+        }
+
+        private static Dictionary<string, string> MapBelegging(JsonElement item, DossierData data)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["BELEGGING_SOORT"] = ResolveEffectiveValue(item, "soort", "soortAnders"),
+                ["BELEGGING_INSTITUUT"] = ResolveEffectiveValue(item, "instituut", "instituutAnders"),
+                ["BELEGGING_TENAAMSTELLING"] = TranslateTenaamstelling(item, "tenaamstelling", "tenaamstellingAnders", data),
+                ["BELEGGING_STATUS"] = HumanizeSnakeCase(GetString(item, "statusVermogen"))
+            };
+        }
+
+        private static Dictionary<string, string> MapVoertuig(JsonElement item, DossierData data)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["VOERTUIG_SOORT"] = ResolveEffectiveValue(item, "soort", "soortAnders"),
+                ["VOERTUIG_KENTEKEN"] = GetString(item, "kenteken"),
+                ["VOERTUIG_TENAAMSTELLING"] = TranslateTenaamstelling(item, "tenaamstelling", "tenaamstellingAnders", data),
+                ["VOERTUIG_MERK"] = GetString(item, "merk"),
+                ["VOERTUIG_MODEL"] = GetString(item, "handelsbenaming"),
+                ["VOERTUIG_STATUS"] = HumanizeSnakeCase(GetString(item, "statusVermogen"))
+            };
+        }
+
+        private static Dictionary<string, string> MapVerzekering(JsonElement item, DossierData data)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["VERZEKERING_SOORT"] = ResolveEffectiveValue(item, "soort", "soortAnders"),
+                ["VERZEKERING_MAATSCHAPPIJ"] = ResolveEffectiveValue(item, "verzekeringsmaatschappij", "verzekeringsmaatschappijAnders"),
+                ["VERZEKERING_NEMER"] = TranslateTenaamstelling(item, "verzekeringnemer", "verzekeringnemerAnders", data),
+                ["VERZEKERING_STATUS"] = HumanizeSnakeCase(GetString(item, "statusVermogen"))
+            };
+        }
+
+        private static Dictionary<string, string> MapSchuld(JsonElement item, DossierData data)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["SCHULD_SOORT"] = ResolveEffectiveValue(item, "soort", "soortAnders"),
+                ["SCHULD_OMSCHRIJVING"] = GetString(item, "omschrijving"),
+                ["SCHULD_BEDRAG"] = DataFormatter.FormatCurrency(GetDecimal(item, "bedrag")),
+                ["SCHULD_TENAAMSTELLING"] = TranslateTenaamstelling(item, "tenaamstelling", "tenaamstellingAnders", data),
+                ["SCHULD_DRAAGPLICHTIG"] = TranslateTenaamstelling(item, "draagplichtig", "draagplichtigAnders", data),
+                ["SCHULD_STATUS"] = HumanizeSnakeCase(GetString(item, "statusVermogen"))
+            };
+        }
+
+        private static Dictionary<string, string> MapVordering(JsonElement item, DossierData data)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["VORDERING_SOORT"] = ResolveEffectiveValue(item, "soort", "soortAnders"),
+                ["VORDERING_OMSCHRIJVING"] = GetString(item, "omschrijving"),
+                ["VORDERING_BEDRAG"] = DataFormatter.FormatCurrency(GetDecimal(item, "bedrag")),
+                ["VORDERING_TENAAMSTELLING"] = TranslateTenaamstelling(item, "tenaamstelling", "tenaamstellingAnders", data),
+                ["VORDERING_STATUS"] = HumanizeSnakeCase(GetString(item, "statusVermogen"))
+            };
+        }
+
+        private static Dictionary<string, string> MapPensioen(JsonElement item, DossierData data)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["PENSIOEN_MAATSCHAPPIJ"] = ResolveEffectiveValue(item, "pensioenmaatschappij", "pensioenmaatschappijAnders"),
+                ["PENSIOEN_TENAAMSTELLING"] = TranslateTenaamstelling(item, "tenaamstelling", "tenaamstellingAnders", data),
+                ["PENSIOEN_VERDELING"] = ResolveEffectiveValue(item, "verdeling", "verdelingAnders"),
+                ["PENSIOEN_BIJZONDER_PARTNERPENSIOEN"] = ResolveEffectiveValue(item, "bijzonderPartnerpensioen", "bijzonderPartnerpensioensAnders", "afwijken")
+            };
+        }
+
+        #endregion
     }
 }

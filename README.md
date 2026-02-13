@@ -295,7 +295,12 @@ Deze helpers bevatten geen state en bieden herbruikbare functionaliteit:
    - Behoudt content en verwijdert alleen tags als veld gevuld is
    - Ondersteunt geneste conditionele blokken
 
-3. **ContentControlProcessor** - Verwerkt speciale content
+3. **LoopSectionProcessor** - Verwerkt loop secties (`[[#COLLECTIE]]...[[/COLLECTIE]]`)
+   - Kinderen-collecties: itereert per kind met `KIND_*` variabelen
+   - JSON-collecties (v2.11.0): 8 collecties (bankrekeningen, voertuigen, pensioenen, etc.) via Collection Registry Pattern
+   - Lege collectie → blok verwijderd, geen variabelen → conditioneel tonen
+
+4. **ContentControlProcessor** - Verwerkt speciale content
    - Gebruikt Strategy Pattern voor tabel generators
    - Verwijdert Word content controls
    - Behoudt en fix formatting van content
@@ -1199,6 +1204,88 @@ Gekozen optie: [[WoonplaatsOptie]]
 [[ENDIF:WoonplaatsRegeling]]
 ```
 
+### Loop Secties (Herhaling over collecties)
+
+De template ondersteunt loop secties die een blok herhalen voor elk item in een collectie:
+
+```
+[[#COLLECTIENAAM]]
+...inhoud die herhaald wordt per item...
+[[/COLLECTIENAAM]]
+```
+
+**Gedrag:**
+- Collectie leeg of niet aanwezig → hele blok wordt verwijderd
+- Blok bevat per-item variabelen → blok wordt herhaald per item met variabelen ingevuld
+- Blok bevat GEEN per-item variabelen → blok wordt eenmalig getoond (conditioneel gedrag)
+
+#### Kinderen-collecties
+
+| Collectienaam | Beschrijving |
+|---------------|--------------|
+| `KINDEREN_UIT_HUWELIJK` | Kinderen geboren tijdens/na het huwelijk |
+| `KINDEREN_VOOR_HUWELIJK` | Kinderen geboren voor het huwelijk |
+| `MINDERJARIGE_KINDEREN` | Kinderen jonger dan 18 |
+| `ALLE_KINDEREN` | Alle kinderen |
+
+**Per-kind variabelen:** `[[KIND_VOORNAMEN]]`, `[[KIND_ACHTERNAAM]]`, `[[KIND_GEBOORTEDATUM]]`, `[[KIND_GEBOORTEPLAATS]]`, `[[KIND_ROEPNAAM]]`, `[[KIND_LEEFTIJD]]`, `[[KIND_ERKENNINGSDATUM]]`
+
+**Voorbeeld:**
+```
+[[#KINDEREN_UIT_HUWELIJK]]
+[[SUBBULLET]][[KIND_VOORNAMEN]] [[KIND_ACHTERNAAM]], geboren op [[KIND_GEBOORTEDATUM]] te [[KIND_GEBOORTEPLAATS]]
+[[/KINDEREN_UIT_HUWELIJK]]
+```
+
+#### JSON-collecties (vermogensverdeling, pensioenen, kinderrekeningen)
+
+| Collectienaam | Prefix | Databron | Per-item variabelen |
+|---------------|--------|----------|---------------------|
+| `BANKREKENINGEN_KINDEREN` | `BANKREKENING` | Communicatie afspraken | `_IBAN`, `_TENAAMSTELLING`, `_BANKNAAM` |
+| `BANKREKENINGEN` | `BANKREKENING` | Vermogensverdeling | `_IBAN`, `_TENAAMSTELLING`, `_BANKNAAM`, `_SALDO`, `_STATUS` |
+| `BELEGGINGEN` | `BELEGGING` | Vermogensverdeling | `_SOORT`, `_INSTITUUT`, `_TENAAMSTELLING`, `_STATUS` |
+| `VOERTUIGEN` | `VOERTUIG` | Vermogensverdeling | `_SOORT`, `_KENTEKEN`, `_TENAAMSTELLING`, `_MERK`, `_MODEL`, `_STATUS` |
+| `VERZEKERINGEN` | `VERZEKERING` | Vermogensverdeling | `_SOORT`, `_MAATSCHAPPIJ`, `_NEMER`, `_STATUS` |
+| `SCHULDEN` | `SCHULD` | Vermogensverdeling | `_SOORT`, `_OMSCHRIJVING`, `_BEDRAG`, `_TENAAMSTELLING`, `_DRAAGPLICHTIG`, `_STATUS` |
+| `VORDERINGEN` | `VORDERING` | Vermogensverdeling | `_SOORT`, `_OMSCHRIJVING`, `_BEDRAG`, `_TENAAMSTELLING`, `_STATUS` |
+| `PENSIOENEN` | `PENSIOEN` | Pensioen | `_MAATSCHAPPIJ`, `_TENAAMSTELLING`, `_VERDELING`, `_BIJZONDER_PARTNERPENSIOEN` |
+
+Variabelen worden samengesteld als `[[PREFIX_VELD]]`, bijv. `[[BANKREKENING_IBAN]]`, `[[VOERTUIG_KENTEKEN]]`.
+
+**Automatische waarde-vertaling:**
+- **Tenaamstelling**: `"partij1"` → naam partij 1, `"beiden"`/`"gezamenlijk"` → "beide partijen", `"kind_123"` → naam van het kind
+- **Anders-velden**: Als soort = `"anders"`, wordt automatisch het `soortAnders` veld gebruikt
+- **Snake_case**: `"doorlopend_krediet"` → "Doorlopend krediet"
+- **IBAN**: Automatisch geformateerd met spaties (`NL91 ABNA 0417 1643 00`)
+- **Bedragen**: Nederlands valuta-formaat via `DataFormatter.FormatCurrency`
+
+**Voorbeelden:**
+```
+[[#BANKREKENINGEN_KINDEREN]]
+[[SUBBULLET]]Rekening [[BANKREKENING_IBAN]] t.n.v. [[BANKREKENING_TENAAMSTELLING]] bij [[BANKREKENING_BANKNAAM]]
+[[/BANKREKENINGEN_KINDEREN]]
+
+[[#VOERTUIGEN]]
+[[SUBBULLET]][[VOERTUIG_SOORT]] met kenteken [[VOERTUIG_KENTEKEN]] ([[VOERTUIG_MERK]] [[VOERTUIG_MODEL]])
+[[/VOERTUIGEN]]
+
+[[#PENSIOENEN]]
+[[SUBBULLET]]Pensioen bij [[PENSIOEN_MAATSCHAPPIJ]] t.n.v. [[PENSIOEN_TENAAMSTELLING]], verdeling: [[PENSIOEN_VERDELING]]
+[[/PENSIOENEN]]
+
+[[#SCHULDEN]]
+[[SUBBULLET]][[SCHULD_SOORT]]: [[SCHULD_OMSCHRIJVING]], [[SCHULD_BEDRAG]], draagplichtig: [[SCHULD_DRAAGPLICHTIG]]
+[[/SCHULDEN]]
+```
+
+**Conditioneel gebruik (zonder variabelen):**
+```
+[[#BANKREKENINGEN]]
+Partijen verklaren dat de volgende bankrekeningen onderdeel zijn van de verdeling:
+[[/BANKREKENINGEN]]
+```
+Dit blok wordt alleen getoond als er bankrekeningen zijn, maar niet herhaald per item.
+
 ### Automatische Artikelnummering
 
 Het systeem ondersteunt automatische multi-level juridische nummering met de volgende placeholders:
@@ -1776,7 +1863,30 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.10.0 (Current) - SoortProcedure placeholder + snake_case→PascalCase naming bridge
+### v2.11.0 (Current) - Generiek loop-mechanisme voor JSON-collecties
+
+**Nieuwe features:**
+- **8 nieuwe loop-collecties**: `BANKREKENINGEN_KINDEREN`, `BANKREKENINGEN`, `BELEGGINGEN`, `VOERTUIGEN`, `VERZEKERINGEN`, `SCHULDEN`, `VORDERINGEN`, `PENSIOENEN` — itereer over dynamische lijsten in artikel templates met `[[#COLLECTIE]]...[[/COLLECTIE]]` syntax
+- **Collection Registry Pattern**: Declaratieve registratie van collecties — nieuwe collectie toevoegen = 1 registratie + 1 mapper, geen bestaande code wijzigen
+- **Automatische waarde-vertaling**: Tenaamstelling-codes worden vertaald naar partijnamen, "anders"-velden worden automatisch opgelost, snake_case wordt gehumaniseerd, IBAN's geformateerd
+
+**Per-collectie variabelen:**
+- `BANKREKENING_IBAN`, `_TENAAMSTELLING`, `_BANKNAAM`, `_SALDO`, `_STATUS`
+- `BELEGGING_SOORT`, `_INSTITUUT`, `_TENAAMSTELLING`, `_STATUS`
+- `VOERTUIG_SOORT`, `_KENTEKEN`, `_TENAAMSTELLING`, `_MERK`, `_MODEL`, `_STATUS`
+- `VERZEKERING_SOORT`, `_MAATSCHAPPIJ`, `_NEMER`, `_STATUS`
+- `SCHULD_SOORT`, `_OMSCHRIJVING`, `_BEDRAG`, `_TENAAMSTELLING`, `_DRAAGPLICHTIG`, `_STATUS`
+- `VORDERING_SOORT`, `_OMSCHRIJVING`, `_BEDRAG`, `_TENAAMSTELLING`, `_STATUS`
+- `PENSIOEN_MAATSCHAPPIJ`, `_TENAAMSTELLING`, `_VERDELING`, `_BIJZONDER_PARTNERPENSIOEN`
+
+**Technische wijzigingen:**
+- `Services/DocumentGeneration/Processors/LoopSectionProcessor.cs` — Collection Registry, JSON parsing, 8 mappers, helpers (TranslateTenaamstelling, ResolveEffectiveValue, HumanizeSnakeCase, FormatIBAN)
+- `Tests/Processors/LoopSectionProcessorTests.cs` — 27 nieuwe unit tests (totaal 201 tests, 0 failures)
+
+**Breaking Changes:**
+- Geen! Bestaande kinderen-collecties werken ongewijzigd. ResolveCollection geeft nu expliciet null terug voor onbekende namen zodat JSON-collecties als fallback werken.
+
+### v2.10.0 - SoortProcedure placeholder + snake_case→PascalCase naming bridge
 
 **Nieuwe features:**
 - **`SoortProcedure` placeholder**: Dossier-veld `soort_procedure` is nu beschikbaar als placeholder (`[[SoortProcedure]]`) en als conditie-veld voor artikel-filtering

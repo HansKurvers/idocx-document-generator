@@ -265,7 +265,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
         /// Bijv. 1 bankrekening → "bankrekening", 2+ → "bankrekeningen".
         /// Wordt aangeroepen NA BuildRules zodat kinderen-regels al bestaan.
         /// Collectie met 0 items wordt overgeslagen (geen grammatica toegevoegd).
-        /// Bij gedeelde sleutels (bijv. "bankrekening/bankrekeningen") wint de eerste collectie met items.
+        /// Bij gedeelde sleutels (bijv. "blijft/blijven") wint de laatste collectie met items.
         /// </summary>
         public void AddCollectionGrammarRules(Dictionary<string, string> rules, DossierData data, string correlationId)
         {
@@ -281,8 +281,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                     ("rekeningnummer", "rekeningnummers"),
                     ("valt", "vallen"),
                     ("staat", "staan"),
-                    ("rekening blijft", "rekeningen blijven"),
-                    ("rekening zal", "rekeningen zullen"),
+                    ("blijft", "blijven"),
+                    ("zal", "zullen"),
                 }),
                 ("BANKREKENINGEN", data.ConvenantInfo?.Bankrekeningen, new[]
                 {
@@ -292,8 +292,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                     ("het saldo", "de saldi"),
                     ("valt", "vallen"),
                     ("staat", "staan"),
-                    ("rekening blijft", "rekeningen blijven"),
-                    ("rekening zal", "rekeningen zullen"),
+                    ("blijft", "blijven"),
+                    ("zal", "zullen"),
                 }),
                 ("BELEGGINGEN", data.ConvenantInfo?.Beleggingen, new[]
                 {
@@ -341,11 +341,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                 foreach (var (singular, plural) in pairs)
                 {
                     var key = $"{singular}/{plural}";
-                    if (!rules.ContainsKey(key))
-                    {
-                        rules[key] = isPlural ? plural : singular;
-                        addedCount++;
-                    }
+                    rules[key] = isPlural ? plural : singular;
+                    addedCount++;
                 }
             }
 

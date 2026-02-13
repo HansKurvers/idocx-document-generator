@@ -602,7 +602,7 @@ public class GrammarRulesBuilderTests
     }
 
     [Fact]
-    public void AddCollectionGrammarRules_GedeeldeSleutel_EersteCollectieWint()
+    public void AddCollectionGrammarRules_GedeeldeSleutel_LaatsteCollectieWint()
     {
         var rules = new Dictionary<string, string>();
         var data = new DossierData
@@ -621,9 +621,9 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        // BANKREKENINGEN_KINDEREN staat eerst in de registry → enkelvoud wint
-        Assert.Equal("bankrekening", rules["bankrekening/bankrekeningen"]);
-        Assert.Equal("saldo", rules["saldo/saldi"]);
+        // BANKREKENINGEN staat later in de registry → meervoud wint
+        Assert.Equal("bankrekeningen", rules["bankrekening/bankrekeningen"]);
+        Assert.Equal("saldi", rules["saldo/saldi"]);
     }
 
     [Fact]
@@ -678,7 +678,7 @@ public class GrammarRulesBuilderTests
     }
 
     [Fact]
-    public void AddCollectionGrammarRules_EenBankrekening_RekeningBlijftEnkelvoud()
+    public void AddCollectionGrammarRules_EenBankrekening_BlijftEnkelvoud()
     {
         var rules = new Dictionary<string, string>();
         var data = new DossierData
@@ -691,11 +691,11 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("rekening blijft", rules["rekening blijft/rekeningen blijven"]);
+        Assert.Equal("blijft", rules["blijft/blijven"]);
     }
 
     [Fact]
-    public void AddCollectionGrammarRules_TweeBankrekeningen_RekeningenBlijvenMeervoud()
+    public void AddCollectionGrammarRules_TweeBankrekeningen_BlijvenMeervoud()
     {
         var rules = new Dictionary<string, string>();
         var data = new DossierData
@@ -708,11 +708,11 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("rekeningen blijven", rules["rekening blijft/rekeningen blijven"]);
+        Assert.Equal("blijven", rules["blijft/blijven"]);
     }
 
     [Fact]
-    public void AddCollectionGrammarRules_EenBankrekening_RekeningZalEnkelvoud()
+    public void AddCollectionGrammarRules_EenBankrekening_ZalEnkelvoud()
     {
         var rules = new Dictionary<string, string>();
         var data = new DossierData
@@ -725,11 +725,11 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("rekening zal", rules["rekening zal/rekeningen zullen"]);
+        Assert.Equal("zal", rules["zal/zullen"]);
     }
 
     [Fact]
-    public void AddCollectionGrammarRules_TweeBankrekeningen_RekeningenZullenMeervoud()
+    public void AddCollectionGrammarRules_TweeBankrekeningen_ZullenMeervoud()
     {
         var rules = new Dictionary<string, string>();
         var data = new DossierData
@@ -742,7 +742,7 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("rekeningen zullen", rules["rekening zal/rekeningen zullen"]);
+        Assert.Equal("zullen", rules["zal/zullen"]);
     }
 
     #endregion

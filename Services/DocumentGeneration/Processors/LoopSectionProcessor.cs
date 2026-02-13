@@ -456,7 +456,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             {
                 var kind = data.Kinderen?.FirstOrDefault(k => k.Id == kindId);
                 if (kind != null)
-                    return kind.Voornamen ?? kind.Naam ?? "het kind";
+                    return kind.Naam ?? "het kind";
             }
             return "het kind";
         }

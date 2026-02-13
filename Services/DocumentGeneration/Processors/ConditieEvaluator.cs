@@ -354,6 +354,19 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
         }
 
         /// <summary>
+        /// Converts a snake_case string to PascalCase.
+        /// Example: "duurzaam_gescheiden" → "DuurzaamGescheiden"
+        /// </summary>
+        private static string SnakeCaseToPascalCase(string snakeCase)
+        {
+            return string.Concat(
+                snakeCase.Split('_')
+                    .Where(s => s.Length > 0)
+                    .Select(s => char.ToUpper(s[0]) + s.Substring(1))
+            );
+        }
+
+        /// <summary>
         /// Creates a human-readable description of a condition
         /// </summary>
         private string DescribeCondition(Conditie conditie)
@@ -434,6 +447,20 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             foreach (var kvp in replacements)
             {
                 context[kvp.Key] = kvp.Value;
+            }
+
+            // Add PascalCase aliases for snake_case keys (bridge between
+            // ConvenantPlaceholderBuilder snake_case and admin PascalCase conditie-velden)
+            var snakeCaseKeys = replacements.Keys
+                .Where(k => k.Contains('_'))
+                .ToList();
+            foreach (var key in snakeCaseKeys)
+            {
+                var pascalKey = SnakeCaseToPascalCase(key);
+                if (!context.ContainsKey(pascalKey))
+                {
+                    context[pascalKey] = replacements[key];
+                }
             }
 
             // Add computed fields

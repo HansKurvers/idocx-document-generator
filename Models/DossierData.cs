@@ -14,6 +14,7 @@ namespace scheidingsdesk_document_generator.Models
         public string Status { get; set; } = string.Empty;
         public int GebruikerId { get; set; }
         public bool? IsAnoniem { get; set; }
+        public string? SoortProcedure { get; set; }
 
         /// <summary>
         /// Parties involved in the dossier (rol_id 1 and 2)

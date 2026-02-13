@@ -45,8 +45,10 @@ namespace scheidingsdesk_document_generator.Services
                 // Create a single command with multiple result sets
                 const string query = @"
                     -- Result set 1: Dossier information
-                    SELECT id, dossier_nummer, aangemaakt_op, gewijzigd_op, status, gebruiker_id, is_anoniem
-                    FROM dbo.dossiers 
+                    -- BELANGRIJK: Bij nieuwe kolommen die als placeholder/conditie-veld nodig zijn,
+                    -- voeg ze hier toe + in DossierData model + DossierPlaceholderBuilder
+                    SELECT id, dossier_nummer, aangemaakt_op, gewijzigd_op, status, gebruiker_id, is_anoniem, soort_procedure
+                    FROM dbo.dossiers
                     WHERE id = @DossierId;
 
                     -- Result set 2: Parties (rol_id 1 and 2)
@@ -335,7 +337,8 @@ namespace scheidingsdesk_document_generator.Services
                     GewijzigdOp = (DateTime)reader["gewijzigd_op"],
                     Status = ConvertToString(reader["status"]),
                     GebruikerId = (int)reader["gebruiker_id"],
-                    IsAnoniem = reader["is_anoniem"] == DBNull.Value ? null : (bool?)reader["is_anoniem"]
+                    IsAnoniem = reader["is_anoniem"] == DBNull.Value ? null : (bool?)reader["is_anoniem"],
+                    SoortProcedure = reader["soort_procedure"] == DBNull.Value ? null : ConvertToString(reader["soort_procedure"])
                 };
 
                 // Result set 2: Parties

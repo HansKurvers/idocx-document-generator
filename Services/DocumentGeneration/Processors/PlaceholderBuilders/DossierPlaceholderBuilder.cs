@@ -8,7 +8,12 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 {
     /// <summary>
     /// Builder voor basis dossier placeholders.
-    /// Verantwoordelijk voor: DossierNummer, DossierDatum, HuidigeDatum, IsAnoniem
+    /// Verantwoordelijk voor: DossierNummer, DossierDatum, HuidigeDatum, IsAnoniem, SoortProcedure
+    ///
+    /// BELANGRIJK: Bij nieuwe kolommen op dbo.dossiers die als placeholder/conditie-veld
+    /// beschikbaar moeten zijn: voeg ze toe aan (1) SQL query in DatabaseService.cs,
+    /// (2) DossierData model, (3) deze builder.
+    /// Custom placeholders uit placeholder_catalogus werken automatisch.
     /// </summary>
     public class DossierPlaceholderBuilder : BasePlaceholderBuilder
     {
@@ -30,6 +35,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "DossierDatum", DataFormatter.FormatDate(data.AangemaaktOp));
             AddPlaceholder(replacements, "HuidigeDatum", DataFormatter.FormatDateDutchLong(DateTime.Now));
             AddPlaceholder(replacements, "IsAnoniem", DataFormatter.ConvertToString(data.IsAnoniem));
+            AddPlaceholder(replacements, "SoortProcedure", data.SoortProcedure);
 
             _logger.LogDebug("Added dossier placeholders: DossierNummer={Nr}, IsAnoniem={Anoniem}",
                 data.DossierNummer, data.IsAnoniem);

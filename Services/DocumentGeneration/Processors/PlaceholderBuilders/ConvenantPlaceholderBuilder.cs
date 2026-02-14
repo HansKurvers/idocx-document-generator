@@ -144,6 +144,22 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "ALIMENTATIEPLICHTIGE", GetPartijBenaming(alimentatieplichtige, false));
             AddPlaceholder(replacements, "ALIMENTATIEGERECHTIGDE", GetPartijBenaming(alimentatiegerechtigde, false));
 
+            // PAL-varianten: partij-aanduiding (bijv. "de man"/"de vrouw" bij anoniem)
+            var betaler = info.PartneralimentatieBetaler?.ToLower();
+            if (betaler == "partij1" || betaler == "partij2")
+            {
+                var plichtigeIsPartij1 = betaler == "partij1";
+                AddPlaceholder(replacements, "AlimentatieplichtigePAL",
+                    replacements.GetValueOrDefault(plichtigeIsPartij1 ? "PARTIJ1_AANDUIDING" : "PARTIJ2_AANDUIDING", ""));
+                AddPlaceholder(replacements, "AlimentatiegerechtigdePAL",
+                    replacements.GetValueOrDefault(plichtigeIsPartij1 ? "PARTIJ2_AANDUIDING" : "PARTIJ1_AANDUIDING", ""));
+            }
+            else
+            {
+                AddPlaceholder(replacements, "AlimentatieplichtigePAL", "");
+                AddPlaceholder(replacements, "AlimentatiegerechtigdePAL", "");
+            }
+
             // Duurzaam gescheiden
             AddPlaceholder(replacements, "DUURZAAM_GESCHEIDEN_DATUM", FormatDate(info.DuurzaamGescheidenDatum));
 

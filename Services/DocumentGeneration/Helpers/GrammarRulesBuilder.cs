@@ -265,7 +265,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
         /// Bijv. 1 bankrekening → "bankrekening", 2+ → "bankrekeningen".
         /// Wordt aangeroepen NA BuildRules zodat kinderen-regels al bestaan.
         /// Collectie met 0 items wordt overgeslagen (geen grammatica toegevoegd).
-        /// Bij gedeelde sleutels (bijv. "blijft/blijven") wint de laatste collectie met items.
+        /// BANKREKENINGEN keys hebben br_ prefix om conflicten met BANKREKENINGEN_KINDEREN te voorkomen.
         /// </summary>
         public void AddCollectionGrammarRules(Dictionary<string, string> rules, DossierData data, string correlationId)
         {
@@ -286,14 +286,14 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                 }),
                 ("BANKREKENINGEN", data.ConvenantInfo?.Bankrekeningen, new[]
                 {
-                    ("bankrekening", "bankrekeningen"),
-                    ("de bankrekening", "de bankrekeningen"),
-                    ("saldo", "saldi"),
-                    ("het saldo", "de saldi"),
-                    ("valt", "vallen"),
-                    ("staat", "staan"),
-                    ("blijft", "blijven"),
-                    ("zal", "zullen"),
+                    ("br_bankrekening", "br_bankrekeningen"),
+                    ("br_de bankrekening", "br_de bankrekeningen"),
+                    ("br_saldo", "br_saldi"),
+                    ("br_het saldo", "br_de saldi"),
+                    ("br_valt", "br_vallen"),
+                    ("br_staat", "br_staan"),
+                    ("br_blijft", "br_blijven"),
+                    ("br_zal", "br_zullen"),
                 }),
                 ("BELEGGINGEN", data.ConvenantInfo?.Beleggingen, new[]
                 {

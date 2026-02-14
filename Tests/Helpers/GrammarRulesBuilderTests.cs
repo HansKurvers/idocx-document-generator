@@ -596,13 +596,14 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("bankrekening", rules["bankrekening/bankrekeningen"]); // 1 item
+        Assert.Equal("bankrekening", rules["bankrekening/bankrekeningen"]); // BANKREKENINGEN_KINDEREN: 1 item
         Assert.Equal("voertuigen", rules["voertuig/voertuigen"]); // 2 items
         Assert.Equal("pensioen", rules["pensioen/pensioenen"]); // 1 item
+        Assert.DoesNotContain("br_bankrekening/br_bankrekeningen", rules.Keys); // geen convenant bankrekeningen
     }
 
     [Fact]
-    public void AddCollectionGrammarRules_GedeeldeSleutel_LaatsteCollectieWint()
+    public void AddCollectionGrammarRules_BankrekeningenKinderenEnConvenant_OnafhankelijkeKeys()
     {
         var rules = new Dictionary<string, string>();
         var data = new DossierData
@@ -621,9 +622,17 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        // BANKREKENINGEN staat later in de registry → meervoud wint
-        Assert.Equal("bankrekeningen", rules["bankrekening/bankrekeningen"]);
-        Assert.Equal("saldi", rules["saldo/saldi"]);
+        // BANKREKENINGEN_KINDEREN keys (zonder prefix) → enkelvoud (1 item)
+        Assert.Equal("bankrekening", rules["bankrekening/bankrekeningen"]);
+        Assert.Equal("saldo", rules["saldo/saldi"]);
+        Assert.Equal("blijft", rules["blijft/blijven"]);
+        Assert.Equal("zal", rules["zal/zullen"]);
+
+        // BANKREKENINGEN keys (br_ prefix) → meervoud (3 items)
+        Assert.Equal("br_bankrekeningen", rules["br_bankrekening/br_bankrekeningen"]);
+        Assert.Equal("br_saldi", rules["br_saldo/br_saldi"]);
+        Assert.Equal("br_blijven", rules["br_blijft/br_blijven"]);
+        Assert.Equal("br_zullen", rules["br_zal/br_zullen"]);
     }
 
     [Fact]

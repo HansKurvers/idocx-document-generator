@@ -1883,7 +1883,23 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.11.0 (Current) - Generiek loop-mechanisme voor JSON-collecties + collectie-grammatica
+### v2.12.0 (Current) - Voorlopige partneralimentatie bedrag
+
+**Nieuwe features:**
+- **`VOORLOPIGE_ALIMENTATIE_BEDRAG` placeholder**: Verwijst nu naar het nieuwe aparte veld `voorlopige_partneralimentatie_bedrag` op `dbo.convenant_info` (voorheen verwees deze naar `HoogtePartneralimentatie`)
+
+**Technische wijzigingen:**
+- `Models/ConvenantInfoData.cs` — `VoorlopigePartneralimentatieBedrag` property toegevoegd
+- `Services/DatabaseService.cs` — `voorlopige_partneralimentatie_bedrag` mapping toegevoegd
+- `ConvenantPlaceholderBuilder.cs` — `VOORLOPIGE_ALIMENTATIE_BEDRAG` verwijst naar nieuw veld
+
+**Database migratie vereist:**
+- `20260214_voorlopige_partneralimentatie_bedrag.sql` — Nieuwe kolom `voorlopige_partneralimentatie_bedrag DECIMAL(10,2) NULL` op `dbo.convenant_info`
+
+**Breaking Changes:**
+- `[[VOORLOPIGE_ALIMENTATIE_BEDRAG]]` toont nu het specifieke voorlopige bedrag i.p.v. het definitieve partneralimentatie bedrag. Templates die dit placeholder gebruiken moeten gecontroleerd worden.
+
+### v2.11.0 - Generiek loop-mechanisme voor JSON-collecties + collectie-grammatica
 
 **Nieuwe features:**
 - **8 nieuwe loop-collecties**: `BANKREKENINGEN_KINDEREN`, `BANKREKENINGEN`, `BELEGGINGEN`, `VOERTUIGEN`, `VERZEKERINGEN`, `SCHULDEN`, `VORDERINGEN`, `PENSIOENEN` — itereer over dynamische lijsten in artikel templates met `[[#COLLECTIE]]...[[/COLLECTIE]]` syntax

@@ -141,7 +141,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             if (!amount.HasValue)
                 return string.Empty;
 
-            return amount.Value.ToString("C2", DutchCulture);
+            // Use non-breaking space between € and amount to prevent line break
+            return amount.Value.ToString("C2", DutchCulture).Replace("€ ", "€\u00A0");
         }
 
         /// <summary>

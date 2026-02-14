@@ -432,10 +432,10 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("bankrekening", rules["bankrekening/bankrekeningen"]);
-        Assert.Equal("saldo", rules["saldo/saldi"]);
-        Assert.Equal("het saldo", rules["het saldo/de saldi"]);
-        Assert.Equal("rekeningnummer", rules["rekeningnummer/rekeningnummers"]);
+        Assert.Equal("bankrekening", rules["bankrekeningkinderen bankrekening/bankrekeningen"]);
+        Assert.Equal("saldo", rules["bankrekeningkinderen saldo/saldi"]);
+        Assert.Equal("het saldo", rules["bankrekeningkinderen het saldo/de saldi"]);
+        Assert.Equal("rekeningnummer", rules["bankrekeningkinderen rekeningnummer/rekeningnummers"]);
     }
 
     [Fact]
@@ -452,11 +452,11 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("bankrekeningen", rules["bankrekening/bankrekeningen"]);
-        Assert.Equal("saldi", rules["saldo/saldi"]);
-        Assert.Equal("de saldi", rules["het saldo/de saldi"]);
-        Assert.Equal("rekeningnummers", rules["rekeningnummer/rekeningnummers"]);
-        Assert.Equal("vallen", rules["valt/vallen"]);
+        Assert.Equal("bankrekeningen", rules["bankrekeningkinderen bankrekening/bankrekeningen"]);
+        Assert.Equal("saldi", rules["bankrekeningkinderen saldo/saldi"]);
+        Assert.Equal("de saldi", rules["bankrekeningkinderen het saldo/de saldi"]);
+        Assert.Equal("rekeningnummers", rules["bankrekeningkinderen rekeningnummer/rekeningnummers"]);
+        Assert.Equal("vallen", rules["bankrekeningkinderen valt/vallen"]);
     }
 
     [Fact]
@@ -473,7 +473,7 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("valt", rules["valt/vallen"]);
+        Assert.Equal("valt", rules["bankrekeningkinderen valt/vallen"]);
     }
 
     [Fact]
@@ -490,8 +490,8 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.DoesNotContain("bankrekening/bankrekeningen", rules.Keys);
-        Assert.DoesNotContain("saldo/saldi", rules.Keys);
+        Assert.DoesNotContain("bankrekeningkinderen bankrekening/bankrekeningen", rules.Keys);
+        Assert.DoesNotContain("bankrekeningkinderen saldo/saldi", rules.Keys);
     }
 
     [Fact]
@@ -502,7 +502,7 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.DoesNotContain("bankrekening/bankrekeningen", rules.Keys);
+        Assert.DoesNotContain("bankrekeningkinderen bankrekening/bankrekeningen", rules.Keys);
     }
 
     [Fact]
@@ -596,7 +596,7 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("bankrekening", rules["bankrekening/bankrekeningen"]); // BANKREKENINGEN_KINDEREN: 1 item
+        Assert.Equal("bankrekening", rules["bankrekeningkinderen bankrekening/bankrekeningen"]); // BANKREKENINGEN_KINDEREN: 1 item
         Assert.Equal("voertuigen", rules["voertuig/voertuigen"]); // 2 items
         Assert.Equal("pensioen", rules["pensioen/pensioenen"]); // 1 item
         Assert.DoesNotContain("br_bankrekening/br_bankrekeningen", rules.Keys); // geen convenant bankrekeningen
@@ -622,11 +622,11 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        // BANKREKENINGEN_KINDEREN keys (zonder prefix) → enkelvoud (1 item)
-        Assert.Equal("bankrekening", rules["bankrekening/bankrekeningen"]);
-        Assert.Equal("saldo", rules["saldo/saldi"]);
-        Assert.Equal("blijft", rules["blijft/blijven"]);
-        Assert.Equal("zal", rules["zal/zullen"]);
+        // BANKREKENINGEN_KINDEREN keys (bankrekeningkinderen prefix) → enkelvoud (1 item)
+        Assert.Equal("bankrekening", rules["bankrekeningkinderen bankrekening/bankrekeningen"]);
+        Assert.Equal("saldo", rules["bankrekeningkinderen saldo/saldi"]);
+        Assert.Equal("blijft", rules["bankrekeningkinderen blijft/blijven"]);
+        Assert.Equal("zal", rules["bankrekeningkinderen zal/zullen"]);
 
         // BANKREKENINGEN keys (br_ prefix) → meervoud (3 items)
         Assert.Equal("br_bankrekeningen", rules["br_bankrekening/br_bankrekeningen"]);
@@ -666,7 +666,7 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("staat", rules["staat/staan"]);
+        Assert.Equal("staat", rules["bankrekeningkinderen staat/staan"]);
     }
 
     [Fact]
@@ -683,7 +683,7 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("staan", rules["staat/staan"]);
+        Assert.Equal("staan", rules["bankrekeningkinderen staat/staan"]);
     }
 
     [Fact]
@@ -700,7 +700,7 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("blijft", rules["blijft/blijven"]);
+        Assert.Equal("blijft", rules["bankrekeningkinderen blijft/blijven"]);
     }
 
     [Fact]
@@ -717,7 +717,7 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("blijven", rules["blijft/blijven"]);
+        Assert.Equal("blijven", rules["bankrekeningkinderen blijft/blijven"]);
     }
 
     [Fact]
@@ -734,7 +734,7 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("zal", rules["zal/zullen"]);
+        Assert.Equal("zal", rules["bankrekeningkinderen zal/zullen"]);
     }
 
     [Fact]
@@ -751,7 +751,7 @@ public class GrammarRulesBuilderTests
 
         _builder.AddCollectionGrammarRules(rules, data, "test-123");
 
-        Assert.Equal("zullen", rules["zal/zullen"]);
+        Assert.Equal("zullen", rules["bankrekeningkinderen zal/zullen"]);
     }
 
     #endregion

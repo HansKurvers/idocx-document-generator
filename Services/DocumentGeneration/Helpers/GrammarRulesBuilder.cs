@@ -269,8 +269,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
         /// </summary>
         public void AddCollectionGrammarRules(Dictionary<string, string> rules, DossierData data, string correlationId)
         {
-            // Declaratieve registratie: JSON-bron + enkelvoud/meervoud paren
-            var collectionGrammars = new (string Name, string? Json, (string Singular, string Plural)[] Pairs)[]
+            // Declaratieve registratie: JSON-bron + enkelvoud/meervoud paren + optioneel key-prefix
+            var collectionGrammars = new (string Name, string? Json, (string Singular, string Plural)[] Pairs, string? KeyPrefix)[]
             {
                 ("BANKREKENINGEN_KINDEREN", data.CommunicatieAfspraken?.BankrekeningKinderen, new[]
                 {
@@ -283,7 +283,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                     ("staat", "staan"),
                     ("blijft", "blijven"),
                     ("zal", "zullen"),
-                }),
+                }, "bankrekeningkinderen "),
                 ("BANKREKENINGEN", data.ConvenantInfo?.Bankrekeningen, new[]
                 {
                     ("br_bankrekening", "br_bankrekeningen"),
@@ -294,44 +294,44 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
                     ("br_staat", "br_staan"),
                     ("br_blijft", "br_blijven"),
                     ("br_zal", "br_zullen"),
-                }),
+                }, null),
                 ("BELEGGINGEN", data.ConvenantInfo?.Beleggingen, new[]
                 {
                     ("belegging", "beleggingen"),
                     ("de belegging", "de beleggingen"),
-                }),
+                }, null),
                 ("VOERTUIGEN", data.ConvenantInfo?.Voertuigen, new[]
                 {
                     ("voertuig", "voertuigen"),
                     ("het voertuig", "de voertuigen"),
-                }),
+                }, null),
                 ("VERZEKERINGEN", data.ConvenantInfo?.Verzekeringen, new[]
                 {
                     ("verzekering", "verzekeringen"),
                     ("de verzekering", "de verzekeringen"),
                     ("polis", "polissen"),
                     ("de polis", "de polissen"),
-                }),
+                }, null),
                 ("SCHULDEN", data.ConvenantInfo?.Schulden, new[]
                 {
                     ("schuld", "schulden"),
                     ("de schuld", "de schulden"),
-                }),
+                }, null),
                 ("VORDERINGEN", data.ConvenantInfo?.Vorderingen, new[]
                 {
                     ("vordering", "vorderingen"),
                     ("de vordering", "de vorderingen"),
-                }),
+                }, null),
                 ("PENSIOENEN", data.ConvenantInfo?.Pensioenen, new[]
                 {
                     ("pensioen", "pensioenen"),
                     ("het pensioen", "de pensioenen"),
-                }),
+                }, null),
             };
 
             int addedCount = 0;
 
-            foreach (var (name, json, pairs) in collectionGrammars)
+            foreach (var (name, json, pairs, prefix) in collectionGrammars)
             {
                 var count = CountJsonArrayItems(json);
                 if (count == 0) continue;
@@ -340,7 +340,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
 
                 foreach (var (singular, plural) in pairs)
                 {
-                    var key = $"{singular}/{plural}";
+                    var key = prefix != null ? $"{prefix}{singular}/{plural}" : $"{singular}/{plural}";
                     rules[key] = isPlural ? plural : singular;
                     addedCount++;
                 }

@@ -1022,6 +1022,7 @@ namespace scheidingsdesk_document_generator.Services
                 // PARTNERALIMENTATIE - Behoefteberekening & Draagkracht
                 DuurzaamGescheiden = SafeReadBoolean(reader, "duurzaam_gescheiden"),
                 DuurzaamGescheidenDatum = SafeReadDateTime(reader, "duurzaam_gescheiden_datum"),
+                VoorlopigePartneralimentatieBedrag = SafeReadDecimal(reader, "voorlopige_partneralimentatie_bedrag"),
                 AlimentatieBerekeningAanhechten = SafeReadBoolean(reader, "alimentatie_berekening_aanhechten"),
                 BerekeningMethode = SafeReadString(reader, "berekening_methode"),
                 NettoGezinsinkomen = SafeReadDecimal(reader, "netto_gezinsinkomen"),

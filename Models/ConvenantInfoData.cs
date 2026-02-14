@@ -16,6 +16,7 @@ namespace scheidingsdesk_document_generator.Models
         // Substap 0: Behoefteberekening & Draagkracht
         public bool? DuurzaamGescheiden { get; set; }
         public DateTime? DuurzaamGescheidenDatum { get; set; }
+        public decimal? VoorlopigePartneralimentatieBedrag { get; set; }
         public bool? AlimentatieBerekeningAanhechten { get; set; }
         public string? BerekeningMethode { get; set; } // hofnorm, behoeftelijst
         public decimal? NettoGezinsinkomen { get; set; }

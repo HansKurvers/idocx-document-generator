@@ -186,7 +186,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             // Alimentatie bedrag
             AddPlaceholder(replacements, "HOOGTE_PARTNERALIMENTATIE", FormatCurrency(info.HoogtePartneralimentatie));
             AddPlaceholder(replacements, "PARTNERALIMENTATIE_INGANGSDATUM", FormatDate(info.PartneralimentatieIngangsdatum));
-            AddPlaceholder(replacements, "VOORLOPIGE_ALIMENTATIE_BEDRAG", FormatCurrency(info.HoogtePartneralimentatie));
+            AddPlaceholder(replacements, "VOORLOPIGE_ALIMENTATIE_BEDRAG", FormatCurrency(info.VoorlopigePartneralimentatieBedrag));
 
             // Afkoop
             AddPlaceholder(replacements, "AFKOOP_BEDRAG", FormatCurrency(info.AfkoopBedrag));

@@ -203,6 +203,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "berekening_methode", info.BerekeningMethode ?? "");
             AddPlaceholder(replacements, "verdiencapaciteit_type", info.VerdiencapaciteitType ?? "");
             AddPlaceholder(replacements, "partneralimentatie_betaler", info.PartneralimentatieBetaler ?? "");
+            AddPlaceholder(replacements, "PartneralimentatieBetaler", info.PartneralimentatieBetaler ?? "");
             AddPlaceholder(replacements, "partneralimentatie_van_toepassing", !string.IsNullOrEmpty(info.PartneralimentatieBetaler) && info.PartneralimentatieBetaler != "geen" ? "true" : "false");
             AddPlaceholder(replacements, "afstand_recht", info.AfstandRecht ?? "");
             AddPlaceholder(replacements, "jusvergelijking", info.Jusvergelijking == true ? "true" : "false");

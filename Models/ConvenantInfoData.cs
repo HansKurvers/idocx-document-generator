@@ -42,6 +42,8 @@ namespace scheidingsdesk_document_generator.Models
         public bool? Jusvergelijking { get; set; }
         public bool? BijdrageHypotheekrente { get; set; }
         public decimal? BijdrageHypotheekrenteBedrag { get; set; }
+        public string? BijdrageHypotheekrenteTotWanneer { get; set; }
+        public DateTime? BijdrageHypotheekrenteTotDatum { get; set; }
         public DateTime? BijdrageHypotheekrenteIngangsdatum { get; set; }
         public DateTime? BijdrageHypotheekrenteEinddatum { get; set; }
         public bool? PartneralimentatieAfkopen { get; set; }

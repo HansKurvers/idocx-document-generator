@@ -193,6 +193,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             // Bijdrage hypotheekrente
             AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_BEDRAG", FormatCurrency(info.BijdrageHypotheekrenteBedrag));
+            AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_TOT_WANNEER", info.BijdrageHypotheekrenteTotWanneer ?? "");
+            AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_TOT_DATUM", FormatDate(info.BijdrageHypotheekrenteTotDatum));
             AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_INGANGSDATUM", FormatDate(info.BijdrageHypotheekrenteIngangsdatum));
             AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_EINDDATUM", FormatDate(info.BijdrageHypotheekrenteEinddatum));
 
@@ -224,6 +226,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "afstand_recht", info.AfstandRecht ?? "");
             AddPlaceholder(replacements, "jusvergelijking", info.Jusvergelijking == true ? "true" : "false");
             AddPlaceholder(replacements, "bijdrage_hypotheekrente", info.BijdrageHypotheekrente == true ? "true" : "false");
+            AddPlaceholder(replacements, "bijdrage_hypotheekrente_tot_wanneer", info.BijdrageHypotheekrenteTotWanneer ?? "");
             AddPlaceholder(replacements, "partneralimentatie_afkopen", info.PartneralimentatieAfkopen == true ? "true" : "false");
             AddPlaceholder(replacements, "afkoop_type", info.AfkoopType ?? "");
             AddPlaceholder(replacements, "niet_wijzigingsbeding", info.NietWijzigingsbeding ?? "");

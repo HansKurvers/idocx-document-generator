@@ -1047,6 +1047,8 @@ namespace scheidingsdesk_document_generator.Services
                 Jusvergelijking = SafeReadBoolean(reader, "jusvergelijking"),
                 BijdrageHypotheekrente = SafeReadBoolean(reader, "bijdrage_hypotheekrente"),
                 BijdrageHypotheekrenteBedrag = SafeReadDecimal(reader, "bijdrage_hypotheekrente_bedrag"),
+                BijdrageHypotheekrenteTotWanneer = SafeReadString(reader, "bijdrage_hypotheekrente_tot_wanneer"),
+                BijdrageHypotheekrenteTotDatum = SafeReadDateTime(reader, "bijdrage_hypotheekrente_tot_datum"),
                 PartneralimentatieAfkopen = SafeReadBoolean(reader, "partneralimentatie_afkopen"),
                 AfkoopType = SafeReadString(reader, "afkoop_type"),
                 AfkoopBedrag = SafeReadDecimal(reader, "afkoop_bedrag"),

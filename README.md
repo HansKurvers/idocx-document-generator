@@ -1303,7 +1303,7 @@ Convenant-specifieke placeholders gebruiken UPPER_SNAKE_CASE notatie en worden g
 
 ```
 [[BIJDRAGE_HYPOTHEEKRENTE_BEDRAG]]         - Bijdrage hypotheekrente bedrag (€ formaat)
-[[BIJDRAGE_HYPOTHEEKRENTE_TOT_WANNEER]]    - Tot wanneer (keuze-optie)
+[[BIJDRAGE_HYPOTHEEKRENTE_TOT_WANNEER]]    - Tot wanneer (leesbaar label: "verkoop van de woning" / "de akte van verdeling" / "een nader bepaalde datum")
 [[BIJDRAGE_HYPOTHEEKRENTE_TOT_DATUM]]      - Tot datum (specifieke datum)
 [[BIJDRAGE_HYPOTHEEKRENTE_INGANGSDATUM]]   - Ingangsdatum bijdrage hypotheekrente
 [[BIJDRAGE_HYPOTHEEKRENTE_EINDDATUM]]      - Einddatum bijdrage hypotheekrente
@@ -2175,7 +2175,23 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.12.0 (Current) - Voorlopige partneralimentatie bedrag & Hypotheekrente tot wanneer
+### v2.13.0 (Current) - Hypotheekrente ingangsdatum & leesbare tot-wanneer labels
+
+**Nieuwe features:**
+- **`BIJDRAGE_HYPOTHEEKRENTE_TOT_WANNEER` leesbare labels**: Placeholder toont nu leesbare tekst i.p.v. database codes: "verkoop van de woning", "de akte van verdeling", "een nader bepaalde datum"
+- **`BIJDRAGE_HYPOTHEEKRENTE_INGANGSDATUM` mapping fix**: DatabaseService mapping toegevoegd zodat de placeholder daadwerkelijk data ontvangt (was eerder niet gemapped)
+
+**Technische wijzigingen:**
+- `Services/DatabaseService.cs` — `bijdrage_hypotheekrente_ingangsdatum` mapping toegevoegd
+- `ConvenantPlaceholderBuilder.cs` — `GetBijdrageHypotheekrenteTotWanneerLabel()` helper voor waarde-naar-label vertaling
+
+**Database migratie vereist:**
+- `20260216_bijdrage_hypotheekrente_ingangsdatum.sql` — Nieuwe kolom `bijdrage_hypotheekrente_ingangsdatum DATE NULL` op `dbo.convenant_info`
+
+**Breaking Changes:**
+- `[[BIJDRAGE_HYPOTHEEKRENTE_TOT_WANNEER]]` toont nu leesbare labels i.p.v. de raw database waarde (bijv. "verkoop van de woning" i.p.v. "verkoop_woning"). Templates die de exacte database waarde verwachten moeten worden gecontroleerd.
+
+### v2.12.0 - Voorlopige partneralimentatie bedrag & Hypotheekrente tot wanneer
 
 **Nieuwe features:**
 - **`VOORLOPIGE_ALIMENTATIE_BEDRAG` placeholder**: Verwijst nu naar het nieuwe aparte veld `voorlopige_partneralimentatie_bedrag` op `dbo.convenant_info` (voorheen verwees deze naar `HoogtePartneralimentatie`)

@@ -697,10 +697,21 @@ Partneralimentatie:
 - [[HOOGTE_PARTNERALIMENTATIE]] - Hoogte partneralimentatie
 - [[PARTNERALIMENTATIE_INGANGSDATUM]] - Ingangsdatum partneralimentatie
 - [[AFKOOP_BEDRAG]] - Afkoop bedrag
+- [[VOORLOPIGE_ALIMENTATIE_BEDRAG]] - Voorlopig partneralimentatie bedrag
+- [[AFSTAND_TENZIJ_OMSTANDIGHEID]] - Afstand tenzij omstandigheid
+- [[WIJZIGINGSOMSTANDIGHEDEN]] - Wijzigingsomstandigheden
+- [[GEEN_WIJZIGINGSOMSTANDIGHEDEN]] - Geen wijzigingsomstandigheden
+- [[CONTRACTUELE_TERMIJN_JAREN]] - Contractuele termijn in jaren
+- [[CONTRACTUELE_TERMIJN_INGANGSDATUM]] - Ingangsdatum contractuele termijn
+- [[PERIODE_DOORBETALEN_1160]] - Periode doorbetalen bij art. 1:160
 - [[BIJDRAGE_HYPOTHEEKRENTE_BEDRAG]] - Bijdrage hypotheekrente bedrag
+- [[BIJDRAGE_HYPOTHEEKRENTE_TOT_WANNEER]] - Tot wanneer bijdrage hypotheekrente
+- [[BIJDRAGE_HYPOTHEEKRENTE_TOT_DATUM]] - Tot datum bijdrage hypotheekrente
 - [[BIJDRAGE_HYPOTHEEKRENTE_INGANGSDATUM]] - Ingangsdatum bijdrage hypotheekrente
 - [[BIJDRAGE_HYPOTHEEKRENTE_EINDDATUM]] - Einddatum bijdrage hypotheekrente
 - [[INDEXERING_EERSTE_JAAR]] - Eerste jaar indexering
+- [[AlimentatieplichtigePAL]] - Alimentatieplichtige in partij-aanduiding stijl (de man/de vrouw)
+- [[AlimentatiegerechtigdePAL]] - Alimentatiegerechtigde in partij-aanduiding stijl (de man/de vrouw)
 
 Woning:
 - [[WONING_ADRES]] - Woning adres
@@ -714,9 +725,21 @@ Woning:
 - [[WONING_TOEDELING_WAARDE]] - Toedelingswaarde woning
 - [[WONING_LAATPRIJS]] - Laatprijs woning
 - [[WONING_OVERBEDELING]] - Overbedeling woning
+- [[WONING_OVERBEDELING_SPAARPRODUCTEN]] - Overbedeling spaarproducten
 - [[NOTARIS_MR]] - Naam notaris (mr.)
 - [[NOTARIS_STANDPLAATS]] - Standplaats notaris
 - [[NOTARIS_LEVERING_DATUM]] - Leveringsdatum notaris
+- [[MAKELAAR_VERKOOP]] - Makelaar verkoop
+- [[ONTSLAG_HOOFDELIJKHEID_DATUM]] - Datum ontslag hoofdelijkheid
+- [[HUURRECHT_ANDERE_DATUM]] - Datum huurrecht
+- [[HUUR_VERPLICHTINGEN_OVERNAME_DATUM]] - Datum overname huurverplichtingen
+
+Hypotheek:
+- [[HYPOTHEEK_NOTARIS_MR]] - Hypotheek notaris naam
+- [[HYPOTHEEK_NOTARIS_STANDPLAATS]] - Hypotheek notaris standplaats
+- [[HYPOTHEEK_NOTARIS_DATUM]] - Hypotheek notaris datum
+- [[PRIVEVERMOGEN_VORDERING_BEDRAG]] - Privevermogen vordering bedrag
+- [[PRIVEVERMOGEN_REDEN]] - Reden privevermogen
 
 Kadastraal:
 - [[KADASTRAAL_GEMEENTE]] - Kadastrale gemeente
@@ -725,7 +748,17 @@ Kadastraal:
 - [[KADASTRAAL_ARE]] - Kadastrale are
 - [[KADASTRAAL_CENTIARE]] - Kadastrale centiare
 - [[KADASTRAAL_AANDUIDING]] - Kadastrale aanduiding
+- [[KADASTRAAL_OPPERVLAKTE]] - Kadastrale oppervlakte
 - [[KADASTRAAL_VOLLEDIGE_NOTATIE]] - Volledige kadastrale notatie
+
+Vermogensverdeling:
+- [[INBOEDEL]] - Inboedel afspraken
+- [[VERMOGENSVERDELING_OPMERKINGEN]] - Opmerkingen vermogensverdeling
+
+Pensioen:
+- [[PENSIOEN_OPMERKINGEN]] - Opmerkingen pensioen
+- [[BIJZONDER_PARTNERPENSIOEN]] - Bijzonder partnerpensioen
+- [[BIJZONDER_PARTNERPENSIOEN_BEDRAG]] - Bedrag bijzonder partnerpensioen
 
 Kwijting / Huwelijksgoederenregime:
 - [[HUWELIJKSGOEDERENREGIME]] - Automatisch afgeleid huwelijksgoederenregime (raw waarde, bijv. "huwelijksvoorwaarden", "algehele_gemeenschap_voor_2018"). Wordt bepaald op basis van SoortRelatie, OvereenkomstGemaakt en DatumAanvangRelatie uit stap 2 (Partijen).
@@ -749,5 +782,10 @@ Considerans:
 - [[MEDIATOR_NAAM]] - Naam mediator
 - [[MEDIATOR_PLAATS]] - Plaats mediator
 - [[RECHTBANK]] - Rechtbank
+- [[RECHTBANK_LOCATIE]] - Zittingsplaats rechtbank
 - [[ADVOCAAT_PARTIJ1]] - Advocaat partij 1
 - [[ADVOCAAT_PARTIJ2]] - Advocaat partij 2
+- [[SPAARREKENING_KINDEREN_NUMMERS]] - Spaarrekeningnummers kinderen
+- [[ERKENNINGSDATUM]] - Erkenningsdatum
+- [[MINDERJARIGE_KINDEREN_NAMEN]] - Roepnamen minderjarige kinderen
+- [[MINDERJARIGE_KINDEREN_ZIJN_IS]] - "zijn" of "is" afhankelijk van aantal

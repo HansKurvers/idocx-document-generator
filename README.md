@@ -34,9 +34,9 @@ De Ouderschapsplan Document Generator is een serverless applicatie gebouwd met A
 
 | Frontend | API | Doc Generator | Status |
 |----------|-----|---------------|--------|
-| 1.4.x | 1.3.x | 2.6.x | ✅ Actueel |
-| 1.4.x | 1.3.x | 2.5.x | ⚠️ Legacy |
-| 1.3.x | 1.2.x | 2.4.x | ❌ Niet ondersteund |
+| 1.4.x | 1.3.x | 2.12.x | ✅ Actueel |
+| 1.4.x | 1.3.x | 2.11.x | ⚠️ Legacy |
+| 1.3.x | 1.2.x | 2.10.x | ❌ Niet ondersteund |
 
 > **Let op**: Zorg dat alle componenten compatibele versies draaien om onverwacht gedrag te voorkomen.
 
@@ -50,28 +50,39 @@ De Ouderschapsplan Document Generator is een serverless applicatie gebouwd met A
    - Vult Word template met gepersonaliseerde informatie
    - Genereert dynamische tabellen voor omgang en zorg
 
-2. **Document Processing** (`/api/process`)
+2. **Convenant Generatie** (`/api/convenant`) (Nieuw)
+   - Genereert echtscheidingsconvenanten op basis van dossier ID
+   - 80+ convenant-specifieke placeholders (partneralimentatie, woning, vermogensverdeling, pensioen, fiscaal)
+   - Dezelfde architectuur als ouderschapsplan met gedeelde services
+
+3. **Document Processing** (`/api/process`)
    - Verwijdert content controls uit Word documenten
    - Verwerkt placeholder teksten
    - Zorgt voor correcte tekstopmaak
 
-3. **Template Management** (Nieuw in v2.1.0)
+4. **Template Management** (Nieuw in v2.1.0)
    - **Get Template Types** (`/api/template-types`) - Haalt beschikbare template types op
    - **Get Templates by Type** (`/api/templates/{type}`) - Haalt templates op voor een specifiek type
    - Ondersteunt types: Feestdag, Vakantie, Algemeen, Bijzondere dag
 
-4. **Grammatica Regels**
+5. **Placeholder Catalogus** (`/api/placeholders`) (Nieuw)
+   - Haalt alle beschikbare placeholders op uit `placeholders.md`
+   - Optioneel filteren op categorie
+   - 30 minuten cache voor performance
+   - Retourneert naam, beschrijving, categorie en formaat per placeholder
+
+6. **Grammatica Regels**
    - Automatische aanpassing van enkelvoud/meervoud op basis van aantal kinderen
    - Geslachtsspecifieke voornaamwoorden (hij/zij/hen)
    - Nederlandse taalregels voor lijsten ("en" tussen laatste twee items)
 
-5. **Dynamische Tabellen**
+7. **Dynamische Tabellen**
    - Omgangstabellen per week regeling met dagindeling
    - Zorgtabellen per categorie
    - Vakantieregelingen (voorjaar, mei, zomer, herfst, kerst)
    - Feestdagenregelingen (Pasen, Koningsdag, Sinterklaas, etc.)
 
-6. **Artikel Bibliotheek Integratie** (Nieuw in v2.3.0, uitgebreid in v2.7.0)
+8. **Artikel Bibliotheek Integratie** (Nieuw in v2.3.0, uitgebreid in v2.7.0)
    - Haalt artikelen op uit database met 4-laags prioriteit (dossier > gebruiker > eigen artikel > systeem)
    - **Eigen artikelen**: Gebruiker-specifieke artikelen (`eigenaar_id = gebruiker_id`) worden automatisch meegenomen
    - **Uitgeschakelde artikelen filteren**: Artikelen met `is_actief = false` worden automatisch uitgesloten
@@ -84,7 +95,7 @@ De Ouderschapsplan Document Generator is een serverless applicatie gebouwd met A
    - `[[ARTIKELEN]]` placeholder genereert alle actieve artikelen (systeem + eigen)
    - Ondersteunt `[[IF:Veld]]...[[ENDIF:Veld]]` binnen artikelen
 
-7. **Template Placeholder Systemen**
+9. **Template Placeholder Systemen**
    - Ondersteunt meerdere placeholder formaten: `[[Key]]`, `{Key}`, `<<Key>>`, `[Key]`
    - Dynamische vervanging van persoons-, kind- en dossiergegevens
    - Speciale placeholders voor tabellen en lijsten
@@ -113,11 +124,14 @@ Deze applicatie is gebouwd met de volgende principes in gedachten:
 │   ├── ZorgData.cs                             # Zorgregelingen
 │   ├── AlimentatieData.cs                      # Alimentatie informatie
 │   ├── OuderschapsplanInfoData.cs              # Ouderschapsplan specifieke info
+│   ├── ConvenantInfoData.cs                    # Convenant specifieke info (partneralimentatie, woning, etc.)
 │   ├── ArtikelData.cs                          # Artikel bibliotheek data (v2.3.0, conditieConfig v2.7.0)
-│   └── ConditieModels.cs                       # Conditie/ConditieConfig modellen
+│   ├── ConditieModels.cs                       # Conditie/ConditieConfig modellen
+│   └── PlaceholderInfo.cs                      # Placeholder catalogus model
 │
 ├── Services/                                    # Business logic services
 │   ├── DatabaseService.cs                      # Database interactie (SQL queries)
+│   ├── PlaceholderCatalogService.cs            # Placeholder catalogus (parsed uit placeholders.md)
 │   │
 │   ├── Artikel/                                # Artikel bibliotheek services (v2.3.0)
 │   │   ├── IArtikelService.cs                  # Interface voor artikel verwerking
@@ -133,8 +147,11 @@ Deze applicatie is gebouwd met de volgende principes in gedachten:
 │       │   ├── DutchLanguageHelper.cs          # 🇳🇱 Nederlandse grammatica regels
 │       │   ├── DataFormatter.cs                # 📝 Data formatting (datums, namen, adressen)
 │       │   ├── OpenXmlHelper.cs                # 📄 Word document element creatie
-│       │   ├── GrammarRulesBuilder.cs          # 🔤 Grammar rules op basis van kinderen
-│       │   └── ArticleNumberingHelper.cs       # 🔢 Automatische artikelnummering
+│       │   ├── GrammarRulesBuilder.cs          # 🔤 Grammar rules op basis van kinderen + collecties
+│       │   ├── ArticleNumberingHelper.cs       # 🔢 Automatische multi-level artikelnummering
+│       │   ├── InlineFormattingParser.cs       # ✏️ Bold/underline parsing in artikel templates
+│       │   ├── LegalNumberingHelper.cs         # 📑 Juridische nummering (Word list styles)
+│       │   └── ListNumberingHelper.cs          # 📋 Opsommingen (bullet/genummerd) in artikelen
 │       │
 │       ├── Processors/                         # Document verwerking
 │       │   ├── PlaceholderProcessor.cs         # Vervangt placeholders in document
@@ -144,31 +161,54 @@ Deze applicatie is gebouwd met de volgende principes in gedachten:
 │       │   ├── ConditionalSectionProcessor.cs  # Verwerkt [[IF:]]...[[ENDIF:]] blokken
 │       │   ├── IConditionalSectionProcessor.cs
 │       │   ├── ConditieEvaluator.cs            # AND/OR conditie evaluatie (placeholders + artikelen)
-│       │   └── IConditieEvaluator.cs
+│       │   ├── IConditieEvaluator.cs
+│       │   ├── LoopSectionProcessor.cs         # 🔄 Loop secties voor collecties (JSON + kinderen)
+│       │   │
+│       │   └── PlaceholderBuilders/            # Modulaire placeholder builders (Order-based)
+│       │       ├── IPlaceholderBuilder.cs       # Interface met Order property
+│       │       ├── BasePlaceholderBuilder.cs    # Basis class met gedeelde helpers
+│       │       ├── DossierPlaceholderBuilder.cs # Dossier-level placeholders (Order: 10)
+│       │       ├── PartijPlaceholderBuilder.cs  # Partij1/Partij2 placeholders (Order: 20)
+│       │       ├── KindPlaceholderBuilder.cs    # Kind placeholders (Order: 30)
+│       │       ├── RelatiePlaceholderBuilder.cs # Relatie/gezag/woonplaats (Order: 40)
+│       │       ├── CommunicatiePlaceholderBuilder.cs  # Communicatie afspraken (Order: 50)
+│       │       ├── FinancieelPlaceholderBuilder.cs    # Financiële placeholders (Order: 60)
+│       │       ├── FiscaalPlaceholderBuilder.cs       # Fiscale regeling placeholders (Order: 70)
+│       │       └── ConvenantPlaceholderBuilder.cs     # Convenant-specifiek (Order: 80)
 │       │
 │       └── Generators/                         # Strategy Pattern: Tabel generators
 │           ├── ITableGenerator.cs              # Interface voor alle generators
 │           ├── OmgangTableGenerator.cs         # 📅 Omgangstabellen (visitation)
 │           ├── ZorgTableGenerator.cs           # 🏥 Zorgtabellen (care, vakanties, feestdagen)
 │           ├── ChildrenListGenerator.cs        # 👶 Kinderen lijst generatie
-│           └── ArtikelContentGenerator.cs      # 📚 Artikelen uit bibliotheek (v2.3.0)
+│           ├── AlimentatieTableGenerator.cs    # 💰 Alimentatie tabellen
+│           ├── ArtikelContentGenerator.cs      # 📚 Artikelen uit bibliotheek (v2.3.0)
+│           └── InhoudsopgaveGenerator.cs       # 📑 Server-side inhoudsopgave (TOC)
 │
-├── OuderschapsplanFunction.cs                   # ✨ HTTP Endpoint (142 regels)
+├── OuderschapsplanFunction.cs                   # ✨ HTTP Endpoint ouderschapsplan
+├── ConvenantFunction.cs                         # 📜 HTTP Endpoint convenant
+├── GetPlaceholdersFunction.cs                   # 📋 GET /api/placeholders catalogus
 ├── ProcessDocumentFunction.cs                   # Document processing endpoint
+├── GetTemplateTypesFunction.cs                  # Template types endpoint
+├── GetTemplatesByTypeFunction.cs                # Templates per type endpoint
 ├── HealthCheckFunction.cs                       # Health check endpoint
+├── RemoveContentControls.cs                     # Content control verwijdering
 ├── Program.cs                                   # 🔧 DI configuratie en host setup
 ├── host.json                                    # Azure Functions configuratie
 ├── local.settings.json                          # Lokale development settings
+├── placeholders.md                              # Placeholder documentatie (bron voor catalogus)
 ├── idocx-document-generator.csproj              # Project file
 │
-└── Tests/                                       # 🧪 Unit tests (xUnit)
+└── Tests/                                       # 🧪 Unit tests (xUnit) - 219 tests
     ├── Helpers/
     │   ├── DutchLanguageHelperTests.cs          # Nederlandse grammatica tests
     │   ├── DataFormatterTests.cs                # Data formatting tests
-    │   ├── GrammarRulesBuilderTests.cs          # Grammar rules tests
+    │   ├── GrammarRulesBuilderTests.cs          # Grammar rules + collectie-grammatica tests
     │   └── LegalNumberingHelperTests.cs         # Artikel nummering tests
     ├── Processors/
-    │   └── ConditieEvaluatorTests.cs            # Conditie logica tests
+    │   ├── ConditieEvaluatorTests.cs            # Conditie logica tests
+    │   ├── ContentControlProcessorTests.cs      # Content control verwerking tests
+    │   └── LoopSectionProcessorTests.cs         # Loop secties en JSON-collecties tests
     └── scheidingsdesk-document-generator.Tests.csproj
 ```
 
@@ -335,6 +375,7 @@ Alle services worden geregistreerd in `Program.cs`:
 ```csharp
 // Core services
 services.AddSingleton<DatabaseService>();
+services.AddSingleton<PlaceholderCatalogService>();
 
 // Document generation services
 services.AddScoped<IDocumentGenerationService, DocumentGenerationService>();
@@ -344,10 +385,23 @@ services.AddScoped<IContentControlProcessor, ContentControlProcessor>();
 services.AddScoped<IConditionalSectionProcessor, ConditionalSectionProcessor>();
 services.AddScoped<GrammarRulesBuilder>();
 
+// Placeholder builders (Order-based execution)
+services.AddScoped<IPlaceholderBuilder, DossierPlaceholderBuilder>();       // Order: 10
+services.AddScoped<IPlaceholderBuilder, PartijPlaceholderBuilder>();        // Order: 20
+services.AddScoped<IPlaceholderBuilder, KindPlaceholderBuilder>();          // Order: 30
+services.AddScoped<IPlaceholderBuilder, RelatiePlaceholderBuilder>();       // Order: 40
+services.AddScoped<IPlaceholderBuilder, CommunicatiePlaceholderBuilder>();  // Order: 50
+services.AddScoped<IPlaceholderBuilder, FinancieelPlaceholderBuilder>();    // Order: 60
+services.AddScoped<IPlaceholderBuilder, FiscaalPlaceholderBuilder>();       // Order: 70
+services.AddScoped<IPlaceholderBuilder, ConvenantPlaceholderBuilder>();     // Order: 80
+
 // Table generators (Strategy Pattern)
 services.AddScoped<ITableGenerator, OmgangTableGenerator>();
-services.AddScoped<ITableGenerator, ZorgTableGenerator>(); // Handles ALL zorg categories including vakanties & feestdagen
+services.AddScoped<ITableGenerator, ZorgTableGenerator>();
 services.AddScoped<ITableGenerator, ChildrenListGenerator>();
+services.AddScoped<ITableGenerator, AlimentatieTableGenerator>();
+services.AddScoped<ITableGenerator, ArtikelContentGenerator>();
+services.AddScoped<ITableGenerator, InhoudsopgaveGenerator>();
 ```
 
 **Waarom deze opzet?**
@@ -397,7 +451,64 @@ curl -X POST https://your-function-app.azurewebsites.net/api/ouderschapsplan \
   -o ouderschapsplan.docx
 ```
 
-### 2. Document Processing
+### 2. Convenant Generatie
+
+**Endpoint**: `POST /api/convenant`
+**Authorization**: Function key vereist
+**Content-Type**: `application/json`
+
+#### Request Body
+
+```json
+{
+  "DossierId": 123
+}
+```
+
+#### Response
+
+- **Success (200)**: Returns Word document
+  - Content-Type: `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
+  - Filename: `Convenant_Dossier_{DossierId}_{yyyyMMdd}.docx`
+
+- **Error (400/500)**: Returns JSON error
+  ```json
+  {
+    "error": "Error message",
+    "correlationId": "unique-tracking-id"
+  }
+  ```
+
+### 3. Placeholder Catalogus
+
+**Endpoint**: `GET /api/placeholders`
+**Authorization**: Function key vereist
+
+#### Query Parameters
+
+| Parameter | Verplicht | Beschrijving |
+|-----------|-----------|--------------|
+| `category` | Nee | Filter op categorie (case-insensitive) |
+
+#### Response
+
+```json
+{
+  "placeholders": [
+    {
+      "name": "Partij1Naam",
+      "description": "Volledige naam van partij 1",
+      "category": "Partij 1 Informatie",
+      "format": "[[ ]]"
+    }
+  ],
+  "count": 42,
+  "categories": ["Partij 1 Informatie", "Convenant Partij Placeholders"],
+  "correlationId": "unique-tracking-id"
+}
+```
+
+### 4. Document Processing
 
 **Endpoint**: `POST /api/process`
 **Authorization**: Function key vereist
@@ -413,7 +524,7 @@ Upload een Word document als:
 
 Processed Word document met verwijderde content controls.
 
-### 3. Health Check
+### 5. Health Check
 
 **Endpoint**: `GET /api/health`
 **Authorization**: Function key vereist
@@ -784,7 +895,7 @@ Als je nieuwe code leest, volg de flow:
 
 ## Template Placeholders
 
-De Word template ondersteunt **200+ placeholders** in meerdere formaten: `[[...]]`, `{...}`, `<<...>>`, `[...]`
+De Word template ondersteunt **500+ placeholders** in meerdere formaten: `[[...]]`, `{...}`, `<<...>>`, `[...]`
 
 ### Placeholder Features
 
@@ -1141,6 +1252,185 @@ Dit is een uitgebreid model voor alle communicatie- en praktische afspraken rond
 
 *JongmeerderjarigeBeschrijving:*
 > "Wij spreken af dat de afspraken in dit ouderschapsplan doorlopen totdat onze kinderen 21 jaar worden."
+
+### Convenant Placeholders (UPPER_SNAKE_CASE)
+
+Convenant-specifieke placeholders gebruiken UPPER_SNAKE_CASE notatie en worden gebouwd door de `ConvenantPlaceholderBuilder` (Order: 80).
+
+#### Partij Aanduiding
+
+```
+[[PARTIJ1_AANDUIDING]]                     - "de man"/"de vrouw" (anoniem) of roepnaam + achternaam
+[[PARTIJ1_AANDUIDING_HOOFDLETTER]]         - Zelfde met hoofdletter (voor begin van zinnen)
+[[PARTIJ2_AANDUIDING]]                     - "de man"/"de vrouw" (anoniem) of roepnaam + achternaam
+[[PARTIJ2_AANDUIDING_HOOFDLETTER]]         - Zelfde met hoofdletter
+```
+
+#### Partneralimentatie
+
+```
+[[ALIMENTATIEPLICHTIGE]]                   - Naam alimentatieplichtige partij
+[[ALIMENTATIEGERECHTIGDE]]                 - Naam alimentatiegerechtigde partij
+[[AlimentatieplichtigePAL]]                - Alimentatieplichtige in partij-aanduiding stijl (de man/de vrouw)
+[[AlimentatiegerechtigdePAL]]              - Alimentatiegerechtigde in partij-aanduiding stijl
+[[DUURZAAM_GESCHEIDEN_DATUM]]              - Datum duurzaam gescheiden
+[[NETTO_GEZINSINKOMEN]]                    - Netto gezinsinkomen (€ formaat)
+[[KOSTEN_KINDEREN_PARTNERALIMENTATIE]]     - Kosten kinderen voor partneralimentatie berekening
+[[NETTO_BEHOEFTE]]                         - Netto behoefte (€ formaat)
+[[BRUTO_AANVULLENDE_BEHOEFTE]]             - Bruto aanvullende behoefte (€ formaat)
+[[BRUTO_JAARINKOMEN_PARTIJ1]]              - Bruto jaarinkomen partij 1 (€ formaat)
+[[DRAAGKRACHTLOOS_INKOMEN_PARTIJ1]]        - Draagkrachtloos inkomen partij 1 (€ formaat)
+[[DRAAGKRACHT_PARTIJ1]]                    - Draagkracht partij 1 (€ formaat)
+[[BRUTO_JAARINKOMEN_PARTIJ2]]              - Bruto jaarinkomen partij 2 (€ formaat)
+[[DRAAGKRACHTLOOS_INKOMEN_PARTIJ2]]        - Draagkrachtloos inkomen partij 2 (€ formaat)
+[[DRAAGKRACHT_PARTIJ2]]                    - Draagkracht partij 2 (€ formaat)
+[[EIGEN_INKOMSTEN_BEDRAG]]                 - Eigen inkomsten bedrag (€ formaat)
+[[VERDIENCAPACITEIT_BEDRAG]]               - Verdiencapaciteit bedrag (€ formaat)
+[[HOOGTE_PARTNERALIMENTATIE]]              - Hoogte partneralimentatie (€ formaat)
+[[PARTNERALIMENTATIE_INGANGSDATUM]]        - Ingangsdatum partneralimentatie
+[[VOORLOPIGE_ALIMENTATIE_BEDRAG]]          - Voorlopig partneralimentatie bedrag (€ formaat)
+[[AFKOOP_BEDRAG]]                          - Afkoop bedrag (€ formaat)
+[[INDEXERING_EERSTE_JAAR]]                 - Eerste jaar indexering
+[[AFSTAND_TENZIJ_OMSTANDIGHEID]]           - Afstand tenzij omstandigheid
+[[WIJZIGINGSOMSTANDIGHEDEN]]               - Wijzigingsomstandigheden
+[[GEEN_WIJZIGINGSOMSTANDIGHEDEN]]          - Geen wijzigingsomstandigheden
+[[CONTRACTUELE_TERMIJN_JAREN]]             - Contractuele termijn in jaren
+[[CONTRACTUELE_TERMIJN_INGANGSDATUM]]      - Ingangsdatum contractuele termijn
+[[PERIODE_DOORBETALEN_1160]]               - Periode doorbetalen bij art. 1:160 (default: "zes maanden")
+```
+
+#### Bijdrage Hypotheekrente
+
+```
+[[BIJDRAGE_HYPOTHEEKRENTE_BEDRAG]]         - Bijdrage hypotheekrente bedrag (€ formaat)
+[[BIJDRAGE_HYPOTHEEKRENTE_TOT_WANNEER]]    - Tot wanneer (keuze-optie)
+[[BIJDRAGE_HYPOTHEEKRENTE_TOT_DATUM]]      - Tot datum (specifieke datum)
+[[BIJDRAGE_HYPOTHEEKRENTE_INGANGSDATUM]]   - Ingangsdatum bijdrage hypotheekrente
+[[BIJDRAGE_HYPOTHEEKRENTE_EINDDATUM]]      - Einddatum bijdrage hypotheekrente
+```
+
+#### Woning
+
+```
+[[WONING_ADRES]]                           - Woning adres
+[[WONING_STRAAT]]                          - Straatnaam woning
+[[WONING_HUISNUMMER]]                      - Huisnummer woning
+[[WONING_POSTCODE]]                        - Postcode woning
+[[WONING_PLAATS]]                          - Plaats woning
+[[WONING_VOLLEDIG_ADRES]]                  - Volledig woning adres (straat, postcode, plaats)
+[[WONING_TOEGEDEELD_AAN]]                 - Aan wie de woning is toegedeeld (partij-aanduiding)
+[[WONING_WOZ_WAARDE]]                     - WOZ waarde woning (€ formaat)
+[[WONING_TOEDELING_WAARDE]]               - Toedelingswaarde woning (€ formaat)
+[[WONING_LAATPRIJS]]                      - Laatprijs woning (€ formaat)
+[[WONING_OVERBEDELING]]                   - Overbedeling woning (€ formaat)
+[[WONING_OVERBEDELING_SPAARPRODUCTEN]]    - Overbedeling spaarproducten (€ formaat)
+[[NOTARIS_MR]]                            - Naam notaris (mr.)
+[[NOTARIS_STANDPLAATS]]                   - Standplaats notaris
+[[NOTARIS_LEVERING_DATUM]]                - Leveringsdatum notaris
+[[MAKELAAR_VERKOOP]]                      - Makelaar verkoop
+[[ONTSLAG_HOOFDELIJKHEID_DATUM]]          - Datum ontslag hoofdelijkheid
+[[HUURRECHT_ANDERE_DATUM]]                - Datum huurrecht
+[[HUUR_VERPLICHTINGEN_OVERNAME_DATUM]]    - Datum overname huurverplichtingen
+```
+
+#### Kadastraal
+
+```
+[[KADASTRAAL_GEMEENTE]]                   - Kadastrale gemeente
+[[KADASTRAAL_SECTIE]]                     - Kadastrale sectie
+[[KADASTRAAL_PERCEEL]]                    - Kadastraal perceel
+[[KADASTRAAL_ARE]]                        - Kadastrale are
+[[KADASTRAAL_CENTIARE]]                   - Kadastrale centiare
+[[KADASTRAAL_AANDUIDING]]                 - Kadastrale aanduiding
+[[KADASTRAAL_OPPERVLAKTE]]                - Kadastrale oppervlakte
+[[KADASTRAAL_VOLLEDIGE_NOTATIE]]          - Volledige kadastrale notatie (automatisch gegenereerd)
+```
+
+#### Hypotheek
+
+```
+[[HYPOTHEEK_NOTARIS_MR]]                  - Hypotheek notaris naam (valt terug op reguliere notaris)
+[[HYPOTHEEK_NOTARIS_STANDPLAATS]]         - Hypotheek notaris standplaats
+[[HYPOTHEEK_NOTARIS_DATUM]]               - Hypotheek notaris datum
+[[PRIVEVERMOGEN_VORDERING_BEDRAG]]        - Privevermogen vordering bedrag (€ formaat)
+[[PRIVEVERMOGEN_REDEN]]                   - Reden privevermogen
+```
+
+#### Vermogensverdeling
+
+```
+[[INBOEDEL]]                              - Inboedel afspraken
+[[VERMOGENSVERDELING_OPMERKINGEN]]        - Opmerkingen vermogensverdeling
+```
+
+#### Pensioen
+
+```
+[[PENSIOEN_OPMERKINGEN]]                  - Opmerkingen pensioen
+[[BIJZONDER_PARTNERPENSIOEN]]             - Bijzonder partnerpensioen
+[[BIJZONDER_PARTNERPENSIOEN_BEDRAG]]      - Bedrag bijzonder partnerpensioen
+```
+
+#### Huwelijksgoederenregime / Kwijting
+
+```
+[[HUWELIJKSGOEDERENREGIME]]               - Automatisch afgeleid regime (raw waarde)
+[[HUWELIJKSGOEDERENREGIME_OMSCHRIJVING]]  - Nederlandse omschrijving
+[[HUWELIJKSGOEDERENREGIME_UITZONDERING]]  - Uitzondering
+[[HUWELIJKSGOEDERENREGIME_ANDERS]]        - Andere omschrijving
+[[HUWELIJKSVOORWAARDEN_DATUM]]            - Datum huwelijksvoorwaarden
+[[HUWELIJKSVOORWAARDEN_NOTARIS]]          - Notaris huwelijksvoorwaarden
+[[HUWELIJKSVOORWAARDEN_PLAATS]]           - Plaats notaris huwelijksvoorwaarden
+[[SLOTBEPALINGEN]]                        - Slotbepalingen tekst
+```
+
+**Automatische afleiding huwelijksgoederenregime:**
+- Gehuwd + voorwaarden → "huwelijkse voorwaarden"
+- Gehuwd + vóór 2018 → "algehele gemeenschap van goederen"
+- Gehuwd + ná 2018 → "beperkte gemeenschap van goederen"
+- Geregistreerd partnerschap + voorwaarden → "partnerschapsvoorwaarden"
+- Samenwonend + overeenkomst → "samenlevingsovereenkomst"
+
+#### Ondertekening
+
+```
+[[ONDERTEKEN_PLAATS_PARTIJ1]]             - Ondertekeningsplaats partij 1
+[[ONDERTEKEN_PLAATS_PARTIJ2]]             - Ondertekeningsplaats partij 2
+[[ONDERTEKEN_DATUM_PARTIJ1]]              - Ondertekeningsdatum partij 1
+[[ONDERTEKEN_DATUM_PARTIJ2]]              - Ondertekeningsdatum partij 2
+```
+
+#### Considerans
+
+```
+[[HUWELIJKSDATUM]]                        - Huwelijksdatum
+[[HUWELIJKSPLAATS]]                       - Huwelijksplaats
+[[MEDIATOR_NAAM]]                         - Naam mediator
+[[MEDIATOR_PLAATS]]                        - Plaats mediator
+[[RECHTBANK]]                             - Rechtbank
+[[RECHTBANK_LOCATIE]]                     - Zittingsplaats rechtbank
+[[ADVOCAAT_PARTIJ1]]                      - Advocaat partij 1
+[[ADVOCAAT_PARTIJ2]]                      - Advocaat partij 2
+[[SPAARREKENING_KINDEREN_NUMMERS]]        - Spaarrekeningnummers kinderen
+[[ERKENNINGSDATUM]]                       - Erkenningsdatum
+[[MINDERJARIGE_KINDEREN_NAMEN]]           - Roepnamen minderjarige kinderen (lijst met "en")
+[[MINDERJARIGE_KINDEREN_ZIJN_IS]]         - "zijn" (meervoud) of "is" (enkelvoud)
+```
+
+#### Convenant Conditie-velden (voor artikel filtering)
+
+Deze velden zijn beschikbaar als conditie-velden voor het tonen/verbergen van artikelen:
+
+```
+duurzaam_gescheiden, alimentatie_berekening_aanhechten, berekening_methode,
+verdiencapaciteit_type, partneralimentatie_betaler, partneralimentatie_van_toepassing,
+afstand_recht, jusvergelijking, bijdrage_hypotheekrente, bijdrage_hypotheekrente_tot_wanneer,
+partneralimentatie_afkopen, afkoop_type, niet_wijzigingsbeding, indexering_type,
+wettelijke_termijn, verlenging_termijn, afwijking_1160, hoe_afwijken_1160,
+woning_soort, koop_toedeling, is_mediation, heeft_vaststellingsovereenkomst,
+heeft_kinderen_uit_huwelijk, heeft_kinderen_voor_huwelijk, heeft_spaarrekeningen_kinderen,
+heeft_kinderen, huwelijksgoederenregime
+```
 
 ### Grammatica Regels (Automatisch Enkelvoud/Meervoud)
 
@@ -1563,10 +1853,12 @@ dotnet test --filter "FullyQualifiedName~DutchLanguageHelperTests"
 |------------|-------|--------------|
 | `DutchLanguageHelperTests` | 40 | Nederlandse grammatica, lijstformattering, voornaamwoorden |
 | `DataFormatterTests` | 30 | Datums, namen, adressen, valuta, telefoonnummers |
-| `GrammarRulesBuilderTests` | 20 | Enkelvoud/meervoud regels, gender-specifieke pronouns |
+| `GrammarRulesBuilderTests` | 39 | Enkelvoud/meervoud regels, gender-specifieke pronouns, collectie-grammatica |
 | `ConditieEvaluatorTests` | 43 | Conditie logica (=, !=, >, <, AND, OR, in, bevat) |
 | `LegalNumberingHelperTests` | 12 | Word document artikel nummering |
-| **Totaal** | **145** | |
+| `ContentControlProcessorTests` | 24 | Content control verwerking |
+| `LoopSectionProcessorTests` | 31 | Loop secties, JSON-collecties, kinderen-collecties |
+| **Totaal** | **219** | |
 
 **Voorbeeld test - Nederlandse lijst formattering:**
 
@@ -1883,18 +2175,21 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.12.0 (Current) - Voorlopige partneralimentatie bedrag
+### v2.12.0 (Current) - Voorlopige partneralimentatie bedrag & Hypotheekrente tot wanneer
 
 **Nieuwe features:**
 - **`VOORLOPIGE_ALIMENTATIE_BEDRAG` placeholder**: Verwijst nu naar het nieuwe aparte veld `voorlopige_partneralimentatie_bedrag` op `dbo.convenant_info` (voorheen verwees deze naar `HoogtePartneralimentatie`)
+- **`BIJDRAGE_HYPOTHEEKRENTE_TOT_WANNEER` placeholder**: Keuze-optie voor tot wanneer de bijdrage hypotheekrente loopt
+- **`BIJDRAGE_HYPOTHEEKRENTE_TOT_DATUM` placeholder**: Specifieke datum tot wanneer de bijdrage hypotheekrente loopt
 
 **Technische wijzigingen:**
-- `Models/ConvenantInfoData.cs` — `VoorlopigePartneralimentatieBedrag` property toegevoegd
-- `Services/DatabaseService.cs` — `voorlopige_partneralimentatie_bedrag` mapping toegevoegd
-- `ConvenantPlaceholderBuilder.cs` — `VOORLOPIGE_ALIMENTATIE_BEDRAG` verwijst naar nieuw veld
+- `Models/ConvenantInfoData.cs` — `VoorlopigePartneralimentatieBedrag`, `BijdrageHypotheekrenteTotWanneer`, `BijdrageHypotheekrenteTotDatum` properties toegevoegd
+- `Services/DatabaseService.cs` — `voorlopige_partneralimentatie_bedrag`, `bijdrage_hypotheekrente_tot_wanneer`, `bijdrage_hypotheekrente_tot_datum` mappings toegevoegd
+- `ConvenantPlaceholderBuilder.cs` — Nieuwe placeholders + conditie-veld `bijdrage_hypotheekrente_tot_wanneer`
 
 **Database migratie vereist:**
 - `20260214_voorlopige_partneralimentatie_bedrag.sql` — Nieuwe kolom `voorlopige_partneralimentatie_bedrag DECIMAL(10,2) NULL` op `dbo.convenant_info`
+- Kolommen `bijdrage_hypotheekrente_tot_wanneer NVARCHAR(100) NULL` en `bijdrage_hypotheekrente_tot_datum DATE NULL` op `dbo.convenant_info`
 
 **Breaking Changes:**
 - `[[VOORLOPIGE_ALIMENTATIE_BEDRAG]]` toont nu het specifieke voorlopige bedrag i.p.v. het definitieve partneralimentatie bedrag. Templates die dit placeholder gebruiken moeten gecontroleerd worden.

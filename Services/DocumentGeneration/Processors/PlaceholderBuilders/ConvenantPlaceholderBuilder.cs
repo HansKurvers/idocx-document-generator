@@ -193,7 +193,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             // Bijdrage hypotheekrente
             AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_BEDRAG", FormatCurrency(info.BijdrageHypotheekrenteBedrag));
-            AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_TOT_WANNEER", info.BijdrageHypotheekrenteTotWanneer ?? "");
+            AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_TOT_WANNEER", GetBijdrageHypotheekrenteTotWanneerLabel(info.BijdrageHypotheekrenteTotWanneer));
             AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_TOT_DATUM", FormatDate(info.BijdrageHypotheekrenteTotDatum));
             AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_INGANGSDATUM", FormatDate(info.BijdrageHypotheekrenteIngangsdatum));
             AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_EINDDATUM", FormatDate(info.BijdrageHypotheekrenteEinddatum));
@@ -435,6 +435,17 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 "samenlevingsovereenkomst" => "samenlevingsovereenkomst",
                 "geen_overeenkomst" => "samenwonend zonder overeenkomst",
                 _ => ""
+            };
+        }
+
+        private string GetBijdrageHypotheekrenteTotWanneerLabel(string? totWanneer)
+        {
+            return totWanneer?.ToLower() switch
+            {
+                "verkoop_woning" => "verkoop van de woning",
+                "akte_van_verdeling" => "de akte van verdeling",
+                "tot_datum" => "een nader bepaalde datum",
+                _ => totWanneer ?? ""
             };
         }
 

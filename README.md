@@ -2175,7 +2175,17 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.13.0 (Current) - Hypotheekrente ingangsdatum & leesbare tot-wanneer labels
+### v2.14.0 (Current) - Afstand tenzij omstandigheid
+
+**Nieuwe features:**
+- **`AFSTAND_TENZIJ_OMSTANDIGHEID` placeholder**: Tekstveld voor omstandigheid bij "Afstand van recht tenzij" partneralimentatie
+
+**Technische wijzigingen:**
+- `Services/DatabaseService.cs` — `afstand_tenzij_omstandigheid` mapping toegevoegd
+- `Models/ConvenantInfoData.cs` — `AfstandTenzijOmstandigheid` property (reeds aanwezig)
+- `ConvenantPlaceholderBuilder.cs` — `AFSTAND_TENZIJ_OMSTANDIGHEID` placeholder (reeds aanwezig)
+
+### v2.13.0 - Hypotheekrente ingangsdatum & leesbare tot-wanneer labels
 
 **Nieuwe features:**
 - **`BIJDRAGE_HYPOTHEEKRENTE_TOT_WANNEER` leesbare labels**: Placeholder toont nu leesbare tekst i.p.v. database codes: "verkoop van de woning", "de akte van verdeling", "een nader bepaalde datum"

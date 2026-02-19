@@ -20,8 +20,8 @@ namespace scheidingsdesk_document_generator.Services
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            
-            _connectionString = _configuration.GetConnectionString("DefaultConnection") 
+
+            _connectionString = _configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("Database connection string 'DefaultConnection' not found in configuration");
         }
 
@@ -52,7 +52,7 @@ namespace scheidingsdesk_document_generator.Services
                     WHERE id = @DossierId;
 
                     -- Result set 2: Parties (rol_id 1 and 2)
-                    SELECT p.id, p.voorletters, p.voornamen, p.roepnaam, p.geslacht, 
+                    SELECT p.id, p.voorletters, p.voornamen, p.roepnaam, p.geslacht,
                            p.tussenvoegsel, p.achternaam, p.adres, p.postcode, p.plaats,
                            p.geboorteplaats, p.geboorte_datum, p.nationaliteit_1, p.nationaliteit_2,
                            p.telefoon, p.email, p.beroep, dp.rol_id, r.naam as rol_naam
@@ -73,8 +73,8 @@ namespace scheidingsdesk_document_generator.Services
                     ORDER BY p.geboorte_datum DESC;
 
                     -- Result set 4: Parent-child relations
-                    SELECT 
-                        ok.ouder_id, 
+                    SELECT
+                        ok.ouder_id,
                         p.voornamen + ISNULL(' ' + p.tussenvoegsel, '') + ' ' + p.achternaam AS ouder_naam,
                         ok.relatie_type_id,
                         rt.naam AS relatie_type,
@@ -321,489 +321,71 @@ namespace scheidingsdesk_document_generator.Services
                 command.Parameters.AddWithValue("@DossierId", actualDossierId);
 
                 using var reader = await command.ExecuteReaderAsync();
-                
-                // Result set 1: Dossier
-                if (!await reader.ReadAsync())
-                {
-                    _logger.LogWarning("Dossier with ID {DossierId} not found", dossierId);
-                    return null;
-                }
 
-                var dossier = new DossierData
-                {
-                    Id = (int)reader["id"],
-                    DossierNummer = ConvertToString(reader["dossier_nummer"]),
-                    AangemaaktOp = (DateTime)reader["aangemaakt_op"],
-                    GewijzigdOp = (DateTime)reader["gewijzigd_op"],
-                    Status = ConvertToString(reader["status"]),
-                    GebruikerId = (int)reader["gebruiker_id"],
-                    IsAnoniem = reader["is_anoniem"] == DBNull.Value ? null : (bool?)reader["is_anoniem"],
-                    SoortProcedure = reader["soort_procedure"] == DBNull.Value ? null : ConvertToString(reader["soort_procedure"])
-                };
+                // Result set 1: Dossier
+                var dossier = await ReadDossier(reader, dossierId);
+                if (dossier == null)
+                    return null;
 
                 // Result set 2: Parties
                 await reader.NextResultAsync();
-                var parties = new List<PersonData>();
-                while (await reader.ReadAsync())
-                {
-                    parties.Add(MapPersonData(reader));
-                }
-                dossier.Partijen = parties;
+                dossier.Partijen = await ReadPartijen(reader);
 
                 // Result set 3: Children
                 await reader.NextResultAsync();
-                var children = new List<ChildData>();
-                while (await reader.ReadAsync())
-                {
-                    children.Add(MapChildData(reader));
-                }
-                dossier.Kinderen = children;
+                dossier.Kinderen = await ReadKinderen(reader);
 
                 // Result set 4: Parent-child relations
                 await reader.NextResultAsync();
-                var childRelations = new Dictionary<int, List<ParentChildRelation>>();
-                while (await reader.ReadAsync())
-                {
-                    var kindId = (int)reader["kind_id"];
-                    if (!childRelations.ContainsKey(kindId))
-                        childRelations[kindId] = new List<ParentChildRelation>();
-                    
-                    childRelations[kindId].Add(new ParentChildRelation
-                    {
-                        OuderId = (int)reader["ouder_id"],
-                        OuderNaam = ConvertToString(reader["ouder_naam"]),
-                        RelatieTypeId = (int)reader["relatie_type_id"],
-                        RelatieType = reader["relatie_type"] == DBNull.Value ? null : ConvertToString(reader["relatie_type"])
-                    });
-                }
-
-                // Assign relations to children
-                foreach (var child in children)
-                {
-                    if (childRelations.ContainsKey(child.Id))
-                        child.ParentRelations = childRelations[child.Id];
-                }
+                await ReadParentChildRelations(reader, dossier.Kinderen);
 
                 // Result set 5: Visitation arrangements
                 await reader.NextResultAsync();
-                var visitationArrangements = new List<OmgangData>();
-                while (await reader.ReadAsync())
-                {
-                    visitationArrangements.Add(new OmgangData
-                    {
-                        Id = (int)reader["id"],
-                        DagId = (int)reader["dag_id"],
-                        DagNaam = ConvertToString(reader["dag_naam"]),
-                        DagdeelId = (int)reader["dagdeel_id"],
-                        DagdeelNaam = ConvertToString(reader["dagdeel_naam"]),
-                        VerzorgerId = (int)reader["verzorger_id"],
-                        VerzorgerNaam = ConvertToString(reader["verzorger_naam"]),
-                        WisselTijd = reader["wissel_tijd"] == DBNull.Value ? null : ConvertToString(reader["wissel_tijd"]),
-                        WeekRegelingId = (int)reader["week_regeling_id"],
-                        WeekRegelingOmschrijving = ConvertToString(reader["week_regeling_omschrijving"]),
-                        WeekRegelingAnders = reader["week_regeling_anders"] == DBNull.Value ? null : ConvertToString(reader["week_regeling_anders"]),
-                        DossierId = (int)reader["dossier_id"],
-                        AangemaaktOp = (DateTime)reader["aangemaakt_op"],
-                        GewijzigdOp = (DateTime)reader["gewijzigd_op"]
-                    });
-                }
-                dossier.Omgang = visitationArrangements;
+                dossier.Omgang = await ReadOmgang(reader);
 
                 // Result set 6: Care arrangements
                 await reader.NextResultAsync();
-                var careArrangements = new List<ZorgData>();
-                while (await reader.ReadAsync())
-                {
-                    careArrangements.Add(new ZorgData
-                    {
-                        Id = (int)reader["id"],
-                        ZorgCategorieId = (int)reader["zorg_categorie_id"],
-                        ZorgCategorieNaam = ConvertToString(reader["zorg_categorie_naam"]),
-                        ZorgSituatieId = (int)reader["zorg_situatie_id"],
-                        ZorgSituatieNaam = ConvertToString(reader["zorg_situatie_naam"]),
-                        Overeenkomst = ConvertToString(reader["overeenkomst"]),
-                        SituatieAnders = reader["situatie_anders"] == DBNull.Value ? null : ConvertToString(reader["situatie_anders"]),
-                        DossierId = (int)reader["dossier_id"],
-                        AangemaaktOp = (DateTime)reader["aangemaakt_op"],
-                        AangemaaktDoor = (int)reader["aangemaakt_door"],
-                        GewijzigdOp = (DateTime)reader["gewijzigd_op"],
-                        GewijzigdDoor = reader["gewijzigd_door"] == DBNull.Value ? null : (int?)reader["gewijzigd_door"]
-                    });
-                }
-                dossier.Zorg = careArrangements;
+                dossier.Zorg = await ReadZorg(reader);
 
-                // Result set 7: Alimentatie (Optional - may not exist if tables are not created yet)
+                // Result set 7: Alimentatie
                 await reader.NextResultAsync();
-                AlimentatieData? alimentatie = null;
-                try
-                {
-                    _logger.LogInformation("Reading alimentatie data for dossier {DossierId}, FieldCount: {FieldCount}", dossierId, reader.FieldCount);
+                dossier.Alimentatie = await ReadAlimentatie(reader, dossierId);
 
-                    if (reader.FieldCount > 0 && await reader.ReadAsync())
-                    {
-                        alimentatie = new AlimentatieData
-                        {
-                            Id = (int)reader["id"],
-                            DossierId = (int)reader["dossier_id"],
-                            NettoBesteedbaarGezinsinkomen = reader["netto_besteedbaar_gezinsinkomen"] == DBNull.Value ? null : Convert.ToDecimal(reader["netto_besteedbaar_gezinsinkomen"]),
-                            KostenKinderen = reader["kosten_kinderen"] == DBNull.Value ? null : Convert.ToDecimal(reader["kosten_kinderen"]),
-                            BijdrageKostenKinderen = reader["bijdrage_kosten_kinderen"] == DBNull.Value ? null : Convert.ToDecimal(reader["bijdrage_kosten_kinderen"]),
-                            BijdrageTemplate = reader["bijdrage_template"] == DBNull.Value ? null : (int?)reader["bijdrage_template"],
-                            BijdrageTemplateOmschrijving = reader["bijdrage_template_omschrijving"] == DBNull.Value ? null : ConvertToString(reader["bijdrage_template_omschrijving"]),
-
-                            // Kinderrekening velden - safely read (backwards compatible if columns don't exist yet)
-                            StortingOuder1Kinderrekening = SafeReadDecimal(reader, "storting_ouder1_kinderrekening"),
-                            StortingOuder2Kinderrekening = SafeReadDecimal(reader, "storting_ouder2_kinderrekening"),
-                            KinderrekeningKostensoorten = SafeReadJsonArray(reader, "kinderrekening_kostensoorten"),
-                            KinderrekeningMaximumOpname = SafeReadBoolean(reader, "kinderrekening_maximum_opname"),
-                            KinderrekeningMaximumOpnameBedrag = SafeReadDecimal(reader, "kinderrekening_maximum_opname_bedrag"),
-                            KinderbijslagStortenOpKinderrekening = SafeReadBoolean(reader, "kinderbijslag_storten_op_kinderrekening"),
-                            KindgebondenBudgetStortenOpKinderrekening = SafeReadBoolean(reader, "kindgebonden_budget_storten_op_kinderrekening"),
-
-                            // Alimentatie settings - safely read (backwards compatible if columns don't exist yet)
-                            BedragenAlleKinderenGelijk = SafeReadBoolean(reader, "bedragen_alle_kinderen_gelijk"),
-                            AlimentatiebedragPerKind = SafeReadDecimal(reader, "alimentatiebedrag_per_kind"),
-                            Alimentatiegerechtigde = SafeReadString(reader, "alimentatiegerechtigde"),
-                            ZorgkortingPercentageAlleKinderen = SafeReadDecimal(reader, "zorgkorting_percentage_alle_kinderen"),
-
-                            // Sync settings for all children - safely read (backwards compatible if columns don't exist yet)
-                            AfsprakenAlleKinderenGelijk = SafeReadBoolean(reader, "afspraken_alle_kinderen_gelijk"),
-                            HoofdverblijfAlleKinderen = SafeReadString(reader, "hoofdverblijf_alle_kinderen"),
-                            InschrijvingAlleKinderen = SafeReadString(reader, "inschrijving_alle_kinderen"),
-                            KinderbijslagOntvangerAlleKinderen = SafeReadString(reader, "kinderbijslag_ontvanger_alle_kinderen"),
-                            KindgebondenBudgetAlleKinderen = SafeReadString(reader, "kindgebonden_budget_alle_kinderen"),
-
-                            // Kinderrekening opheffing en alimentatie ingangsdatum velden
-                            KinderrekeningOpheffen = SafeReadString(reader, "kinderrekening_opheffen"),
-                            IngangsdatumOptie = SafeReadString(reader, "ingangsdatum_optie"),
-                            Ingangsdatum = SafeReadDateTime(reader, "ingangsdatum"),
-                            IngangsdatumAnders = SafeReadString(reader, "ingangsdatum_anders"),
-                            EersteIndexeringJaar = SafeReadInt(reader, "eerste_indexering_jaar")
-                        };
-
-                        var hasNewFields = ColumnExists(reader, "storting_ouder1_kinderrekening");
-                        _logger.LogInformation("Loaded alimentatie: Gezinsinkomen={Gezinsinkomen}, KostenKinderen={Kosten}, HasNewKinderrekeningFields={HasNewFields}",
-                            alimentatie.NettoBesteedbaarGezinsinkomen, alimentatie.KostenKinderen, hasNewFields);
-                    }
-                    else
-                    {
-                        _logger.LogInformation("No alimentatie data found for dossier {DossierId}", dossierId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Alimentatie tables may not exist yet, skipping alimentatie data");
-                }
-                dossier.Alimentatie = alimentatie;
-
-                // Result set 8: Bijdragen kosten kinderen (Optional)
+                // Result set 8: Bijdragen kosten kinderen
                 await reader.NextResultAsync();
-                var bijdragenKostenKinderen = new List<BijdrageKostenKinderenData>();
-                try
-                {
-                    _logger.LogInformation("Reading bijdragen kosten kinderen for dossier {DossierId}, FieldCount: {FieldCount}", dossierId, reader.FieldCount);
+                await ReadBijdragenKostenKinderen(reader, dossier.Alimentatie, dossierId);
 
-                    if (reader.FieldCount > 0)
-                    {
-                        while (await reader.ReadAsync())
-                        {
-                            var bijdrage = new BijdrageKostenKinderenData
-                            {
-                                Id = (int)reader["id"],
-                                AlimentatieId = (int)reader["alimentatie_id"],
-                                PersonenId = (int)reader["personen_id"],
-                                PersoonNaam = ConvertToString(reader["persoon_naam"]),
-                                EigenAandeel = reader["eigen_aandeel"] == DBNull.Value ? null : (decimal?)reader["eigen_aandeel"]
-                            };
-                            bijdragenKostenKinderen.Add(bijdrage);
-                            _logger.LogInformation("Loaded bijdrage: PersonId={PersonId}, Naam={Naam}, Aandeel={Aandeel}",
-                                bijdrage.PersonenId, bijdrage.PersoonNaam, bijdrage.EigenAandeel);
-                        }
-                    }
-                    _logger.LogInformation("Total bijdragen loaded: {Count}", bijdragenKostenKinderen.Count);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Bijdragen kosten kinderen table may not exist yet, skipping");
-                }
-                if (alimentatie != null)
-                    alimentatie.BijdragenKostenKinderen = bijdragenKostenKinderen;
-
-                // Result set 9: Financiele afspraken kinderen (Optional)
+                // Result set 9: Financiele afspraken kinderen
                 await reader.NextResultAsync();
-                var financieleAfsprakenKinderen = new List<FinancieleAfsprakenKinderenData>();
-                try
-                {
-                    _logger.LogInformation("Reading financiele afspraken kinderen for dossier {DossierId}, FieldCount: {FieldCount}", dossierId, reader.FieldCount);
+                await ReadFinancieleAfsprakenKinderen(reader, dossier.Alimentatie, dossierId);
 
-                    if (reader.FieldCount > 0)
-                    {
-                        while (await reader.ReadAsync())
-                        {
-                            var afspraak = new FinancieleAfsprakenKinderenData
-                            {
-                                Id = (int)reader["id"],
-                                AlimentatieId = (int)reader["alimentatie_id"],
-                                KindId = (int)reader["kind_id"],
-                                KindNaam = ConvertToString(reader["kind_naam"]),
-                                AlimentatieBedrag = reader["alimentatie_bedrag"] == DBNull.Value ? null : Convert.ToDecimal(reader["alimentatie_bedrag"]),
-                                Hoofdverblijf = reader["hoofdverblijf"] == DBNull.Value ? null : ConvertToString(reader["hoofdverblijf"]),
-                                KinderbijslagOntvanger = reader["kinderbijslag_ontvanger"] == DBNull.Value ? null : ConvertToString(reader["kinderbijslag_ontvanger"]),
-                                ZorgkortingPercentage = reader["zorgkorting_percentage"] == DBNull.Value ? null : Convert.ToDecimal(reader["zorgkorting_percentage"]),
-                                Inschrijving = reader["inschrijving"] == DBNull.Value ? null : ConvertToString(reader["inschrijving"]),
-                                KindgebondenBudget = reader["kindgebonden_budget"] == DBNull.Value ? null : ConvertToString(reader["kindgebonden_budget"])
-                            };
-                            financieleAfsprakenKinderen.Add(afspraak);
-                            _logger.LogInformation("Loaded financiele afspraak: KindId={KindId}, Naam={Naam}, Bedrag={Bedrag}, Hoofdverblijf={Hoofdverblijf}",
-                                afspraak.KindId, afspraak.KindNaam, afspraak.AlimentatieBedrag, afspraak.Hoofdverblijf);
-                        }
-                    }
-                    _logger.LogInformation("Total financiele afspraken loaded: {Count}", financieleAfsprakenKinderen.Count);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Financiele afspraken kinderen table may not exist yet, skipping");
-                }
-                if (alimentatie != null)
-                    alimentatie.FinancieleAfsprakenKinderen = financieleAfsprakenKinderen;
-
-                // Result set 10: Ouderschapsplan info (Optional)
+                // Result set 10: Ouderschapsplan info
                 await reader.NextResultAsync();
-                OuderschapsplanInfoData? ouderschapsplanInfo = null;
-                try
-                {
-                    if (reader.FieldCount > 0 && await reader.ReadAsync())
-                    {
-                        ouderschapsplanInfo = new OuderschapsplanInfoData
-                        {
-                            Id = SafeReadInt(reader, "id") ?? 0,
-                            DossierId = SafeReadInt(reader, "dossier_id") ?? 0,
-                            Partij1PersoonId = SafeReadInt(reader, "partij_1_persoon_id") ?? 0,
-                            Partij2PersoonId = SafeReadInt(reader, "partij_2_persoon_id") ?? 0,
-                            SoortRelatie = SafeReadString(reader, "soort_relatie"),
-                            DatumAanvangRelatie = SafeReadDateTime(reader, "datum_aanvang_relatie"),
-                            PlaatsRelatie = SafeReadString(reader, "plaats_relatie"),
-                            OvereenkomstGemaakt = SafeReadBoolean(reader, "overeenkomst_gemaakt"),
-                            SoortRelatieVerbreking = SafeReadString(reader, "soort_relatie_verbreking"),
-                            BetrokkenheidKind = SafeReadString(reader, "betrokkenheid_kind"),
-                            Kiesplan = SafeReadString(reader, "kiesplan"),
-                            GezagPartij = SafeReadInt(reader, "gezag_partij"),
-                            GezagTermijnWeken = SafeReadInt(reader, "gezag_termijn_weken"),
-                            WaOpNaamVanPartij = SafeReadInt(reader, "wa_op_naam_van_partij"),
-                            KeuzeDevices = SafeReadString(reader, "keuze_devices"),
-                            ZorgverzekeringOpNaamVanPartij = SafeReadInt(reader, "zorgverzekering_op_naam_van_partij"),
-                            KinderbijslagPartij = SafeReadInt(reader, "kinderbijslag_partij"),
-                            WoonplaatsOptie = SafeReadInt(reader, "woonplaats_optie"),
-                            WoonplaatsPartij1 = SafeReadString(reader, "woonplaats_partij1"),
-                            WoonplaatsPartij2 = SafeReadString(reader, "woonplaats_partij2"),
-                            BrpPartij1 = SafeReadString(reader, "brp_partij_1"),
-                            BrpPartij2 = SafeReadString(reader, "brp_partij_2"),
-                            KgbPartij1 = SafeReadString(reader, "kgb_partij_1"),
-                            KgbPartij2 = SafeReadString(reader, "kgb_partij_2"),
-                            Hoofdverblijf = SafeReadString(reader, "hoofdverblijf"),
-                            Zorgverdeling = SafeReadString(reader, "zorgverdeling"),
-                            OpvangKinderen = SafeReadString(reader, "opvang_kinderen"),
-                            BankrekeningnummersOpNaamVanKind = SafeReadString(reader, "bankrekeningnummers_op_naam_van_kind"),
-                            ParentingCoordinator = SafeReadString(reader, "parenting_coordinator"),
-                            
-                            // Note: GezagZin, RelatieAanvangZin and OuderschapsplanDoelZin 
-                            // are generated dynamically and not stored in database
-                            
-                            CreatedAt = SafeReadDateTime(reader, "created_at") ?? DateTime.Now,
-                            UpdatedAt = SafeReadDateTime(reader, "updated_at") ?? DateTime.Now
-                        };
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Ouderschapsplan info table may not exist yet, skipping");
-                }
-                dossier.OuderschapsplanInfo = ouderschapsplanInfo;
+                dossier.OuderschapsplanInfo = await ReadOuderschapsplanInfo(reader);
 
-                // Result set 11: Communicatie Afspraken (Optional)
+                // Result set 11: Communicatie afspraken
                 await reader.NextResultAsync();
-                CommunicatieAfsprakenData? communicatieAfspraken = null;
-                try
-                {
-                    if (reader.FieldCount > 0 && await reader.ReadAsync())
-                    {
-                        communicatieAfspraken = new CommunicatieAfsprakenData
-                        {
-                            Id = SafeReadInt(reader, "id") ?? 0,
-                            DossierId = SafeReadInt(reader, "dossier_id") ?? 0,
-                            VillaPinedoKinderen = SafeReadString(reader, "villa_pinedo_kinderen"),
-                            KinderenBetrokkenheid = SafeReadString(reader, "kinderen_betrokkenheid"),
-                            KiesMethode = SafeReadString(reader, "kies_methode"),
-                            Opvang = SafeReadString(reader, "opvang"),
-                            InformatieUitwisseling = SafeReadString(reader, "informatie_uitwisseling"),
-                            BijlageBeslissingen = SafeReadString(reader, "bijlage_beslissingen"),
-                            SocialMedia = SafeReadString(reader, "social_media"),
-                            MobielTablet = SafeReadString(reader, "mobiel_tablet"),
-                            ToezichtApps = SafeReadString(reader, "toezicht_apps"),
-                            LocatieDelen = SafeReadString(reader, "locatie_delen"),
-                            IdBewijzen = SafeReadString(reader, "id_bewijzen"),
-                            Aansprakelijkheidsverzekering = SafeReadString(reader, "aansprakelijkheidsverzekering"),
-                            Ziektekostenverzekering = SafeReadString(reader, "ziektekostenverzekering"),
-                            ToestemmingReizen = SafeReadString(reader, "toestemming_reizen"),
-                            Jongmeerderjarige = SafeReadString(reader, "jongmeerderjarige"),
-                            Studiekosten = SafeReadString(reader, "studiekosten"),
-                            BankrekeningKinderen = SafeReadString(reader, "bankrekening_kinderen"),
-                            Evaluatie = SafeReadString(reader, "evaluatie"),
-                            ParentingCoordinator = SafeReadString(reader, "parenting_coordinator"),
-                            MediationClausule = SafeReadString(reader, "mediation_clausule")
-                        };
-                        _logger.LogInformation("Loaded CommunicatieAfspraken for dossier {DossierId}", dossierId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Communicatie afspraken table may not exist yet, skipping");
-                }
-                dossier.CommunicatieAfspraken = communicatieAfspraken;
+                dossier.CommunicatieAfspraken = await ReadCommunicatieAfspraken(reader, dossierId);
 
-                // Result set 12: Omgangsregeling - Read omgang_tekst_of_schema from separate table
+                // Result set 12: Omgangsregeling
                 await reader.NextResultAsync();
-                try
-                {
-                    if (reader.FieldCount > 0 && await reader.ReadAsync())
-                    {
-                        // Create communicatieAfspraken if it doesn't exist yet
-                        if (communicatieAfspraken == null)
-                        {
-                            communicatieAfspraken = new CommunicatieAfsprakenData
-                            {
-                                DossierId = actualDossierId
-                            };
-                        }
+                ReadOmgangsregeling(reader, dossier, actualDossierId);
 
-                        // Populate omgang fields from omgangsregeling table
-                        communicatieAfspraken.OmgangTekstOfSchema = SafeReadString(reader, "omgang_tekst_of_schema");
-                        communicatieAfspraken.OmgangBeschrijving = SafeReadString(reader, "omgang_beschrijving");
-
-                        // Update dossier reference
-                        dossier.CommunicatieAfspraken = communicatieAfspraken;
-
-                        _logger.LogInformation("Loaded Omgangsregeling data for dossier {DossierId}", dossierId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Omgangsregeling table may not exist yet, skipping");
-                }
-
-                // Result set 13: Custom placeholder values
+                // Result set 13: Custom placeholders
                 await reader.NextResultAsync();
-                try
-                {
-                    if (reader.FieldCount > 0)
-                    {
-                        while (await reader.ReadAsync())
-                        {
-                            var key = SafeReadString(reader, "placeholder_key");
-                            var waarde = SafeReadString(reader, "waarde");
-                            if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(waarde))
-                            {
-                                dossier.CustomPlaceholders[key] = waarde;
-                            }
-                        }
-                        _logger.LogInformation("Loaded {Count} custom placeholders for dossier {DossierId}",
-                            dossier.CustomPlaceholders.Count, dossierId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Placeholder catalogus table may not exist yet, skipping custom placeholders");
-                }
+                ReadCustomPlaceholders(reader, dossier, dossierId);
 
                 // Result set 14: Conditional placeholders
                 await reader.NextResultAsync();
-                try
-                {
-                    if (reader.FieldCount > 0)
-                    {
-                        while (await reader.ReadAsync())
-                        {
-                            var conditionalPlaceholder = new ConditionalPlaceholder
-                            {
-                                Id = SafeReadInt(reader, "id") ?? 0,
-                                PlaceholderKey = SafeReadString(reader, "placeholder_key") ?? string.Empty,
-                                HeeftConditie = SafeReadBoolean(reader, "heeft_conditie") ?? false,
-                                ConditieConfigJson = SafeReadString(reader, "conditie_config")
-                            };
-                            if (conditionalPlaceholder.HeeftConditie && !string.IsNullOrEmpty(conditionalPlaceholder.ConditieConfigJson))
-                            {
-                                dossier.ConditionalPlaceholders.Add(conditionalPlaceholder);
-                            }
-                        }
-                        _logger.LogInformation("Loaded {Count} conditional placeholders for dossier {DossierId}",
-                            dossier.ConditionalPlaceholders.Count, dossierId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Conditional placeholder columns may not exist yet, skipping conditional placeholders");
-                }
+                ReadConditionalPlaceholders(reader, dossier, dossierId);
 
-                // Result set 15: Convenant fiscal data (Optional)
+                // Result set 15: Convenant fiscal data
                 await reader.NextResultAsync();
-                ConvenantFiscaalData? convenantFiscaal = null;
-                try
-                {
-                    if (reader.FieldCount > 0 && await reader.ReadAsync())
-                    {
-                        convenantFiscaal = new ConvenantFiscaalData
-                        {
-                            FiscaalAdviesKeuze = SafeReadString(reader, "fiscaal_advies_keuze"),
-                            FiscaalAdviseurNaam = SafeReadString(reader, "fiscaal_adviseur_naam"),
-                            EigenWoningEinddatumBewust = SafeReadBoolean(reader, "eigen_woning_einddatum_bewust"),
-                            FiscaalPartnerschapKeuze = SafeReadString(reader, "fiscaal_partnerschap_keuze"),
-                            FiscaalPartnerschapAdviseur = SafeReadString(reader, "fiscaal_partnerschap_adviseur"),
-                            EigenWoningSectieOpnemen = SafeReadBoolean(reader, "eigen_woning_sectie_opnemen"),
-                            IbOndernemingSectieOpnemen = SafeReadBoolean(reader, "ib_onderneming_sectie_opnemen"),
-                            AanmerkelijkBelangOpnemen = SafeReadBoolean(reader, "aanmerkelijk_belang_opnemen"),
-                            AanmerkelijkBelangVanToepassing = SafeReadString(reader, "aanmerkelijk_belang_van_toepassing"),
-                            AanmerkelijkBelangAfrekening = SafeReadString(reader, "aanmerkelijk_belang_afrekening"),
-                            TerbeschikkingstellingOpnemen = SafeReadBoolean(reader, "terbeschikkingstelling_opnemen"),
-                            TerbeschikkingstellingKeuze = SafeReadString(reader, "terbeschikkingstelling_keuze"),
-                            SchenkbelastingOpnemen = SafeReadBoolean(reader, "schenkbelasting_opnemen"),
-                            DraagplichtHeffingenTot = SafeReadString(reader, "draagplicht_heffingen_tot"),
-                            DraagplichtHeffingenTotVerhouding1 = SafeReadInt(reader, "draagplicht_heffingen_tot_verhouding1"),
-                            DraagplichtHeffingenTotVerhouding2 = SafeReadInt(reader, "draagplicht_heffingen_tot_verhouding2"),
-                            DraagplichtHeffingenJaar = SafeReadString(reader, "draagplicht_heffingen_jaar"),
-                            DraagplichtHeffingenJaarVerhouding1 = SafeReadInt(reader, "draagplicht_heffingen_jaar_verhouding1"),
-                            DraagplichtHeffingenJaarVerhouding2 = SafeReadInt(reader, "draagplicht_heffingen_jaar_verhouding2"),
-                            VerrekeningLijfrentenPensioenOpnemen = SafeReadBoolean(reader, "verrekening_lijfrenten_pensioen_opnemen"),
-                            VerrekeningLijfrentenPensioenJaar = SafeReadInt(reader, "verrekening_lijfrenten_pensioen_jaar"),
-                            AfkoopAlimentatieVerrekeningOpnemen = SafeReadBoolean(reader, "afkoop_alimentatie_verrekening_opnemen"),
-                            AfkoopAlimentatieVerrekeningJaar = SafeReadInt(reader, "afkoop_alimentatie_verrekening_jaar"),
-                            OptimalisatieAangiftenOpnemen = SafeReadBoolean(reader, "optimalisatie_aangiften_opnemen"),
-                            OptimalisatieVoordeelVerdeling = SafeReadString(reader, "optimalisatie_voordeel_verdeling")
-                        };
-                        _logger.LogInformation("Loaded ConvenantFiscaal data for dossier {DossierId}", dossierId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Convenant fiscal columns may not exist yet, skipping");
-                }
-                dossier.ConvenantFiscaal = convenantFiscaal;
+                dossier.ConvenantFiscaal = await ReadConvenantFiscaal(reader, dossierId);
 
-                // Result set 16: Complete Convenant Info (Optional)
+                // Result set 16: Complete convenant info
                 await reader.NextResultAsync();
-                ConvenantInfoData? convenantInfo = null;
-                try
-                {
-                    if (reader.FieldCount > 0 && await reader.ReadAsync())
-                    {
-                        convenantInfo = MapConvenantInfoData(reader);
-                        _logger.LogInformation("Loaded ConvenantInfo data for dossier {DossierId}", dossierId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Convenant info columns may not exist yet, skipping");
-                }
-                dossier.ConvenantInfo = convenantInfo;
+                dossier.ConvenantInfo = await ReadConvenantInfo(reader, dossierId);
 
                 _logger.LogInformation("Successfully retrieved dossier data for dossier ID: {DossierId}", dossierId);
                 return dossier;
@@ -820,6 +402,507 @@ namespace scheidingsdesk_document_generator.Services
             }
         }
 
+        #region Result Set Readers
+
+        private async Task<DossierData?> ReadDossier(SqlDataReader reader, int dossierId)
+        {
+            if (!await reader.ReadAsync())
+            {
+                _logger.LogWarning("Dossier with ID {DossierId} not found", dossierId);
+                return null;
+            }
+
+            return new DossierData
+            {
+                Id = (int)reader["id"],
+                DossierNummer = ConvertToString(reader["dossier_nummer"]),
+                AangemaaktOp = (DateTime)reader["aangemaakt_op"],
+                GewijzigdOp = (DateTime)reader["gewijzigd_op"],
+                Status = ConvertToString(reader["status"]),
+                GebruikerId = (int)reader["gebruiker_id"],
+                IsAnoniem = reader["is_anoniem"] == DBNull.Value ? null : (bool?)reader["is_anoniem"],
+                SoortProcedure = reader["soort_procedure"] == DBNull.Value ? null : ConvertToString(reader["soort_procedure"])
+            };
+        }
+
+        private static async Task<List<PersonData>> ReadPartijen(SqlDataReader reader)
+        {
+            var parties = new List<PersonData>();
+            while (await reader.ReadAsync())
+            {
+                parties.Add(MapPersonData(reader));
+            }
+            return parties;
+        }
+
+        private static async Task<List<ChildData>> ReadKinderen(SqlDataReader reader)
+        {
+            var children = new List<ChildData>();
+            while (await reader.ReadAsync())
+            {
+                children.Add(MapChildData(reader));
+            }
+            return children;
+        }
+
+        private static async Task ReadParentChildRelations(SqlDataReader reader, List<ChildData> children)
+        {
+            var childRelations = new Dictionary<int, List<ParentChildRelation>>();
+            while (await reader.ReadAsync())
+            {
+                var kindId = (int)reader["kind_id"];
+                if (!childRelations.ContainsKey(kindId))
+                    childRelations[kindId] = new List<ParentChildRelation>();
+
+                childRelations[kindId].Add(new ParentChildRelation
+                {
+                    OuderId = (int)reader["ouder_id"],
+                    OuderNaam = ConvertToString(reader["ouder_naam"]),
+                    RelatieTypeId = (int)reader["relatie_type_id"],
+                    RelatieType = reader["relatie_type"] == DBNull.Value ? null : ConvertToString(reader["relatie_type"])
+                });
+            }
+
+            foreach (var child in children)
+            {
+                if (childRelations.ContainsKey(child.Id))
+                    child.ParentRelations = childRelations[child.Id];
+            }
+        }
+
+        private static async Task<List<OmgangData>> ReadOmgang(SqlDataReader reader)
+        {
+            var visitationArrangements = new List<OmgangData>();
+            while (await reader.ReadAsync())
+            {
+                visitationArrangements.Add(new OmgangData
+                {
+                    Id = (int)reader["id"],
+                    DagId = (int)reader["dag_id"],
+                    DagNaam = ConvertToString(reader["dag_naam"]),
+                    DagdeelId = (int)reader["dagdeel_id"],
+                    DagdeelNaam = ConvertToString(reader["dagdeel_naam"]),
+                    VerzorgerId = (int)reader["verzorger_id"],
+                    VerzorgerNaam = ConvertToString(reader["verzorger_naam"]),
+                    WisselTijd = reader["wissel_tijd"] == DBNull.Value ? null : ConvertToString(reader["wissel_tijd"]),
+                    WeekRegelingId = (int)reader["week_regeling_id"],
+                    WeekRegelingOmschrijving = ConvertToString(reader["week_regeling_omschrijving"]),
+                    WeekRegelingAnders = reader["week_regeling_anders"] == DBNull.Value ? null : ConvertToString(reader["week_regeling_anders"]),
+                    DossierId = (int)reader["dossier_id"],
+                    AangemaaktOp = (DateTime)reader["aangemaakt_op"],
+                    GewijzigdOp = (DateTime)reader["gewijzigd_op"]
+                });
+            }
+            return visitationArrangements;
+        }
+
+        private static async Task<List<ZorgData>> ReadZorg(SqlDataReader reader)
+        {
+            var careArrangements = new List<ZorgData>();
+            while (await reader.ReadAsync())
+            {
+                careArrangements.Add(new ZorgData
+                {
+                    Id = (int)reader["id"],
+                    ZorgCategorieId = (int)reader["zorg_categorie_id"],
+                    ZorgCategorieNaam = ConvertToString(reader["zorg_categorie_naam"]),
+                    ZorgSituatieId = (int)reader["zorg_situatie_id"],
+                    ZorgSituatieNaam = ConvertToString(reader["zorg_situatie_naam"]),
+                    Overeenkomst = ConvertToString(reader["overeenkomst"]),
+                    SituatieAnders = reader["situatie_anders"] == DBNull.Value ? null : ConvertToString(reader["situatie_anders"]),
+                    DossierId = (int)reader["dossier_id"],
+                    AangemaaktOp = (DateTime)reader["aangemaakt_op"],
+                    AangemaaktDoor = (int)reader["aangemaakt_door"],
+                    GewijzigdOp = (DateTime)reader["gewijzigd_op"],
+                    GewijzigdDoor = reader["gewijzigd_door"] == DBNull.Value ? null : (int?)reader["gewijzigd_door"]
+                });
+            }
+            return careArrangements;
+        }
+
+        private async Task<AlimentatieData?> ReadAlimentatie(SqlDataReader reader, int dossierId)
+        {
+            try
+            {
+                _logger.LogInformation("Reading alimentatie data for dossier {DossierId}, FieldCount: {FieldCount}", dossierId, reader.FieldCount);
+
+                if (reader.FieldCount > 0 && await reader.ReadAsync())
+                {
+                    var alimentatie = new AlimentatieData
+                    {
+                        Id = (int)reader["id"],
+                        DossierId = (int)reader["dossier_id"],
+                        NettoBesteedbaarGezinsinkomen = reader["netto_besteedbaar_gezinsinkomen"] == DBNull.Value ? null : Convert.ToDecimal(reader["netto_besteedbaar_gezinsinkomen"]),
+                        KostenKinderen = reader["kosten_kinderen"] == DBNull.Value ? null : Convert.ToDecimal(reader["kosten_kinderen"]),
+                        BijdrageKostenKinderen = reader["bijdrage_kosten_kinderen"] == DBNull.Value ? null : Convert.ToDecimal(reader["bijdrage_kosten_kinderen"]),
+                        BijdrageTemplate = reader["bijdrage_template"] == DBNull.Value ? null : (int?)reader["bijdrage_template"],
+                        BijdrageTemplateOmschrijving = reader["bijdrage_template_omschrijving"] == DBNull.Value ? null : ConvertToString(reader["bijdrage_template_omschrijving"]),
+
+                        // Kinderrekening velden
+                        StortingOuder1Kinderrekening = SafeReadDecimal(reader, "storting_ouder1_kinderrekening"),
+                        StortingOuder2Kinderrekening = SafeReadDecimal(reader, "storting_ouder2_kinderrekening"),
+                        KinderrekeningKostensoorten = SafeReadJsonArray(reader, "kinderrekening_kostensoorten"),
+                        KinderrekeningMaximumOpname = SafeReadBoolean(reader, "kinderrekening_maximum_opname"),
+                        KinderrekeningMaximumOpnameBedrag = SafeReadDecimal(reader, "kinderrekening_maximum_opname_bedrag"),
+                        KinderbijslagStortenOpKinderrekening = SafeReadBoolean(reader, "kinderbijslag_storten_op_kinderrekening"),
+                        KindgebondenBudgetStortenOpKinderrekening = SafeReadBoolean(reader, "kindgebonden_budget_storten_op_kinderrekening"),
+
+                        // Alimentatie settings
+                        BedragenAlleKinderenGelijk = SafeReadBoolean(reader, "bedragen_alle_kinderen_gelijk"),
+                        AlimentatiebedragPerKind = SafeReadDecimal(reader, "alimentatiebedrag_per_kind"),
+                        Alimentatiegerechtigde = SafeReadString(reader, "alimentatiegerechtigde"),
+                        ZorgkortingPercentageAlleKinderen = SafeReadDecimal(reader, "zorgkorting_percentage_alle_kinderen"),
+
+                        // Sync settings for all children
+                        AfsprakenAlleKinderenGelijk = SafeReadBoolean(reader, "afspraken_alle_kinderen_gelijk"),
+                        HoofdverblijfAlleKinderen = SafeReadString(reader, "hoofdverblijf_alle_kinderen"),
+                        InschrijvingAlleKinderen = SafeReadString(reader, "inschrijving_alle_kinderen"),
+                        KinderbijslagOntvangerAlleKinderen = SafeReadString(reader, "kinderbijslag_ontvanger_alle_kinderen"),
+                        KindgebondenBudgetAlleKinderen = SafeReadString(reader, "kindgebonden_budget_alle_kinderen"),
+
+                        // Kinderrekening opheffing en alimentatie ingangsdatum velden
+                        KinderrekeningOpheffen = SafeReadString(reader, "kinderrekening_opheffen"),
+                        IngangsdatumOptie = SafeReadString(reader, "ingangsdatum_optie"),
+                        Ingangsdatum = SafeReadDateTime(reader, "ingangsdatum"),
+                        IngangsdatumAnders = SafeReadString(reader, "ingangsdatum_anders"),
+                        EersteIndexeringJaar = SafeReadInt(reader, "eerste_indexering_jaar")
+                    };
+
+                    var hasNewFields = ColumnExists(reader, "storting_ouder1_kinderrekening");
+                    _logger.LogInformation("Loaded alimentatie: Gezinsinkomen={Gezinsinkomen}, KostenKinderen={Kosten}, HasNewKinderrekeningFields={HasNewFields}",
+                        alimentatie.NettoBesteedbaarGezinsinkomen, alimentatie.KostenKinderen, hasNewFields);
+
+                    return alimentatie;
+                }
+                else
+                {
+                    _logger.LogInformation("No alimentatie data found for dossier {DossierId}", dossierId);
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Alimentatie tables may not exist yet, skipping alimentatie data");
+                return null;
+            }
+        }
+
+        private async Task ReadBijdragenKostenKinderen(SqlDataReader reader, AlimentatieData? alimentatie, int dossierId)
+        {
+            var bijdragenKostenKinderen = new List<BijdrageKostenKinderenData>();
+            try
+            {
+                _logger.LogInformation("Reading bijdragen kosten kinderen for dossier {DossierId}, FieldCount: {FieldCount}", dossierId, reader.FieldCount);
+
+                if (reader.FieldCount > 0)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var bijdrage = new BijdrageKostenKinderenData
+                        {
+                            Id = (int)reader["id"],
+                            AlimentatieId = (int)reader["alimentatie_id"],
+                            PersonenId = (int)reader["personen_id"],
+                            PersoonNaam = ConvertToString(reader["persoon_naam"]),
+                            EigenAandeel = reader["eigen_aandeel"] == DBNull.Value ? null : (decimal?)reader["eigen_aandeel"]
+                        };
+                        bijdragenKostenKinderen.Add(bijdrage);
+                        _logger.LogInformation("Loaded bijdrage: PersonId={PersonId}, Naam={Naam}, Aandeel={Aandeel}",
+                            bijdrage.PersonenId, bijdrage.PersoonNaam, bijdrage.EigenAandeel);
+                    }
+                }
+                _logger.LogInformation("Total bijdragen loaded: {Count}", bijdragenKostenKinderen.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Bijdragen kosten kinderen table may not exist yet, skipping");
+            }
+            if (alimentatie != null)
+                alimentatie.BijdragenKostenKinderen = bijdragenKostenKinderen;
+        }
+
+        private async Task ReadFinancieleAfsprakenKinderen(SqlDataReader reader, AlimentatieData? alimentatie, int dossierId)
+        {
+            var financieleAfsprakenKinderen = new List<FinancieleAfsprakenKinderenData>();
+            try
+            {
+                _logger.LogInformation("Reading financiele afspraken kinderen for dossier {DossierId}, FieldCount: {FieldCount}", dossierId, reader.FieldCount);
+
+                if (reader.FieldCount > 0)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var afspraak = new FinancieleAfsprakenKinderenData
+                        {
+                            Id = (int)reader["id"],
+                            AlimentatieId = (int)reader["alimentatie_id"],
+                            KindId = (int)reader["kind_id"],
+                            KindNaam = ConvertToString(reader["kind_naam"]),
+                            AlimentatieBedrag = reader["alimentatie_bedrag"] == DBNull.Value ? null : Convert.ToDecimal(reader["alimentatie_bedrag"]),
+                            Hoofdverblijf = reader["hoofdverblijf"] == DBNull.Value ? null : ConvertToString(reader["hoofdverblijf"]),
+                            KinderbijslagOntvanger = reader["kinderbijslag_ontvanger"] == DBNull.Value ? null : ConvertToString(reader["kinderbijslag_ontvanger"]),
+                            ZorgkortingPercentage = reader["zorgkorting_percentage"] == DBNull.Value ? null : Convert.ToDecimal(reader["zorgkorting_percentage"]),
+                            Inschrijving = reader["inschrijving"] == DBNull.Value ? null : ConvertToString(reader["inschrijving"]),
+                            KindgebondenBudget = reader["kindgebonden_budget"] == DBNull.Value ? null : ConvertToString(reader["kindgebonden_budget"])
+                        };
+                        financieleAfsprakenKinderen.Add(afspraak);
+                        _logger.LogInformation("Loaded financiele afspraak: KindId={KindId}, Naam={Naam}, Bedrag={Bedrag}, Hoofdverblijf={Hoofdverblijf}",
+                            afspraak.KindId, afspraak.KindNaam, afspraak.AlimentatieBedrag, afspraak.Hoofdverblijf);
+                    }
+                }
+                _logger.LogInformation("Total financiele afspraken loaded: {Count}", financieleAfsprakenKinderen.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Financiele afspraken kinderen table may not exist yet, skipping");
+            }
+            if (alimentatie != null)
+                alimentatie.FinancieleAfsprakenKinderen = financieleAfsprakenKinderen;
+        }
+
+        private async Task<OuderschapsplanInfoData?> ReadOuderschapsplanInfo(SqlDataReader reader)
+        {
+            try
+            {
+                if (reader.FieldCount > 0 && await reader.ReadAsync())
+                {
+                    return new OuderschapsplanInfoData
+                    {
+                        Id = SafeReadInt(reader, "id") ?? 0,
+                        DossierId = SafeReadInt(reader, "dossier_id") ?? 0,
+                        Partij1PersoonId = SafeReadInt(reader, "partij_1_persoon_id") ?? 0,
+                        Partij2PersoonId = SafeReadInt(reader, "partij_2_persoon_id") ?? 0,
+                        SoortRelatie = SafeReadString(reader, "soort_relatie"),
+                        DatumAanvangRelatie = SafeReadDateTime(reader, "datum_aanvang_relatie"),
+                        PlaatsRelatie = SafeReadString(reader, "plaats_relatie"),
+                        OvereenkomstGemaakt = SafeReadBoolean(reader, "overeenkomst_gemaakt"),
+                        SoortRelatieVerbreking = SafeReadString(reader, "soort_relatie_verbreking"),
+                        BetrokkenheidKind = SafeReadString(reader, "betrokkenheid_kind"),
+                        Kiesplan = SafeReadString(reader, "kiesplan"),
+                        GezagPartij = SafeReadInt(reader, "gezag_partij"),
+                        GezagTermijnWeken = SafeReadInt(reader, "gezag_termijn_weken"),
+                        WaOpNaamVanPartij = SafeReadInt(reader, "wa_op_naam_van_partij"),
+                        KeuzeDevices = SafeReadString(reader, "keuze_devices"),
+                        ZorgverzekeringOpNaamVanPartij = SafeReadInt(reader, "zorgverzekering_op_naam_van_partij"),
+                        KinderbijslagPartij = SafeReadInt(reader, "kinderbijslag_partij"),
+                        WoonplaatsOptie = SafeReadInt(reader, "woonplaats_optie"),
+                        WoonplaatsPartij1 = SafeReadString(reader, "woonplaats_partij1"),
+                        WoonplaatsPartij2 = SafeReadString(reader, "woonplaats_partij2"),
+                        BrpPartij1 = SafeReadString(reader, "brp_partij_1"),
+                        BrpPartij2 = SafeReadString(reader, "brp_partij_2"),
+                        KgbPartij1 = SafeReadString(reader, "kgb_partij_1"),
+                        KgbPartij2 = SafeReadString(reader, "kgb_partij_2"),
+                        Hoofdverblijf = SafeReadString(reader, "hoofdverblijf"),
+                        Zorgverdeling = SafeReadString(reader, "zorgverdeling"),
+                        OpvangKinderen = SafeReadString(reader, "opvang_kinderen"),
+                        BankrekeningnummersOpNaamVanKind = SafeReadString(reader, "bankrekeningnummers_op_naam_van_kind"),
+                        ParentingCoordinator = SafeReadString(reader, "parenting_coordinator"),
+
+                        CreatedAt = SafeReadDateTime(reader, "created_at") ?? DateTime.Now,
+                        UpdatedAt = SafeReadDateTime(reader, "updated_at") ?? DateTime.Now
+                    };
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Ouderschapsplan info table may not exist yet, skipping");
+                return null;
+            }
+        }
+
+        private async Task<CommunicatieAfsprakenData?> ReadCommunicatieAfspraken(SqlDataReader reader, int dossierId)
+        {
+            try
+            {
+                if (reader.FieldCount > 0 && await reader.ReadAsync())
+                {
+                    var data = new CommunicatieAfsprakenData
+                    {
+                        Id = SafeReadInt(reader, "id") ?? 0,
+                        DossierId = SafeReadInt(reader, "dossier_id") ?? 0,
+                        VillaPinedoKinderen = SafeReadString(reader, "villa_pinedo_kinderen"),
+                        KinderenBetrokkenheid = SafeReadString(reader, "kinderen_betrokkenheid"),
+                        KiesMethode = SafeReadString(reader, "kies_methode"),
+                        Opvang = SafeReadString(reader, "opvang"),
+                        InformatieUitwisseling = SafeReadString(reader, "informatie_uitwisseling"),
+                        BijlageBeslissingen = SafeReadString(reader, "bijlage_beslissingen"),
+                        SocialMedia = SafeReadString(reader, "social_media"),
+                        MobielTablet = SafeReadString(reader, "mobiel_tablet"),
+                        ToezichtApps = SafeReadString(reader, "toezicht_apps"),
+                        LocatieDelen = SafeReadString(reader, "locatie_delen"),
+                        IdBewijzen = SafeReadString(reader, "id_bewijzen"),
+                        Aansprakelijkheidsverzekering = SafeReadString(reader, "aansprakelijkheidsverzekering"),
+                        Ziektekostenverzekering = SafeReadString(reader, "ziektekostenverzekering"),
+                        ToestemmingReizen = SafeReadString(reader, "toestemming_reizen"),
+                        Jongmeerderjarige = SafeReadString(reader, "jongmeerderjarige"),
+                        Studiekosten = SafeReadString(reader, "studiekosten"),
+                        BankrekeningKinderen = SafeReadString(reader, "bankrekening_kinderen"),
+                        Evaluatie = SafeReadString(reader, "evaluatie"),
+                        ParentingCoordinator = SafeReadString(reader, "parenting_coordinator"),
+                        MediationClausule = SafeReadString(reader, "mediation_clausule")
+                    };
+                    _logger.LogInformation("Loaded CommunicatieAfspraken for dossier {DossierId}", dossierId);
+                    return data;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Communicatie afspraken table may not exist yet, skipping");
+                return null;
+            }
+        }
+
+        private void ReadOmgangsregeling(SqlDataReader reader, DossierData dossier, int actualDossierId)
+        {
+            try
+            {
+                if (reader.FieldCount > 0 && reader.Read())
+                {
+                    if (dossier.CommunicatieAfspraken == null)
+                    {
+                        dossier.CommunicatieAfspraken = new CommunicatieAfsprakenData
+                        {
+                            DossierId = actualDossierId
+                        };
+                    }
+
+                    dossier.CommunicatieAfspraken.OmgangTekstOfSchema = SafeReadString(reader, "omgang_tekst_of_schema");
+                    dossier.CommunicatieAfspraken.OmgangBeschrijving = SafeReadString(reader, "omgang_beschrijving");
+
+                    _logger.LogInformation("Loaded Omgangsregeling data for dossier {DossierId}", actualDossierId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Omgangsregeling table may not exist yet, skipping");
+            }
+        }
+
+        private void ReadCustomPlaceholders(SqlDataReader reader, DossierData dossier, int dossierId)
+        {
+            try
+            {
+                if (reader.FieldCount > 0)
+                {
+                    while (reader.Read())
+                    {
+                        var key = SafeReadString(reader, "placeholder_key");
+                        var waarde = SafeReadString(reader, "waarde");
+                        if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(waarde))
+                        {
+                            dossier.CustomPlaceholders[key] = waarde;
+                        }
+                    }
+                    _logger.LogInformation("Loaded {Count} custom placeholders for dossier {DossierId}",
+                        dossier.CustomPlaceholders.Count, dossierId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Placeholder catalogus table may not exist yet, skipping custom placeholders");
+            }
+        }
+
+        private void ReadConditionalPlaceholders(SqlDataReader reader, DossierData dossier, int dossierId)
+        {
+            try
+            {
+                if (reader.FieldCount > 0)
+                {
+                    while (reader.Read())
+                    {
+                        var conditionalPlaceholder = new ConditionalPlaceholder
+                        {
+                            Id = SafeReadInt(reader, "id") ?? 0,
+                            PlaceholderKey = SafeReadString(reader, "placeholder_key") ?? string.Empty,
+                            HeeftConditie = SafeReadBoolean(reader, "heeft_conditie") ?? false,
+                            ConditieConfigJson = SafeReadString(reader, "conditie_config")
+                        };
+                        if (conditionalPlaceholder.HeeftConditie && !string.IsNullOrEmpty(conditionalPlaceholder.ConditieConfigJson))
+                        {
+                            dossier.ConditionalPlaceholders.Add(conditionalPlaceholder);
+                        }
+                    }
+                    _logger.LogInformation("Loaded {Count} conditional placeholders for dossier {DossierId}",
+                        dossier.ConditionalPlaceholders.Count, dossierId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Conditional placeholder columns may not exist yet, skipping conditional placeholders");
+            }
+        }
+
+        private async Task<ConvenantFiscaalData?> ReadConvenantFiscaal(SqlDataReader reader, int dossierId)
+        {
+            try
+            {
+                if (reader.FieldCount > 0 && await reader.ReadAsync())
+                {
+                    var data = new ConvenantFiscaalData
+                    {
+                        FiscaalAdviesKeuze = SafeReadString(reader, "fiscaal_advies_keuze"),
+                        FiscaalAdviseurNaam = SafeReadString(reader, "fiscaal_adviseur_naam"),
+                        EigenWoningEinddatumBewust = SafeReadBoolean(reader, "eigen_woning_einddatum_bewust"),
+                        FiscaalPartnerschapKeuze = SafeReadString(reader, "fiscaal_partnerschap_keuze"),
+                        FiscaalPartnerschapAdviseur = SafeReadString(reader, "fiscaal_partnerschap_adviseur"),
+                        EigenWoningSectieOpnemen = SafeReadBoolean(reader, "eigen_woning_sectie_opnemen"),
+                        IbOndernemingSectieOpnemen = SafeReadBoolean(reader, "ib_onderneming_sectie_opnemen"),
+                        AanmerkelijkBelangOpnemen = SafeReadBoolean(reader, "aanmerkelijk_belang_opnemen"),
+                        AanmerkelijkBelangVanToepassing = SafeReadString(reader, "aanmerkelijk_belang_van_toepassing"),
+                        AanmerkelijkBelangAfrekening = SafeReadString(reader, "aanmerkelijk_belang_afrekening"),
+                        TerbeschikkingstellingOpnemen = SafeReadBoolean(reader, "terbeschikkingstelling_opnemen"),
+                        TerbeschikkingstellingKeuze = SafeReadString(reader, "terbeschikkingstelling_keuze"),
+                        SchenkbelastingOpnemen = SafeReadBoolean(reader, "schenkbelasting_opnemen"),
+                        DraagplichtHeffingenTot = SafeReadString(reader, "draagplicht_heffingen_tot"),
+                        DraagplichtHeffingenTotVerhouding1 = SafeReadInt(reader, "draagplicht_heffingen_tot_verhouding1"),
+                        DraagplichtHeffingenTotVerhouding2 = SafeReadInt(reader, "draagplicht_heffingen_tot_verhouding2"),
+                        DraagplichtHeffingenJaar = SafeReadString(reader, "draagplicht_heffingen_jaar"),
+                        DraagplichtHeffingenJaarVerhouding1 = SafeReadInt(reader, "draagplicht_heffingen_jaar_verhouding1"),
+                        DraagplichtHeffingenJaarVerhouding2 = SafeReadInt(reader, "draagplicht_heffingen_jaar_verhouding2"),
+                        VerrekeningLijfrentenPensioenOpnemen = SafeReadBoolean(reader, "verrekening_lijfrenten_pensioen_opnemen"),
+                        VerrekeningLijfrentenPensioenJaar = SafeReadInt(reader, "verrekening_lijfrenten_pensioen_jaar"),
+                        AfkoopAlimentatieVerrekeningOpnemen = SafeReadBoolean(reader, "afkoop_alimentatie_verrekening_opnemen"),
+                        AfkoopAlimentatieVerrekeningJaar = SafeReadInt(reader, "afkoop_alimentatie_verrekening_jaar"),
+                        OptimalisatieAangiftenOpnemen = SafeReadBoolean(reader, "optimalisatie_aangiften_opnemen"),
+                        OptimalisatieVoordeelVerdeling = SafeReadString(reader, "optimalisatie_voordeel_verdeling")
+                    };
+                    _logger.LogInformation("Loaded ConvenantFiscaal data for dossier {DossierId}", dossierId);
+                    return data;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Convenant fiscal columns may not exist yet, skipping");
+                return null;
+            }
+        }
+
+        private async Task<ConvenantInfoData?> ReadConvenantInfo(SqlDataReader reader, int dossierId)
+        {
+            try
+            {
+                if (reader.FieldCount > 0 && await reader.ReadAsync())
+                {
+                    var data = MapConvenantInfoData(reader);
+                    _logger.LogInformation("Loaded ConvenantInfo data for dossier {DossierId}", dossierId);
+                    return data;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Convenant info columns may not exist yet, skipping");
+                return null;
+            }
+        }
+
+        #endregion
+
+        #region Data Mappers
 
         private static PersonData MapPersonData(SqlDataReader reader)
         {
@@ -870,146 +953,6 @@ namespace scheidingsdesk_document_generator.Services
                 Email = reader["email"] == DBNull.Value ? null : ConvertToString(reader["email"]),
                 Beroep = reader["beroep"] == DBNull.Value ? null : ConvertToString(reader["beroep"])
             };
-        }
-
-        /// <summary>
-        /// Safely converts database values to string, handling booleans and other types
-        /// </summary>
-        private static string ConvertToString(object value)
-        {
-            if (value == null || value == DBNull.Value)
-                return string.Empty;
-
-            // Handle boolean values
-            if (value is bool boolValue)
-                return boolValue ? "Ja" : "Nee";
-
-            // Default to string conversion
-            return value.ToString() ?? string.Empty;
-        }
-
-        /// <summary>
-        /// Checks if a column exists in the data reader
-        /// </summary>
-        private static bool ColumnExists(SqlDataReader reader, string columnName)
-        {
-            try
-            {
-                return reader.GetOrdinal(columnName) >= 0;
-            }
-            catch (IndexOutOfRangeException)
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Safely reads a nullable decimal value from the reader, returns null if column doesn't exist
-        /// </summary>
-        private static decimal? SafeReadDecimal(SqlDataReader reader, string columnName)
-        {
-            if (!ColumnExists(reader, columnName))
-                return null;
-
-            var value = reader[columnName];
-            return value == DBNull.Value ? null : Convert.ToDecimal(value);
-        }
-
-        /// <summary>
-        /// Safely reads a nullable boolean value from the reader, returns null if column doesn't exist
-        /// </summary>
-        private static bool? SafeReadBoolean(SqlDataReader reader, string columnName)
-        {
-            if (!ColumnExists(reader, columnName))
-                return null;
-
-            var value = reader[columnName];
-            return value == DBNull.Value ? null : (bool?)value;
-        }
-
-        /// <summary>
-        /// Resolves a dossier ID or nummer to the actual dossier ID
-        /// If the input is already a valid dossier ID, returns it
-        /// If the input is a dossier nummer (string numeric), looks up the actual ID
-        /// </summary>
-        private async Task<int> ResolveDossierIdAsync(SqlConnection connection, int inputId)
-        {
-            // First, try to find a dossier with this ID
-            const string checkIdQuery = "SELECT id FROM dbo.dossiers WHERE id = @InputId";
-            using var checkIdCommand = new SqlCommand(checkIdQuery, connection);
-            checkIdCommand.Parameters.AddWithValue("@InputId", inputId);
-
-            var resultById = await checkIdCommand.ExecuteScalarAsync();
-            if (resultById != null)
-            {
-                // Found by ID - this is the normal case, no need to log
-                return inputId;
-            }
-
-            // If not found by ID, try to find by dossier_nummer
-            const string checkNummerQuery = "SELECT id FROM dbo.dossiers WHERE dossier_nummer = @DossierNummer";
-            using var checkNummerCommand = new SqlCommand(checkNummerQuery, connection);
-            checkNummerCommand.Parameters.AddWithValue("@DossierNummer", inputId.ToString());
-
-            var resultByNummer = await checkNummerCommand.ExecuteScalarAsync();
-            if (resultByNummer != null)
-            {
-                int actualId = Convert.ToInt32(resultByNummer);
-                _logger.LogInformation("Resolved dossier nummer {DossierNummer} to ID {ActualId}", inputId, actualId);
-                return actualId;
-            }
-
-            // If still not found, return the original input (will fail later with proper error)
-            _logger.LogWarning("Dossier not found by ID or nummer: {InputId}", inputId);
-            return inputId;
-        }
-
-        /// <summary>
-        /// Safely reads a nullable string value from the reader, returns null if column doesn't exist
-        /// </summary>
-        private static string? SafeReadString(SqlDataReader reader, string columnName)
-        {
-            if (!ColumnExists(reader, columnName))
-                return null;
-
-            var value = reader[columnName];
-            return value == DBNull.Value ? null : ConvertToString(value);
-        }
-
-        /// <summary>
-        /// Safely reads a nullable integer value from the reader, returns null if column doesn't exist
-        /// Handles both INT and TINYINT (byte) database types
-        /// </summary>
-        private static int? SafeReadInt(SqlDataReader reader, string columnName)
-        {
-            if (!ColumnExists(reader, columnName))
-                return null;
-
-            var value = reader[columnName];
-            if (value == DBNull.Value)
-                return null;
-
-            // Handle both INT (int) and TINYINT (byte) types
-            return value switch
-            {
-                int intValue => intValue,
-                byte byteValue => (int)byteValue,
-                short shortValue => (int)shortValue,
-                long longValue => (int)longValue,
-                _ => Convert.ToInt32(value)
-            };
-        }
-
-        /// <summary>
-        /// Safely reads a nullable DateTime value from the reader, returns null if column doesn't exist
-        /// </summary>
-        private static DateTime? SafeReadDateTime(SqlDataReader reader, string columnName)
-        {
-            if (!ColumnExists(reader, columnName))
-                return null;
-
-            var value = reader[columnName];
-            return value == DBNull.Value ? null : (DateTime?)value;
         }
 
         /// <summary>
@@ -1192,9 +1135,102 @@ namespace scheidingsdesk_document_generator.Services
             };
         }
 
+        #endregion
+
+        #region Safe Read Helpers
+
         /// <summary>
-        /// Parses a JSON array of strings from database value
+        /// Safely converts database values to string, handling booleans and other types
         /// </summary>
+        private static string ConvertToString(object value)
+        {
+            if (value == null || value == DBNull.Value)
+                return string.Empty;
+
+            if (value is bool boolValue)
+                return boolValue ? "Ja" : "Nee";
+
+            return value.ToString() ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Checks if a column exists in the data reader
+        /// </summary>
+        private static bool ColumnExists(SqlDataReader reader, string columnName)
+        {
+            try
+            {
+                return reader.GetOrdinal(columnName) >= 0;
+            }
+            catch (IndexOutOfRangeException)
+            {
+                return false;
+            }
+        }
+
+        private static decimal? SafeReadDecimal(SqlDataReader reader, string columnName)
+        {
+            if (!ColumnExists(reader, columnName))
+                return null;
+
+            var value = reader[columnName];
+            return value == DBNull.Value ? null : Convert.ToDecimal(value);
+        }
+
+        private static bool? SafeReadBoolean(SqlDataReader reader, string columnName)
+        {
+            if (!ColumnExists(reader, columnName))
+                return null;
+
+            var value = reader[columnName];
+            return value == DBNull.Value ? null : (bool?)value;
+        }
+
+        private static string? SafeReadString(SqlDataReader reader, string columnName)
+        {
+            if (!ColumnExists(reader, columnName))
+                return null;
+
+            var value = reader[columnName];
+            return value == DBNull.Value ? null : ConvertToString(value);
+        }
+
+        private static int? SafeReadInt(SqlDataReader reader, string columnName)
+        {
+            if (!ColumnExists(reader, columnName))
+                return null;
+
+            var value = reader[columnName];
+            if (value == DBNull.Value)
+                return null;
+
+            return value switch
+            {
+                int intValue => intValue,
+                byte byteValue => (int)byteValue,
+                short shortValue => (int)shortValue,
+                long longValue => (int)longValue,
+                _ => Convert.ToInt32(value)
+            };
+        }
+
+        private static DateTime? SafeReadDateTime(SqlDataReader reader, string columnName)
+        {
+            if (!ColumnExists(reader, columnName))
+                return null;
+
+            var value = reader[columnName];
+            return value == DBNull.Value ? null : (DateTime?)value;
+        }
+
+        private static List<string> SafeReadJsonArray(SqlDataReader reader, string columnName)
+        {
+            if (!ColumnExists(reader, columnName))
+                return new List<string>();
+
+            return ParseJsonStringArray(reader[columnName]);
+        }
+
         private static List<string> ParseJsonStringArray(object value)
         {
             if (value == null || value == DBNull.Value)
@@ -1211,26 +1247,48 @@ namespace scheidingsdesk_document_generator.Services
             }
             catch (JsonException)
             {
-                // If JSON parsing fails, return empty list
                 return new List<string>();
             }
         }
 
-        /// <summary>
-        /// Safely reads a JSON array from the reader, returns empty list if column doesn't exist
-        /// </summary>
-        private static List<string> SafeReadJsonArray(SqlDataReader reader, string columnName)
-        {
-            if (!ColumnExists(reader, columnName))
-                return new List<string>();
+        #endregion
 
-            return ParseJsonStringArray(reader[columnName]);
+        #region Other Public Methods
+
+        /// <summary>
+        /// Resolves a dossier ID or nummer to the actual dossier ID
+        /// </summary>
+        private async Task<int> ResolveDossierIdAsync(SqlConnection connection, int inputId)
+        {
+            const string checkIdQuery = "SELECT id FROM dbo.dossiers WHERE id = @InputId";
+            using var checkIdCommand = new SqlCommand(checkIdQuery, connection);
+            checkIdCommand.Parameters.AddWithValue("@InputId", inputId);
+
+            var resultById = await checkIdCommand.ExecuteScalarAsync();
+            if (resultById != null)
+            {
+                return inputId;
+            }
+
+            const string checkNummerQuery = "SELECT id FROM dbo.dossiers WHERE dossier_nummer = @DossierNummer";
+            using var checkNummerCommand = new SqlCommand(checkNummerQuery, connection);
+            checkNummerCommand.Parameters.AddWithValue("@DossierNummer", inputId.ToString());
+
+            var resultByNummer = await checkNummerCommand.ExecuteScalarAsync();
+            if (resultByNummer != null)
+            {
+                int actualId = Convert.ToInt32(resultByNummer);
+                _logger.LogInformation("Resolved dossier nummer {DossierNummer} to ID {ActualId}", inputId, actualId);
+                return actualId;
+            }
+
+            _logger.LogWarning("Dossier not found by ID or nummer: {InputId}", inputId);
+            return inputId;
         }
 
         /// <summary>
         /// Gets available template types from the database
         /// </summary>
-        /// <returns>List of available template types</returns>
         public async Task<List<string>> GetAvailableTemplateTypesAsync()
         {
             try
@@ -1240,16 +1298,15 @@ namespace scheidingsdesk_document_generator.Services
                 using var connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                // Query distinct types from regelingen_templates table
                 const string query = @"
-                    SELECT DISTINCT type 
-                    FROM dbo.regelingen_templates 
-                    WHERE type IS NOT NULL 
+                    SELECT DISTINCT type
+                    FROM dbo.regelingen_templates
+                    WHERE type IS NOT NULL
                     ORDER BY type";
 
                 using var command = new SqlCommand(query, connection);
                 using var reader = await command.ExecuteReaderAsync();
-                
+
                 var templateTypes = new List<string>();
                 while (await reader.ReadAsync())
                 {
@@ -1260,7 +1317,6 @@ namespace scheidingsdesk_document_generator.Services
                     }
                 }
 
-                // If no types found in database, return default types
                 if (templateTypes.Count == 0)
                 {
                     templateTypes.AddRange(TemplateTypes.DefaultTypes);
@@ -1273,13 +1329,11 @@ namespace scheidingsdesk_document_generator.Services
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Database error while retrieving template types");
-                // Return default types on error
                 return new List<string>(TemplateTypes.DefaultTypes);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error while retrieving template types");
-                // Return default types on error
                 return new List<string>(TemplateTypes.DefaultTypes);
             }
         }
@@ -1287,8 +1341,6 @@ namespace scheidingsdesk_document_generator.Services
         /// <summary>
         /// Gets templates by type from the database
         /// </summary>
-        /// <param name="templateType">The type of templates to retrieve (e.g., "Feestdag", "Vakantie", "Algemeen", "Bijzondere dag")</param>
-        /// <returns>List of templates for the specified type</returns>
         public async Task<List<RegelingTemplate>> GetTemplatesByTypeAsync(string templateType)
         {
             try
@@ -1298,18 +1350,17 @@ namespace scheidingsdesk_document_generator.Services
                 using var connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                // Query templates by type
                 const string query = @"
                     SELECT id, template_naam, template_tekst, meervoud_kinderen, type
-                    FROM dbo.regelingen_templates 
+                    FROM dbo.regelingen_templates
                     WHERE type = @TemplateType
                     ORDER BY template_naam";
 
                 using var command = new SqlCommand(query, connection);
                 command.Parameters.AddWithValue("@TemplateType", templateType);
-                
+
                 using var reader = await command.ExecuteReaderAsync();
-                
+
                 var templates = new List<RegelingTemplate>();
                 while (await reader.ReadAsync())
                 {
@@ -1339,13 +1390,8 @@ namespace scheidingsdesk_document_generator.Services
         }
 
         /// <summary>
-        /// Retrieves artikelen (articles/clauses) for a dossier with 3-layer priority:
-        /// Dossier override > Gebruiker aanpassing > Systeem template
+        /// Retrieves artikelen (articles/clauses) for a dossier with 3-layer priority
         /// </summary>
-        /// <param name="dossierId">The dossier ID</param>
-        /// <param name="gebruikerId">The user ID (owner of the dossier)</param>
-        /// <param name="documentType">The document type (e.g., "ouderschapsplan", "convenant")</param>
-        /// <returns>List of articles with effective text based on priority</returns>
         public async Task<List<ArtikelData>> GetArtikelenVoorDossierAsync(int dossierId, int gebruikerId, string documentType = "ouderschapsplan")
         {
             try
@@ -1356,8 +1402,6 @@ namespace scheidingsdesk_document_generator.Services
                 using var connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                // Query that joins artikel_templates with gebruiker_artikelen and dossier_artikelen
-                // to get the effective text based on the 3-layer priority system
                 const string query = @"
                     SELECT
                         t.id,
@@ -1423,11 +1467,9 @@ namespace scheidingsdesk_document_generator.Services
                         Versie = (int)reader["versie"],
                         IsActief = (bool)reader["is_actief"],
                         NummeringType = reader["nummering_type"]?.ToString() ?? "doornummeren",
-                        // Gebruiker aanpassingen
                         GebruikerTitel = reader["gebruiker_titel"] == DBNull.Value ? null : ConvertToString(reader["gebruiker_titel"]),
                         GebruikerTekst = reader["gebruiker_tekst"] == DBNull.Value ? null : ConvertToString(reader["gebruiker_tekst"]),
                         GebruikerActief = reader["gebruiker_actief"] == DBNull.Value ? null : (bool?)reader["gebruiker_actief"],
-                        // Dossier overrides
                         DossierTekst = reader["dossier_tekst"] == DBNull.Value ? null : ConvertToString(reader["dossier_tekst"]),
                         IsUitgesloten = (bool)reader["is_uitgesloten"]
                     });
@@ -1439,7 +1481,6 @@ namespace scheidingsdesk_document_generator.Services
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Database error while retrieving artikelen for dossier {DossierId}", dossierId);
-                // Return empty list if table doesn't exist (backwards compatibility)
                 if (ex.Message.Contains("Invalid object name") && ex.Message.Contains("artikel"))
                 {
                     _logger.LogWarning("Artikel tables do not exist yet, returning empty list");
@@ -1453,5 +1494,7 @@ namespace scheidingsdesk_document_generator.Services
                 throw;
             }
         }
+
+        #endregion
     }
 }

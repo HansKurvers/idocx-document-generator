@@ -3,28 +3,25 @@ using Microsoft.Azure.Functions.Worker;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using scheidingsdesk_document_generator.Services.DocumentGeneration;
 using System;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace Scheidingsdesk
 {
     /// <summary>
     /// Convenant Function - Endpoint for generating echtscheidingsconvenant documents
-    /// Follows the same architecture as OuderschapsplanFunction using modular service architecture
+    /// Inherits shared request parsing and error handling from BaseDocumentFunction
     /// </summary>
-    public class ConvenantFunction
+    public class ConvenantFunction : BaseDocumentFunction<ConvenantFunction>
     {
-        private readonly ILogger<ConvenantFunction> _logger;
         private readonly IDocumentGenerationService _documentGenerationService;
 
         public ConvenantFunction(
             ILogger<ConvenantFunction> logger,
             IDocumentGenerationService documentGenerationService)
+            : base(logger)
         {
-            _logger = logger;
             _documentGenerationService = documentGenerationService;
         }
 
@@ -40,7 +37,7 @@ namespace Scheidingsdesk
             try
             {
                 // Parse and validate request
-                var request = await ParseRequestAsync(req, correlationId);
+                var request = await ParseRequestAsync<ConvenantRequest>(req, correlationId);
                 if (request == null)
                 {
                     return CreateBadRequest("Invalid request body. Please provide a JSON object with DossierId.", correlationId);
@@ -79,62 +76,12 @@ namespace Scheidingsdesk
                 return CreateErrorResponse("An unexpected error occurred during document generation.", correlationId, 500);
             }
         }
-
-        private async Task<ConvenantRequest?> ParseRequestAsync(HttpRequest req, string correlationId)
-        {
-            try
-            {
-                string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-
-                if (string.IsNullOrWhiteSpace(requestBody))
-                {
-                    _logger.LogWarning($"[{correlationId}] Empty request body");
-                    return null;
-                }
-
-                var request = JsonConvert.DeserializeObject<ConvenantRequest>(requestBody);
-
-                if (request?.DossierId == null || request.DossierId <= 0)
-                {
-                    _logger.LogWarning($"[{correlationId}] Invalid DossierId: {request?.DossierId}");
-                    return null;
-                }
-
-                return request;
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogError(ex, $"[{correlationId}] JSON parsing error");
-                return null;
-            }
-        }
-
-        private IActionResult CreateBadRequest(string message, string correlationId)
-        {
-            return new BadRequestObjectResult(new
-            {
-                error = message,
-                correlationId = correlationId
-            });
-        }
-
-        private IActionResult CreateErrorResponse(string message, string correlationId, int statusCode)
-        {
-            return new ObjectResult(new
-            {
-                error = message,
-                correlationId = correlationId
-            })
-            {
-                StatusCode = statusCode
-            };
-        }
     }
 
     /// <summary>
     /// Request model for Convenant generation
     /// </summary>
-    public class ConvenantRequest
+    public class ConvenantRequest : IDocumentRequest
     {
         public int DossierId { get; set; }
     }

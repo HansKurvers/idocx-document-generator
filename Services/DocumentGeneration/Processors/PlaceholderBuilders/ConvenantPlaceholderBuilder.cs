@@ -153,11 +153,37 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                     replacements.GetValueOrDefault(plichtigeIsPartij1 ? "PARTIJ1_AANDUIDING" : "PARTIJ2_AANDUIDING", ""));
                 AddPlaceholder(replacements, "AlimentatiegerechtigdePAL",
                     replacements.GetValueOrDefault(plichtigeIsPartij1 ? "PARTIJ2_AANDUIDING" : "PARTIJ1_AANDUIDING", ""));
+
+                // Voornaamwoord-placeholders gebaseerd op geslacht
+                var geslachtPlichtige = alimentatieplichtige?.Geslacht;
+                var geslachtGerechtigde = alimentatiegerechtigde?.Geslacht;
+
+                // hij/zij
+                AddPlaceholder(replacements, "HijZijPALplichtige", DutchLanguageHelper.GetSubjectPronoun(geslachtPlichtige, false));
+                AddPlaceholder(replacements, "HijZijPALgerechtigde", DutchLanguageHelper.GetSubjectPronoun(geslachtGerechtigde, false));
+
+                // hem/haar
+                AddPlaceholder(replacements, "HemHaarPALplichtige", DutchLanguageHelper.GetObjectPronoun(geslachtPlichtige, false));
+                AddPlaceholder(replacements, "HemHaarPALgerechtigde", DutchLanguageHelper.GetObjectPronoun(geslachtGerechtigde, false));
+
+                // zijn/haar
+                AddPlaceholder(replacements, "ZijnHaarPALplichtige", GetBezittelijkVoornaamwoord(geslachtPlichtige));
+                AddPlaceholder(replacements, "ZijnHaarPALgerechtigde", GetBezittelijkVoornaamwoord(geslachtGerechtigde));
+
+                // Alias voor bestaande conditional placeholder
+                AddPlaceholder(replacements, "zijnofhaarPALgerechtigde", GetBezittelijkVoornaamwoord(geslachtGerechtigde));
             }
             else
             {
                 AddPlaceholder(replacements, "AlimentatieplichtigePAL", "");
                 AddPlaceholder(replacements, "AlimentatiegerechtigdePAL", "");
+                AddPlaceholder(replacements, "HijZijPALplichtige", "hij/zij");
+                AddPlaceholder(replacements, "HijZijPALgerechtigde", "hij/zij");
+                AddPlaceholder(replacements, "HemHaarPALplichtige", "hem/haar");
+                AddPlaceholder(replacements, "HemHaarPALgerechtigde", "hem/haar");
+                AddPlaceholder(replacements, "ZijnHaarPALplichtige", "zijn/haar");
+                AddPlaceholder(replacements, "ZijnHaarPALgerechtigde", "zijn/haar");
+                AddPlaceholder(replacements, "zijnofhaarPALgerechtigde", "zijn/haar");
             }
 
             // Duurzaam gescheiden

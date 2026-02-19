@@ -34,8 +34,8 @@ De Ouderschapsplan Document Generator is een serverless applicatie gebouwd met A
 
 | Frontend | API | Doc Generator | Status |
 |----------|-----|---------------|--------|
-| 1.4.x | 1.3.x | 2.12.x | ✅ Actueel |
-| 1.4.x | 1.3.x | 2.11.x | ⚠️ Legacy |
+| 1.22.x | 1.5.x | 2.16.x | ✅ Actueel |
+| 1.21.x | 1.4.x | 2.15.x | ⚠️ Legacy |
 | 1.3.x | 1.2.x | 2.10.x | ❌ Niet ondersteund |
 
 > **Let op**: Zorg dat alle componenten compatibele versies draaien om onverwacht gedrag te voorkomen.
@@ -130,7 +130,7 @@ Deze applicatie is gebouwd met de volgende principes in gedachten:
 │   └── PlaceholderInfo.cs                      # Placeholder catalogus model
 │
 ├── Services/                                    # Business logic services
-│   ├── DatabaseService.cs                      # Database interactie (SQL queries)
+│   ├── DatabaseService.cs                      # Database interactie (SQL queries, opgesplitst in private methoden per result set)
 │   ├── PlaceholderCatalogService.cs            # Placeholder catalogus (parsed uit placeholders.md)
 │   │
 │   ├── Artikel/                                # Artikel bibliotheek services (v2.3.0)
@@ -185,8 +185,9 @@ Deze applicatie is gebouwd met de volgende principes in gedachten:
 │           ├── ArtikelContentGenerator.cs      # 📚 Artikelen uit bibliotheek (v2.3.0)
 │           └── InhoudsopgaveGenerator.cs       # 📑 Server-side inhoudsopgave (TOC)
 │
-├── OuderschapsplanFunction.cs                   # ✨ HTTP Endpoint ouderschapsplan
-├── ConvenantFunction.cs                         # 📜 HTTP Endpoint convenant
+├── BaseDocumentFunction.cs                       # 🏗️ Gedeelde base class voor document endpoints
+├── OuderschapsplanFunction.cs                   # ✨ HTTP Endpoint ouderschapsplan (extends BaseDocumentFunction)
+├── ConvenantFunction.cs                         # 📜 HTTP Endpoint convenant (extends BaseDocumentFunction)
 ├── GetPlaceholdersFunction.cs                   # 📋 GET /api/placeholders catalogus
 ├── ProcessDocumentFunction.cs                   # Document processing endpoint
 ├── GetTemplateTypesFunction.cs                  # Template types endpoint
@@ -226,8 +227,8 @@ Deze applicatie is gebouwd met de volgende principes in gedachten:
 ```
 1. HTTP Request (POST /api/ouderschapsplan)
    ↓
-2. OuderschapsplanFunction (Endpoint)
-   - Valideert request
+2. OuderschapsplanFunction (extends BaseDocumentFunction)
+   - Valideert request (via gedeelde ParseRequestAsync<T>)
    - Genereert correlation ID voor tracking
    ↓
 3. DocumentGenerationService (Orchestrator) coördineert:
@@ -2175,7 +2176,22 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.15.0 (Current) - Underscore/spatie normalisatie in conditie-evaluatie
+### v2.16.0 (Current) - BaseDocumentFunction & DatabaseService refactoring
+
+**Refactoring:**
+- **`BaseDocumentFunction` base class**: Nieuwe gedeelde base class voor `OuderschapsplanFunction` en `ConvenantFunction`. Elimineert gedupliceerde `ParseRequestAsync()`, `CreateBadRequest()` en `CreateErrorResponse()` methoden
+- **`DatabaseService.GetDossierDataAsync()` opgesplitst**: De ~820-regel methode met 16 sequentiële result sets is opgesplitst in ~16 private methoden per result set (`ReadPartijen()`, `ReadKinderen()`, `ReadAlimentatie()`, etc.)
+
+**Technische wijzigingen:**
+- `BaseDocumentFunction.cs` — Nieuwe abstract base class met generieke `ParseRequestAsync<T>()`, `CreateBadRequest()`, `CreateErrorResponse()`
+- `OuderschapsplanFunction.cs` — Extends `BaseDocumentFunction`, verwijderde gedupliceerde helper methoden
+- `ConvenantFunction.cs` — Extends `BaseDocumentFunction`, verwijderde gedupliceerde helper methoden
+- `Services/DatabaseService.cs` — `GetDossierDataAsync()` refactored naar kleinere private methoden
+
+**Breaking Changes:**
+- Geen! API endpoints en response formats zijn ongewijzigd.
+
+### v2.15.0 - Underscore/spatie normalisatie in conditie-evaluatie
 
 **Bug fix:**
 - **`ConditieEvaluator.AreEqual()` normaliseert underscores naar spaties**: Frontend slaat waarden op met underscores (bijv. `contractueel_afwijkend`), maar placeholder `mogelijke_waarden` gebruiken spaties (bijv. `Contractueel afwijkend`). De string-vergelijking normaliseert nu `_` → ` ` zodat condities correct matchen. Geldt voor alle velden met underscore-waarden (VerlengingTermijn, WettelijkeTermijn, etc.).

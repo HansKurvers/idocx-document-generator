@@ -436,8 +436,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 "partij1" or "ouder_1" => GetPartijNaam(data.Partij1),
                 "partij2" or "ouder_2" => GetPartijNaam(data.Partij2),
                 "gezamenlijk" or "beiden" or "ouders_gezamenlijk" => "beide partijen",
-                "kinderen_alle" => ResolveMinderjaerigeKinderenNamen(data),
-                "kinderen_allemaal" => ResolveAlleKinderenNamen(data),
+                "kinderen_alle" => FormatKinderenNamen(data.Kinderen?.Where(k => k.Leeftijd.HasValue && k.Leeftijd.Value < 18), "alle minderjarige kinderen"),
+                "kinderen_allemaal" => FormatKinderenNamen(data.Kinderen, "alle kinderen"),
                 "aflossen" => "af te lossen",
                 var l when l.StartsWith("kind_") => ResolveKindNaam(l, data),
                 _ => HumanizeSnakeCase(code)
@@ -462,10 +462,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             return "het kind";
         }
 
-        private static string ResolveMinderjaerigeKinderenNamen(DossierData data)
+        private static string FormatKinderenNamen(IEnumerable<ChildData>? kinderen, string fallback)
         {
-            var namen = data.Kinderen?
-                .Where(k => k.Leeftijd.HasValue && k.Leeftijd.Value < 18)
+            var namen = kinderen?
                 .Select(k => k.Naam)
                 .Where(n => !string.IsNullOrEmpty(n))
                 .ToList();
@@ -473,20 +472,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             if (namen != null && namen.Any())
                 return DutchLanguageHelper.FormatList(namen!);
 
-            return "alle minderjarige kinderen";
-        }
-
-        private static string ResolveAlleKinderenNamen(DossierData data)
-        {
-            var namen = data.Kinderen?
-                .Select(k => k.Naam)
-                .Where(n => !string.IsNullOrEmpty(n))
-                .ToList();
-
-            if (namen != null && namen.Any())
-                return DutchLanguageHelper.FormatList(namen!);
-
-            return "alle kinderen";
+            return fallback;
         }
 
         private static string PrefixLidwoord(string bankNaam)

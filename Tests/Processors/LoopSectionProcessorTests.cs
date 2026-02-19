@@ -105,9 +105,9 @@ public class LoopSectionProcessorTests
 
         Assert.Contains("NL91 ABNA 0417 1643 00", result); // IBAN geformateerd
         Assert.Contains("t.n.v. Jan de Vries", result); // ouder_1 → partij1 naam
-        Assert.Contains("bij ABN AMRO", result);
+        Assert.Contains("bij de ABN AMRO", result);
         Assert.Contains("t.n.v. beide partijen", result); // ouders_gezamenlijk
-        Assert.Contains("bij Rabobank", result);
+        Assert.Contains("bij de Rabobank", result);
     }
 
     [Fact]

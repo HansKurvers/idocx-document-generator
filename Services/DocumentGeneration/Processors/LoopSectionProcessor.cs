@@ -436,7 +436,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 "partij1" or "ouder_1" => GetPartijNaam(data.Partij1),
                 "partij2" or "ouder_2" => GetPartijNaam(data.Partij2),
                 "gezamenlijk" or "beiden" or "ouders_gezamenlijk" => "beide partijen",
-                "kinderen_alle" => "alle kinderen",
+                "kinderen_alle" => ResolveAlleKinderenNamen(data),
                 "aflossen" => "af te lossen",
                 var l when l.StartsWith("kind_") => ResolveKindNaam(l, data),
                 _ => HumanizeSnakeCase(code)
@@ -461,6 +461,31 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             return "het kind";
         }
 
+        private static string ResolveAlleKinderenNamen(DossierData data)
+        {
+            var namen = data.Kinderen?
+                .Select(k => k.Naam)
+                .Where(n => !string.IsNullOrEmpty(n))
+                .ToList();
+
+            if (namen != null && namen.Any())
+                return DutchLanguageHelper.FormatList(namen!);
+
+            return "alle kinderen";
+        }
+
+        private static string PrefixLidwoord(string bankNaam)
+        {
+            if (string.IsNullOrEmpty(bankNaam))
+                return "";
+
+            if (bankNaam.StartsWith("de ", StringComparison.OrdinalIgnoreCase) ||
+                bankNaam.StartsWith("het ", StringComparison.OrdinalIgnoreCase))
+                return bankNaam;
+
+            return $"de {bankNaam}";
+        }
+
         #endregion
 
         #region Per-Collection Mappers
@@ -471,7 +496,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             {
                 ["BANKREKENING_IBAN"] = FormatIBAN(GetString(item, "iban")),
                 ["BANKREKENING_TENAAMSTELLING"] = TranslateTenaamstelling(item, "tenaamstelling", "tenaamstellingAnders", data),
-                ["BANKREKENING_BANKNAAM"] = GetString(item, "bankNaam")
+                ["BANKREKENING_BANKNAAM"] = PrefixLidwoord(GetString(item, "bankNaam"))
             };
         }
 
@@ -481,7 +506,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             {
                 ["BANKREKENING_IBAN"] = FormatIBAN(GetString(item, "iban")),
                 ["BANKREKENING_TENAAMSTELLING"] = TranslateTenaamstelling(item, "tenaamstelling", "tenaamstellingAnders", data),
-                ["BANKREKENING_BANKNAAM"] = GetString(item, "bankNaam"),
+                ["BANKREKENING_BANKNAAM"] = PrefixLidwoord(GetString(item, "bankNaam")),
                 ["BANKREKENING_SALDO"] = DataFormatter.FormatCurrency(GetDecimal(item, "saldo")),
                 ["BANKREKENING_STATUS"] = HumanizeSnakeCase(GetString(item, "statusVermogen"))
             };

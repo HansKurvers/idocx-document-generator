@@ -44,7 +44,7 @@ jobs:
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_845355B2C2294EBCB4D8C084D7EF3CDF }}
 
       - name: 'Run Azure Functions Action'
-        uses: Azure/functions-action@v1
+        uses: Azure/functions-action@v1.5.4
         id: fa
         with:
           app-name: 'idocx-document-staging'

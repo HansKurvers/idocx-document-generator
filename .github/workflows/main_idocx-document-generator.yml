@@ -45,7 +45,7 @@ jobs:
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_22F7D4FBA20C4F7DBE77DE3BE5D22781 }}
 
       - name: 'Run Azure Functions Action'
-        uses: Azure/functions-action@v1
+        uses: Azure/functions-action@v1.5.4
         id: fa
         with:
           app-name: 'scheidingsdesk-document-service'

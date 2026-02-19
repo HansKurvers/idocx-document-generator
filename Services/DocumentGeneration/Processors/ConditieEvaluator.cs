@@ -260,8 +260,11 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 return Math.Abs(aNum - bNum) < 0.0001;
             }
 
-            // String comparison (case-insensitive)
-            return string.Equals(a.ToString(), b.ToString(), StringComparison.OrdinalIgnoreCase);
+            // String comparison (case-insensitive, normalize underscores to spaces
+            // so "contractueel_afwijkend" matches "Contractueel afwijkend")
+            var aStr = a.ToString()?.Replace('_', ' ');
+            var bStr = b.ToString()?.Replace('_', ' ');
+            return string.Equals(aStr, bStr, StringComparison.OrdinalIgnoreCase);
         }
 
         private int Compare(object? a, object? b)

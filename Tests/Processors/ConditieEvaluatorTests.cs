@@ -582,6 +582,40 @@ public class ConditieEvaluatorTests
 
     #endregion
 
+    #region Underscore/Space Normalization Tests
+
+    [Fact]
+    public void Evaluate_EqualsString_NormalizesUnderscoresToSpaces()
+    {
+        var config = CreateConfig(
+            "default",
+            (CreateSimpleCondition("VerlengingTermijn", "=", "Contractueel afwijkend"), "Match")
+        );
+        var context = new Dictionary<string, object> { { "VerlengingTermijn", "contractueel_afwijkend" } };
+
+        var result = _evaluator.Evaluate(config, context);
+
+        Assert.Equal(1, result.MatchedRule);
+        Assert.Equal("Match", result.RawResult);
+    }
+
+    [Fact]
+    public void Evaluate_EqualsString_NormalizesUnderscoresToSpaces_Reverse()
+    {
+        // Context has spaces, condition has underscores
+        var config = CreateConfig(
+            "default",
+            (CreateSimpleCondition("WettelijkeTermijn", "=", "tot_aow"), "Match")
+        );
+        var context = new Dictionary<string, object> { { "WettelijkeTermijn", "tot aow" } };
+
+        var result = _evaluator.Evaluate(config, context);
+
+        Assert.Equal(1, result.MatchedRule);
+    }
+
+    #endregion
+
     #region Context Key Case Insensitivity Tests
 
     [Fact]

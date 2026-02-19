@@ -394,6 +394,42 @@ public class LoopSectionProcessorTests
         Assert.Contains("Sophie", result); // Kind met Id=1
     }
 
+    [Fact]
+    public void Process_BankrekeningKinderen_KinderenAlleToontAlleenMinderjarigen()
+    {
+        var data = CreateDossierWithKinderen();
+        // Maak Thomas meerderjarig (19 jaar), Sophie blijft minderjarig
+        data.Kinderen![1].GeboorteDatum = DateTime.Today.AddYears(-19);
+        data.CommunicatieAfspraken = new CommunicatieAfsprakenData
+        {
+            BankrekeningKinderen = @"[{""iban"":""NL91ABNA0417164300"",""tenaamstelling"":""kinderen_alle"",""bankNaam"":""ABN AMRO""}]"
+        };
+        var tekst = "[[#BANKREKENINGEN_KINDEREN]][[BANKREKENING_TENAAMSTELLING]][[/BANKREKENINGEN_KINDEREN]]";
+
+        var result = LoopSectionProcessor.Process(tekst, data);
+
+        Assert.Contains("Sophie", result);
+        Assert.DoesNotContain("Thomas", result);
+    }
+
+    [Fact]
+    public void Process_BankrekeningKinderen_KinderenAllemaalToontAlleKinderen()
+    {
+        var data = CreateDossierWithKinderen();
+        // Maak Thomas meerderjarig (19 jaar), Sophie blijft minderjarig
+        data.Kinderen![1].GeboorteDatum = DateTime.Today.AddYears(-19);
+        data.CommunicatieAfspraken = new CommunicatieAfsprakenData
+        {
+            BankrekeningKinderen = @"[{""iban"":""NL91ABNA0417164300"",""tenaamstelling"":""kinderen_allemaal"",""bankNaam"":""ABN AMRO""}]"
+        };
+        var tekst = "[[#BANKREKENINGEN_KINDEREN]][[BANKREKENING_TENAAMSTELLING]][[/BANKREKENINGEN_KINDEREN]]";
+
+        var result = LoopSectionProcessor.Process(tekst, data);
+
+        Assert.Contains("Sophie", result);
+        Assert.Contains("Thomas", result);
+    }
+
     #endregion
 
     #region IBAN formatting

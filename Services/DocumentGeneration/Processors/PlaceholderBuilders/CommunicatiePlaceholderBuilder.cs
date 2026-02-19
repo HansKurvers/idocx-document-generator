@@ -614,12 +614,12 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             if (code == "kinderen_alle")
             {
                 var minderjarigen = kinderen.Where(k => CalculateAge(k.GeboorteDatum) < 18).ToList();
-                if (minderjarigen.Any())
-                {
-                    var namen = minderjarigen.Select(k => k.Roepnaam ?? k.Voornamen ?? k.Achternaam).ToList();
-                    return $"Op naam van {DutchLanguageHelper.FormatList(namen)}";
-                }
-                return "Op naam van alle minderjarige kinderen";
+                return FormatKinderenTenaamstelling(minderjarigen, "alle minderjarige kinderen");
+            }
+
+            if (code == "kinderen_allemaal")
+            {
+                return FormatKinderenTenaamstelling(kinderen, "alle kinderen");
             }
 
             if (code.StartsWith("kind_"))
@@ -651,6 +651,16 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 age--;
 
             return age;
+        }
+
+        private static string FormatKinderenTenaamstelling(List<ChildData> kinderen, string fallback)
+        {
+            if (kinderen.Any())
+            {
+                var namen = kinderen.Select(k => k.Roepnaam ?? k.Voornamen ?? k.Achternaam).ToList();
+                return $"Op naam van {DutchLanguageHelper.FormatList(namen)}";
+            }
+            return $"Op naam van {fallback}";
         }
 
         private static string Capitalize(string? text)

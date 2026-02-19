@@ -436,7 +436,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 "partij1" or "ouder_1" => GetPartijNaam(data.Partij1),
                 "partij2" or "ouder_2" => GetPartijNaam(data.Partij2),
                 "gezamenlijk" or "beiden" or "ouders_gezamenlijk" => "beide partijen",
-                "kinderen_alle" => ResolveAlleKinderenNamen(data),
+                "kinderen_alle" => ResolveMinderjaerigeKinderenNamen(data),
+                "kinderen_allemaal" => ResolveAlleKinderenNamen(data),
                 "aflossen" => "af te lossen",
                 var l when l.StartsWith("kind_") => ResolveKindNaam(l, data),
                 _ => HumanizeSnakeCase(code)
@@ -459,6 +460,20 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                     return kind.Naam ?? "het kind";
             }
             return "het kind";
+        }
+
+        private static string ResolveMinderjaerigeKinderenNamen(DossierData data)
+        {
+            var namen = data.Kinderen?
+                .Where(k => k.Leeftijd.HasValue && k.Leeftijd.Value < 18)
+                .Select(k => k.Naam)
+                .Where(n => !string.IsNullOrEmpty(n))
+                .ToList();
+
+            if (namen != null && namen.Any())
+                return DutchLanguageHelper.FormatList(namen!);
+
+            return "alle minderjarige kinderen";
         }
 
         private static string ResolveAlleKinderenNamen(DossierData data)

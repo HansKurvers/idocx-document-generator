@@ -139,7 +139,7 @@ namespace scheidingsdesk_document_generator.Models
 
         /// <summary>
         /// Account holder code - needs translation to readable text
-        /// Possible values: "ouder_1", "ouder_2", "ouders_gezamenlijk", "kind_123", "kinderen_alle"
+        /// Possible values: "ouder_1", "ouder_2", "ouders_gezamenlijk", "kind_123", "kinderen_alle", "kinderen_allemaal"
         /// </summary>
         public string Tenaamstelling { get; set; } = string.Empty;
 

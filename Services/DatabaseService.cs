@@ -1044,6 +1044,7 @@ namespace scheidingsdesk_document_generator.Services
                 HoogtePartneralimentatie = SafeReadDecimal(reader, "hoogte_partneralimentatie"),
                 PartneralimentatieIngangsdatum = SafeReadDateTime(reader, "partneralimentatie_ingangsdatum"),
                 AfstandRecht = SafeReadString(reader, "afstand_recht"),
+                AfstandTenzijOmstandigheid = SafeReadString(reader, "afstand_tenzij_omstandigheid"),
                 Jusvergelijking = SafeReadBoolean(reader, "jusvergelijking"),
                 BijdrageHypotheekrente = SafeReadBoolean(reader, "bijdrage_hypotheekrente"),
                 BijdrageHypotheekrenteBedrag = SafeReadDecimal(reader, "bijdrage_hypotheekrente_bedrag"),

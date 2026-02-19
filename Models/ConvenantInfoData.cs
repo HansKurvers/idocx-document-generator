@@ -51,6 +51,8 @@ namespace scheidingsdesk_document_generator.Models
 
         // Substap 2: Termijnen & Indexering
         public string? NietWijzigingsbeding { get; set; } // volledig, beperkt_niet, beperkt_wijziging, afkoop
+        public string? BeperktNietWijzigingsbeding { get; set; }
+        public string? BeperktWijzigingsbeding { get; set; }
         public string? Wijzigingsomstandigheden { get; set; }
         public string? GeenWijzigingsomstandigheden { get; set; }
         public string? IndexeringType { get; set; } // wettelijk, uitgesloten, alternatief

@@ -232,6 +232,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "partneralimentatie_afkopen", info.PartneralimentatieAfkopen == true ? "true" : "false");
             AddPlaceholder(replacements, "afkoop_type", info.AfkoopType ?? "");
             AddPlaceholder(replacements, "niet_wijzigingsbeding", info.NietWijzigingsbeding ?? "");
+            AddPlaceholder(replacements, "BEPERKT_NIET_WIJZIGINGSBEDING", info.BeperktNietWijzigingsbeding ?? "");
+            AddPlaceholder(replacements, "BEPERKT_WIJZIGINGSBEDING", info.BeperktWijzigingsbeding ?? "");
             AddPlaceholder(replacements, "indexering_type", info.IndexeringType ?? "");
             AddPlaceholder(replacements, "wettelijke_termijn", info.WettelijkeTermijn ?? "");
             AddPlaceholder(replacements, "verlenging_termijn", info.VerlengingTermijn ?? "");

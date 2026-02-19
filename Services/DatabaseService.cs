@@ -1056,6 +1056,8 @@ namespace scheidingsdesk_document_generator.Services
 
                 // PARTNERALIMENTATIE - Termijnen & Indexering
                 NietWijzigingsbeding = SafeReadString(reader, "niet_wijzigingsbeding"),
+                BeperktNietWijzigingsbeding = SafeReadString(reader, "beperkt_niet_wijzigingsbeding"),
+                BeperktWijzigingsbeding = SafeReadString(reader, "beperkt_wijzigingsbeding"),
                 IndexeringType = SafeReadString(reader, "indexering_type"),
                 WettelijkeTermijn = SafeReadString(reader, "wettelijke_termijn"),
                 VerlengingTermijn = SafeReadString(reader, "verlenging_termijn"),

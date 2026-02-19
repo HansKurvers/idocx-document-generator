@@ -196,7 +196,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_TOT_WANNEER", GetBijdrageHypotheekrenteTotWanneerLabel(info.BijdrageHypotheekrenteTotWanneer));
             AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_TOT_DATUM", FormatDate(info.BijdrageHypotheekrenteTotDatum));
             AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_INGANGSDATUM", FormatDate(info.BijdrageHypotheekrenteIngangsdatum));
-            AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_EINDDATUM", FormatDate(info.BijdrageHypotheekrenteEinddatum));
+            AddPlaceholder(replacements, "BIJDRAGE_HYPOTHEEKRENTE_EINDDATUM", FormatDate(info.BijdrageHypotheekrenteTotDatum));
+            AddPlaceholder(replacements, "EINDE_BIJDRAGE_HYPOTHEEKRENTE", GetEindeBijdrageHypotheekrente(info));
 
             // Indexering
             AddPlaceholder(replacements, "INDEXERING_EERSTE_JAAR", info.IndexeringEersteJaar?.ToString() ?? DateTime.Now.AddYears(1).Year.ToString());
@@ -227,6 +228,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "jusvergelijking", info.Jusvergelijking == true ? "true" : "false");
             AddPlaceholder(replacements, "bijdrage_hypotheekrente", info.BijdrageHypotheekrente == true ? "true" : "false");
             AddPlaceholder(replacements, "bijdrage_hypotheekrente_tot_wanneer", info.BijdrageHypotheekrenteTotWanneer ?? "");
+            AddPlaceholder(replacements, "einde_bijdrage_hypotheekrente", info.BijdrageHypotheekrenteTotWanneer ?? "");
             AddPlaceholder(replacements, "partneralimentatie_afkopen", info.PartneralimentatieAfkopen == true ? "true" : "false");
             AddPlaceholder(replacements, "afkoop_type", info.AfkoopType ?? "");
             AddPlaceholder(replacements, "niet_wijzigingsbeding", info.NietWijzigingsbeding ?? "");
@@ -446,6 +448,17 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 "akte_van_verdeling" => "de akte van verdeling",
                 "tot_datum" => "een nader bepaalde datum",
                 _ => totWanneer ?? ""
+            };
+        }
+
+        private string GetEindeBijdrageHypotheekrente(ConvenantInfoData info)
+        {
+            return info.BijdrageHypotheekrenteTotWanneer?.ToLower() switch
+            {
+                "verkoop_woning" => "de verkoop van de woning",
+                "akte_van_verdeling" => "de akte van verdeling",
+                "tot_datum" => FormatDate(info.BijdrageHypotheekrenteTotDatum),
+                _ => ""
             };
         }
 

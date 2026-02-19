@@ -45,7 +45,6 @@ namespace scheidingsdesk_document_generator.Models
         public string? BijdrageHypotheekrenteTotWanneer { get; set; }
         public DateTime? BijdrageHypotheekrenteTotDatum { get; set; }
         public DateTime? BijdrageHypotheekrenteIngangsdatum { get; set; }
-        public DateTime? BijdrageHypotheekrenteEinddatum { get; set; }
         public bool? PartneralimentatieAfkopen { get; set; }
         public string? AfkoopType { get; set; } // bruto, afstemming
         public decimal? AfkoopBedrag { get; set; }

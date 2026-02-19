@@ -2175,7 +2175,16 @@ Dit project is eigendom van Ouderschapsplan en bedoeld voor interne gebruik in h
 
 ## Changelog
 
-### v2.14.0 (Current) - Afstand tenzij omstandigheid
+### v2.15.0 (Current) - Underscore/spatie normalisatie in conditie-evaluatie
+
+**Bug fix:**
+- **`ConditieEvaluator.AreEqual()` normaliseert underscores naar spaties**: Frontend slaat waarden op met underscores (bijv. `contractueel_afwijkend`), maar placeholder `mogelijke_waarden` gebruiken spaties (bijv. `Contractueel afwijkend`). De string-vergelijking normaliseert nu `_` → ` ` zodat condities correct matchen. Geldt voor alle velden met underscore-waarden (VerlengingTermijn, WettelijkeTermijn, etc.).
+
+**Technische wijzigingen:**
+- `Services/DocumentGeneration/Processors/ConditieEvaluator.cs` — `Replace('_', ' ')` normalisatie in `AreEqual()` methode
+- `Tests/Processors/ConditieEvaluatorTests.cs` — 2 nieuwe tests voor underscore/spatie normalisatie
+
+### v2.14.0 - Afstand tenzij omstandigheid
 
 **Nieuwe features:**
 - **`AFSTAND_TENZIJ_OMSTANDIGHEID` placeholder**: Tekstveld voor omstandigheid bij "Afstand van recht tenzij" partneralimentatie

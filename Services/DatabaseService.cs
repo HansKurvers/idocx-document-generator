@@ -979,6 +979,7 @@ namespace scheidingsdesk_document_generator.Services
                 DraagkrachtloosInkomenPartij2 = SafeReadDecimal(reader, "draagkrachtloos_inkomen_partij2"),
                 DraagkrachtPartij2 = SafeReadDecimal(reader, "draagkracht_partij2"),
                 VerdiencapaciteitType = SafeReadString(reader, "verdiencapaciteit_type"),
+                EigenInkomsten = SafeReadString(reader, "eigen_inkomsten"),
                 EigenInkomstenBedrag = SafeReadDecimal(reader, "eigen_inkomsten_bedrag"),
                 VerdiencapaciteitBedrag = SafeReadDecimal(reader, "verdiencapaciteit_bedrag"),
 

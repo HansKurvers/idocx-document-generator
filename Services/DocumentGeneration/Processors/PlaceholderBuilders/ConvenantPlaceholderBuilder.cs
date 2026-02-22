@@ -263,6 +263,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "indexering_type", info.IndexeringType ?? "");
             AddPlaceholder(replacements, "wettelijke_termijn", info.WettelijkeTermijn ?? "");
             AddPlaceholder(replacements, "verlenging_termijn", info.VerlengingTermijn ?? "");
+            AddPlaceholder(replacements, "eigen_inkomsten", info.EigenInkomsten ?? "");
             AddPlaceholder(replacements, "eigen_inkomsten_regeling", info.EigenInkomstenRegeling == true ? "true" : "false");
             AddPlaceholder(replacements, "kortingsregeling", info.Kortingsregeling ?? "");
             AddPlaceholder(replacements, "KORTINGSREGELING_PERCENTAGE1", info.KortingsregelingPercentage1?.ToString("0") ?? "");

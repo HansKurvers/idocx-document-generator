@@ -30,6 +30,7 @@ namespace scheidingsdesk_document_generator.Models
         public decimal? DraagkrachtloosInkomenPartij2 { get; set; }
         public decimal? DraagkrachtPartij2 { get; set; }
         public string? VerdiencapaciteitType { get; set; } // werkelijk, verdiencapaciteit, geen
+        public string? EigenInkomsten { get; set; } // geen, bruto_jaar
         public decimal? EigenInkomstenBedrag { get; set; }
         public decimal? VerdiencapaciteitBedrag { get; set; }
 

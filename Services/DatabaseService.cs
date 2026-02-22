@@ -1016,6 +1016,7 @@ namespace scheidingsdesk_document_generator.Services
                 KortingsregelingPercentage2 = SafeReadDecimal(reader, "kortingsregeling_percentage2"),
                 Inkomensdrempel = SafeReadBoolean(reader, "inkomensdrempel"),
                 InkomensdrempelBedrag = SafeReadDecimal(reader, "inkomensdrempel_bedrag"),
+                InkomensdrempelBedragDaarna = SafeReadDecimal(reader, "inkomensdrempel_bedrag_daarna"),
                 AfwijkingMaatstaven = SafeReadBoolean(reader, "afwijking_maatstaven"),
                 Afwijking1160 = SafeReadBoolean(reader, "afwijking_1160"),
                 HoeAfwijken1160 = SafeReadString(reader, "hoe_afwijken_1160"),

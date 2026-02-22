@@ -70,6 +70,7 @@ namespace scheidingsdesk_document_generator.Models
         public decimal? KortingsregelingPercentage2 { get; set; }
         public bool? Inkomensdrempel { get; set; }
         public decimal? InkomensdrempelBedrag { get; set; }
+        public decimal? InkomensdrempelBedragDaarna { get; set; }
         public bool? AfwijkingMaatstaven { get; set; }
         public bool? Afwijking1160 { get; set; }
         public string? HoeAfwijken1160 { get; set; } // doorbetaling, opschorting

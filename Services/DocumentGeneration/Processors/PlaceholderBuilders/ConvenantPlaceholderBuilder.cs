@@ -276,11 +276,11 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "vermogen_regeling", info.VermogenRegeling ?? "");
             AddPlaceholder(replacements, "VERMOGEN_GRENS_BEDRAG", FormatCurrency(info.VermogenGrensBedrag));
             AddPlaceholder(replacements, "VERMOGEN_FICTIEF_RENDEMENT", info.VermogenFictiefRendement?.ToString("0.##") ?? "");
-            AddPlaceholder(replacements, "AFREKENING_CORRECTIE", info.AfrekeningCorrectie ?? "");
-            AddPlaceholder(replacements, "OVERLEGGEN_INKOMENSGEGEVENS", info.OverleggenInkomens ?? "");
             AddPlaceholder(replacements, "afwijking_maatstaven", info.AfwijkingMaatstaven == true ? "true" : "false");
             AddPlaceholder(replacements, "afwijking_1160", info.Afwijking1160 == true ? "true" : "false");
             AddPlaceholder(replacements, "hoe_afwijken_1160", info.HoeAfwijken1160 ?? "");
+            AddPlaceholder(replacements, "periode_doorbetalen_1160", info.PeriodeDoorbetalen1160 ?? "");
+            AddPlaceholder(replacements, "herleving_maanden", info.HerlevingMaanden?.ToString() ?? "");
         }
 
         private void BuildWoningPlaceholders(Dictionary<string, string> replacements, ConvenantInfoData info)

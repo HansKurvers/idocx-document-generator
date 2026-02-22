@@ -75,11 +75,10 @@ namespace scheidingsdesk_document_generator.Models
         public bool? Afwijking1160 { get; set; }
         public string? HoeAfwijken1160 { get; set; } // doorbetaling, opschorting
         public string? PeriodeDoorbetalen1160 { get; set; }
+        public int? HerlevingMaanden { get; set; }
         public string? VermogenRegeling { get; set; } // meetellen, grens, niet_meetellen
         public decimal? VermogenFictiefRendement { get; set; }
         public decimal? VermogenGrensBedrag { get; set; }
-        public string? AfrekeningCorrectie { get; set; }
-        public string? OverleggenInkomens { get; set; }
 
         // =====================================================
         // WONING - Basis

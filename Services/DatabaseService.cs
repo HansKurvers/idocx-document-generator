@@ -1021,11 +1021,10 @@ namespace scheidingsdesk_document_generator.Services
                 Afwijking1160 = SafeReadBoolean(reader, "afwijking_1160"),
                 HoeAfwijken1160 = SafeReadString(reader, "hoe_afwijken_1160"),
                 PeriodeDoorbetalen1160 = SafeReadString(reader, "periode_doorbetalen_1160"),
+                HerlevingMaanden = SafeReadInt(reader, "herleving_maanden"),
                 VermogenRegeling = SafeReadString(reader, "vermogen_regeling"),
                 VermogenFictiefRendement = SafeReadDecimal(reader, "vermogen_fictief_rendement"),
                 VermogenGrensBedrag = SafeReadDecimal(reader, "vermogen_grens_bedrag"),
-                AfrekeningCorrectie = SafeReadString(reader, "afrekening_correctie"),
-                OverleggenInkomens = SafeReadString(reader, "overleggen_inkomens"),
 
                 // WONING - Basis
                 WoningAdresKeuze = SafeReadString(reader, "woning_adres_keuze"),

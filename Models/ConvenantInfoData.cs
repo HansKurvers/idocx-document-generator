@@ -63,6 +63,13 @@ namespace scheidingsdesk_document_generator.Models
         public DateTime? ContractueleTermijnIngangsdatum { get; set; }
 
         // Substap 3: Afwijkingen & Eigeninkomsten
+        public bool? EigenInkomstenRegeling { get; set; }
+        public string? Kortingsregeling { get; set; } // niet_korten, inkomen, inkomen_vermogen, eerst_dan
+        public decimal? KortingsregelingPercentage1 { get; set; }
+        public decimal? KortingsregelingPercentage2 { get; set; }
+        public bool? Inkomensdrempel { get; set; }
+        public decimal? InkomensdrempelBedrag { get; set; }
+        public bool? AfwijkingMaatstaven { get; set; }
         public bool? Afwijking1160 { get; set; }
         public string? HoeAfwijken1160 { get; set; } // doorbetaling, opschorting
         public string? PeriodeDoorbetalen1160 { get; set; }

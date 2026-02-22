@@ -1006,7 +1006,14 @@ namespace scheidingsdesk_document_generator.Services
                 WettelijkeTermijn = SafeReadString(reader, "wettelijke_termijn"),
                 VerlengingTermijn = SafeReadString(reader, "verlenging_termijn"),
 
-                // PARTNERALIMENTATIE - Afwijkingen
+                // PARTNERALIMENTATIE - Afwijkingen & Eigeninkomsten
+                EigenInkomstenRegeling = SafeReadBoolean(reader, "eigen_inkomsten_regeling"),
+                Kortingsregeling = SafeReadString(reader, "kortingsregeling"),
+                KortingsregelingPercentage1 = SafeReadDecimal(reader, "kortingsregeling_percentage1"),
+                KortingsregelingPercentage2 = SafeReadDecimal(reader, "kortingsregeling_percentage2"),
+                Inkomensdrempel = SafeReadBoolean(reader, "inkomensdrempel"),
+                InkomensdrempelBedrag = SafeReadDecimal(reader, "inkomensdrempel_bedrag"),
+                AfwijkingMaatstaven = SafeReadBoolean(reader, "afwijking_maatstaven"),
                 Afwijking1160 = SafeReadBoolean(reader, "afwijking_1160"),
                 HoeAfwijken1160 = SafeReadString(reader, "hoe_afwijken_1160"),
                 PeriodeDoorbetalen1160 = SafeReadString(reader, "periode_doorbetalen_1160"),

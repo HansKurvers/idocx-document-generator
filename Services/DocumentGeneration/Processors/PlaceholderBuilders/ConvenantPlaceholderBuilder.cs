@@ -272,6 +272,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "inkomensdrempel", info.Inkomensdrempel == true ? "true" : "false");
             AddPlaceholder(replacements, "INKOMENSDREMPEL_BEDRAG", FormatCurrency(info.InkomensdrempelBedrag));
             AddPlaceholder(replacements, "INKOMENSDREMPEL_BEDRAG_DAARNA", FormatCurrency(info.InkomensdrempelBedragDaarna));
+            AddPlaceholder(replacements, "vermogen_regeling", info.VermogenRegeling ?? "");
             AddPlaceholder(replacements, "VERMOGEN_FICTIEF_RENDEMENT", info.VermogenFictiefRendement?.ToString("0.##") ?? "");
             AddPlaceholder(replacements, "AFREKENING_CORRECTIE", info.AfrekeningCorrectie ?? "");
             AddPlaceholder(replacements, "OVERLEGGEN_INKOMENSGEGEVENS", info.OverleggenInkomens ?? "");

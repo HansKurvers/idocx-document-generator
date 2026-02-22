@@ -266,8 +266,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "eigen_inkomsten", info.EigenInkomsten ?? "");
             AddPlaceholder(replacements, "eigen_inkomsten_regeling", info.EigenInkomstenRegeling == true ? "true" : "false");
             AddPlaceholder(replacements, "kortingsregeling", info.Kortingsregeling ?? "");
-            AddPlaceholder(replacements, "KORTINGSREGELING_PERCENTAGE1", info.KortingsregelingPercentage1?.ToString("0") ?? "");
-            AddPlaceholder(replacements, "KORTINGSREGELING_PERCENTAGE2", info.KortingsregelingPercentage2?.ToString("0") ?? "");
+            AddPlaceholder(replacements, "KORTINGSREGELING_PERCENTAGE", info.KortingsregelingPercentage1?.ToString("0") ?? "");
+            AddPlaceholder(replacements, "KORTINGSREGELING_EERST_PERCENTAGE", info.KortingsregelingPercentage1?.ToString("0") ?? "");
+            AddPlaceholder(replacements, "KORTINGSREGELING_DAARNA_PERCENTAGE", info.KortingsregelingPercentage2?.ToString("0") ?? "");
             AddPlaceholder(replacements, "inkomensdrempel", info.Inkomensdrempel == true ? "true" : "false");
             AddPlaceholder(replacements, "INKOMENSDREMPEL_BEDRAG", FormatCurrency(info.InkomensdrempelBedrag));
             AddPlaceholder(replacements, "afwijking_maatstaven", info.AfwijkingMaatstaven == true ? "true" : "false");

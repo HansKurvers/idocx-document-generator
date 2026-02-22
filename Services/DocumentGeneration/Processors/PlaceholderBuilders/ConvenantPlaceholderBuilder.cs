@@ -280,7 +280,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "afwijking_1160", info.Afwijking1160 == true ? "true" : "false");
             AddPlaceholder(replacements, "hoe_afwijken_1160", info.HoeAfwijken1160 ?? "");
             AddPlaceholder(replacements, "periode_doorbetalen_1160", info.PeriodeDoorbetalen1160 ?? "");
-            AddPlaceholder(replacements, "herleving_maanden", info.HerlevingMaanden?.ToString() ?? "");
+            AddPlaceholder(replacements, "HerlevingMaanden", info.HerlevingMaanden?.ToString() ?? "");
         }
 
         private void BuildWoningPlaceholders(Dictionary<string, string> replacements, ConvenantInfoData info)

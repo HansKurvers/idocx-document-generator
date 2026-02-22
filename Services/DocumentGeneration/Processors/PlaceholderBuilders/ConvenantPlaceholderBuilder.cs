@@ -46,6 +46,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             BuildHypotheekPlaceholders(replacements, convenantInfo);
             BuildVermogensverdelingPlaceholders(replacements, convenantInfo);
             BuildPensioenPlaceholders(replacements, convenantInfo);
+            BuildFiscaalConditionFields(replacements, data, convenantInfo);
             BuildKwijtingPlaceholders(replacements, data, convenantInfo);
             BuildOndertekeningPlaceholders(replacements, convenantInfo);
             BuildConsideransPlaceholders(replacements, data, convenantInfo);
@@ -273,6 +274,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "INKOMENSDREMPEL_BEDRAG", FormatCurrency(info.InkomensdrempelBedrag));
             AddPlaceholder(replacements, "INKOMENSDREMPEL_BEDRAG_DAARNA", FormatCurrency(info.InkomensdrempelBedragDaarna));
             AddPlaceholder(replacements, "vermogen_regeling", info.VermogenRegeling ?? "");
+            AddPlaceholder(replacements, "VERMOGEN_GRENS_BEDRAG", FormatCurrency(info.VermogenGrensBedrag));
             AddPlaceholder(replacements, "VERMOGEN_FICTIEF_RENDEMENT", info.VermogenFictiefRendement?.ToString("0.##") ?? "");
             AddPlaceholder(replacements, "AFREKENING_CORRECTIE", info.AfrekeningCorrectie ?? "");
             AddPlaceholder(replacements, "OVERLEGGEN_INKOMENSGEGEVENS", info.OverleggenInkomens ?? "");
@@ -327,7 +329,33 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             // Condition fields
             AddPlaceholder(replacements, "woning_soort", info.WoningSoort ?? "");
+            AddPlaceholder(replacements, "woning_adres_keuze", info.WoningAdresKeuze ?? "");
+            AddPlaceholder(replacements, "woning_status_vermogen", info.WoningStatusVermogen ?? "");
+            AddPlaceholder(replacements, "huurrecht_toekomt_aan", info.HuurrechtToekomtAan ?? "");
+            AddPlaceholder(replacements, "huurrecht_wanneer", info.HuurrechtWanneer ?? "");
+            AddPlaceholder(replacements, "huur_verzoek_rechter", info.HuurVerzoekRechter == true ? "true" : "false");
+            AddPlaceholder(replacements, "huur_verplichtingen_voldaan", info.HuurVerplichtingenVoldaan == true ? "true" : "false");
+            AddPlaceholder(replacements, "huur_borg_toedelen", info.HuurBorgToedelen == true ? "true" : "false");
+            AddPlaceholder(replacements, "huur_borg_aan", info.HuurBorgAan ?? "");
             AddPlaceholder(replacements, "koop_toedeling", info.KoopToedeling ?? "");
+            AddPlaceholder(replacements, "koop_nieuwbouw", info.KoopNieuwbouw == true ? "true" : "false");
+            AddPlaceholder(replacements, "koop_privevermogen_investering", info.KoopPrivevermogenInvestering == true ? "true" : "false");
+            AddPlaceholder(replacements, "koop_investering_na_2012", info.KoopInvesteringNa2012 == true ? "true" : "false");
+            AddPlaceholder(replacements, "koop_privevermogen_hoe", info.KoopPrivevermogenHoe ?? "");
+            AddPlaceholder(replacements, "koop_privevermogen_vordering", info.KoopPrivevermogenVordering ?? "");
+            AddPlaceholder(replacements, "koop_lasten_woning", info.KoopLastenWoning == true ? "true" : "false");
+            AddPlaceholder(replacements, "koop_hypotheekrente", info.KoopHypotheekrente ?? "");
+            AddPlaceholder(replacements, "koop_maandelijkse_aflossing", info.KoopMaandelijkseAflossing ?? "");
+            AddPlaceholder(replacements, "koop_premie_inleg", info.KoopPremieInleg ?? "");
+            AddPlaceholder(replacements, "koop_aanslag_woz", info.KoopAanslagWoz ?? "");
+            AddPlaceholder(replacements, "koop_gebruikerslasten", info.KoopGebruikerslasten ?? "");
+            AddPlaceholder(replacements, "koop_klein_onderhoud", info.KoopKleinOnderhoud ?? "");
+            AddPlaceholder(replacements, "koop_groot_onderhoud", info.KoopGrootOnderhoud ?? "");
+            AddPlaceholder(replacements, "koop_kadastraal_vermelden", info.KoopKadastraalVermelden == true ? "true" : "false");
+            AddPlaceholder(replacements, "koop_notaris_hypotheek_zelfde", info.KoopNotarisHypotheekZelfde == true ? "true" : "false");
+            AddPlaceholder(replacements, "koop_ontslag_hoofdelijkheid", info.KoopOntslagHoofdelijkheid == true ? "true" : "false");
+            AddPlaceholder(replacements, "koop_volmacht_notaris", info.KoopVolmachtNotaris == true ? "true" : "false");
+            AddPlaceholder(replacements, "koop_medewerking_leveren", info.KoopMedewerkingLeveren == true ? "true" : "false");
         }
 
         private string BuildVolledigWoningAdres(ConvenantInfoData info)
@@ -410,9 +438,20 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
         private void BuildVermogensverdelingPlaceholders(Dictionary<string, string> replacements, ConvenantInfoData info)
         {
             // JSON data wordt door aparte generators verwerkt
-            // Hier alleen de condition fields
+            // Hier alleen de condition fields en value placeholders
             AddPlaceholder(replacements, "INBOEDEL", info.Inboedel ?? "");
             AddPlaceholder(replacements, "VERMOGENSVERDELING_OPMERKINGEN", info.VermogensverdelingOpmerkingen ?? "");
+            AddPlaceholder(replacements, "INBOEDEL_VERDELING_BEDRAG", FormatCurrency(info.InboedelVerdelingBedrag));
+            AddPlaceholder(replacements, "INBOEDEL_SIERADEN_BEDRAG", FormatCurrency(info.InboedelSieradenBedrag));
+            AddPlaceholder(replacements, "INBOEDEL_LEVERING_DATUM", FormatDate(info.InboedelLeveringDatum));
+
+            // Condition fields
+            AddPlaceholder(replacements, "inboedel_status", info.InboedelStatus ?? "");
+            AddPlaceholder(replacements, "inboedel_verdeling", info.InboedelVerdeling ?? "");
+            AddPlaceholder(replacements, "inboedel_overzicht", info.InboedelOverzicht == true ? "true" : "false");
+            AddPlaceholder(replacements, "inboedel_bijlage_aanhechten", info.InboedelBijlageAanhechten == true ? "true" : "false");
+            AddPlaceholder(replacements, "inboedel_sieraden", info.InboedelSieraden ?? "");
+            AddPlaceholder(replacements, "inboedel_levering", info.InboedelLevering ?? "");
         }
 
         private void BuildPensioenPlaceholders(Dictionary<string, string> replacements, ConvenantInfoData info)
@@ -420,6 +459,37 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "PENSIOEN_OPMERKINGEN", info.PensioenOpmerkingen ?? "");
             AddPlaceholder(replacements, "BIJZONDER_PARTNERPENSIOEN", info.BijzonderPartnerpensioen ?? "");
             AddPlaceholder(replacements, "BIJZONDER_PARTNERPENSIOEN_BEDRAG", info.BijzonderPartnerpensioenbedrag ?? "");
+
+            // Condition fields
+            AddPlaceholder(replacements, "bijzonder_partnerpensioen", info.BijzonderPartnerpensioen ?? "");
+        }
+
+        private void BuildFiscaalConditionFields(Dictionary<string, string> replacements, DossierData data, ConvenantInfoData convenantInfo)
+        {
+            var fiscaal = data.ConvenantFiscaal;
+            if (fiscaal != null)
+            {
+                AddPlaceholder(replacements, "fiscaal_advies_keuze", fiscaal.FiscaalAdviesKeuze ?? "");
+                AddPlaceholder(replacements, "eigen_woning_einddatum_bewust", fiscaal.EigenWoningEinddatumBewust == true ? "true" : "false");
+                AddPlaceholder(replacements, "fiscaal_partnerschap_keuze", fiscaal.FiscaalPartnerschapKeuze ?? "");
+                AddPlaceholder(replacements, "eigen_woning_sectie_opnemen", fiscaal.EigenWoningSectieOpnemen == true ? "true" : "false");
+                AddPlaceholder(replacements, "ib_onderneming_sectie_opnemen", fiscaal.IbOndernemingSectieOpnemen == true ? "true" : "false");
+                AddPlaceholder(replacements, "aanmerkelijk_belang_opnemen", fiscaal.AanmerkelijkBelangOpnemen == true ? "true" : "false");
+                AddPlaceholder(replacements, "aanmerkelijk_belang_van_toepassing", fiscaal.AanmerkelijkBelangVanToepassing ?? "");
+                AddPlaceholder(replacements, "aanmerkelijk_belang_afrekening", fiscaal.AanmerkelijkBelangAfrekening ?? "");
+                AddPlaceholder(replacements, "terbeschikkingstelling_opnemen", fiscaal.TerbeschikkingstellingOpnemen == true ? "true" : "false");
+                AddPlaceholder(replacements, "terbeschikkingstelling_keuze", fiscaal.TerbeschikkingstellingKeuze ?? "");
+                AddPlaceholder(replacements, "schenkbelasting_opnemen", fiscaal.SchenkbelastingOpnemen == true ? "true" : "false");
+                AddPlaceholder(replacements, "draagplicht_heffingen_tot", fiscaal.DraagplichtHeffingenTot ?? "");
+                AddPlaceholder(replacements, "draagplicht_heffingen_jaar", fiscaal.DraagplichtHeffingenJaar ?? "");
+                AddPlaceholder(replacements, "verrekening_lijfrenten_pensioen_opnemen", fiscaal.VerrekeningLijfrentenPensioenOpnemen == true ? "true" : "false");
+                AddPlaceholder(replacements, "afkoop_alimentatie_verrekening_opnemen", fiscaal.AfkoopAlimentatieVerrekeningOpnemen == true ? "true" : "false");
+                AddPlaceholder(replacements, "optimalisatie_aangiften_opnemen", fiscaal.OptimalisatieAangiftenOpnemen == true ? "true" : "false");
+                AddPlaceholder(replacements, "optimalisatie_voordeel_verdeling", fiscaal.OptimalisatieVoordeelVerdeling ?? "");
+            }
+
+            // Hypotheekrente aftrek comes from convenant info, not fiscal data
+            AddPlaceholder(replacements, "hypotheekrente_aftrek", convenantInfo.HypotheekrenteAftrek ?? "");
         }
 
         private void BuildKwijtingPlaceholders(Dictionary<string, string> replacements, DossierData data, ConvenantInfoData info)
@@ -440,6 +510,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
 
             // Condition fields for article selection
             AddPlaceholder(replacements, "huwelijksgoederenregime", afgeleidRegime);
+            AddPlaceholder(replacements, "kwijting_akkoord", info.KwijtingAkkoord == true ? "true" : "false");
         }
 
         /// <summary>

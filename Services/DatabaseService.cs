@@ -1116,6 +1116,17 @@ namespace scheidingsdesk_document_generator.Services
                 Inboedel = SafeReadString(reader, "inboedel"),
                 VermogensverdelingOpmerkingen = SafeReadString(reader, "vermogensverdeling_opmerkingen"),
 
+                // Inboedel sub-fields
+                InboedelStatus = SafeReadString(reader, "inboedel_status"),
+                InboedelVerdeling = SafeReadString(reader, "inboedel_verdeling"),
+                InboedelVerdelingBedrag = SafeReadDecimal(reader, "inboedel_verdeling_bedrag"),
+                InboedelOverzicht = SafeReadBoolean(reader, "inboedel_overzicht"),
+                InboedelBijlageAanhechten = SafeReadBoolean(reader, "inboedel_bijlage_aanhechten"),
+                InboedelSieraden = SafeReadString(reader, "inboedel_sieraden"),
+                InboedelSieradenBedrag = SafeReadDecimal(reader, "inboedel_sieraden_bedrag"),
+                InboedelLevering = SafeReadString(reader, "inboedel_levering"),
+                InboedelLeveringDatum = SafeReadDateTime(reader, "inboedel_levering_datum"),
+
                 // PENSIOEN
                 Pensioenen = SafeReadString(reader, "pensioenen"),
                 PensioenOpmerkingen = SafeReadString(reader, "pensioen_opmerkingen"),

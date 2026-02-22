@@ -179,6 +179,17 @@ namespace scheidingsdesk_document_generator.Models
         public string? Inboedel { get; set; }
         public string? VermogensverdelingOpmerkingen { get; set; }
 
+        // Inboedel sub-fields
+        public string? InboedelStatus { get; set; } // gemeenschappelijk, uitgesloten, verrekenen
+        public string? InboedelVerdeling { get; set; } // gesloten_beurzen, partij1_vergoedt, partij2_vergoedt
+        public decimal? InboedelVerdelingBedrag { get; set; }
+        public bool? InboedelOverzicht { get; set; }
+        public bool? InboedelBijlageAanhechten { get; set; }
+        public string? InboedelSieraden { get; set; } // eigen_bezit, partij1_betaalt_partij2, partij2_betaalt_partij1
+        public decimal? InboedelSieradenBedrag { get; set; }
+        public string? InboedelLevering { get; set; } // datum, inschrijving_beschikking, feitelijk_bezit
+        public DateTime? InboedelLeveringDatum { get; set; }
+
         // =====================================================
         // PENSIOEN
         // =====================================================

@@ -140,7 +140,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                         if (jsonResult.Items.Count == 0)
                             return "";
 
-                        return HasCollectionVariables(blokInhoud, jsonResult.Prefix)
+                        var sampleItem = jsonResult.Items.Count > 0 ? jsonResult.Items[0] : null;
+                        return HasCollectionVariables(blokInhoud, jsonResult.Prefix, sampleItem)
                             ? ExpandPerItem(blokInhoud, jsonResult.Items, jsonResult.Prefix)
                             : blokInhoud.Trim();
                     }
@@ -323,22 +324,35 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
         }
 
         /// <summary>
-        /// Checkt of een blok variabelen met het gegeven prefix bevat.
-        /// Bijv. prefix "BANKREKENING" matcht [[BANKREKENING_IBAN]], [[BANKREKENING_SALDO]], etc.
+        /// Checkt of een blok variabelen bevat die door de collectie-mapper geproduceerd worden.
+        /// Controleert eerst op PREFIX_* patronen, daarna op exacte keys uit de sample item dictionary.
         /// </summary>
-        private static bool HasCollectionVariables(string blokInhoud, string prefix)
+        private static bool HasCollectionVariables(string blokInhoud, string prefix, Dictionary<string, string>? sampleItem = null)
         {
+            // Bestaande prefix-check
             var pattern = @"\[\[" + Regex.Escape(prefix) + @"_\w+\]\]";
-            return Regex.IsMatch(blokInhoud, pattern, RegexOptions.IgnoreCase);
+            if (Regex.IsMatch(blokInhoud, pattern, RegexOptions.IgnoreCase))
+                return true;
+
+            // Nieuwe check: kijk of een key uit de sample item voorkomt in het blok
+            if (sampleItem != null)
+            {
+                foreach (var key in sampleItem.Keys)
+                {
+                    if (blokInhoud.Contains($"[[{key}]]", StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
-        /// Expandeert een blok per item, vervangt PREFIX_* variabelen met item-specifieke waarden.
-        /// Generieke versie van ExpandPerKind voor Dictionary-based items.
+        /// Expandeert een blok per item, vervangt ALLE [[VARIABELE]] patronen met item-specifieke waarden.
+        /// Matcht zowel PREFIX_* variabelen als template-vriendelijke aliases (bijv. SALDO, PEILDATUM).
         /// </summary>
         private static string ExpandPerItem(string blokInhoud, List<Dictionary<string, string>> items, string prefix)
         {
-            var pattern = new Regex(@"\[\[(" + Regex.Escape(prefix) + @"_\w+)\]\]", RegexOptions.IgnoreCase);
+            var pattern = new Regex(@"\[\[(\w+)\]\]", RegexOptions.IgnoreCase);
             var regels = new List<string>();
 
             foreach (var item in items)
@@ -475,6 +489,18 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             return fallback;
         }
 
+        /// <summary>
+        /// Parst een ISO-datum string uit een JSON property en formatteert deze als Nederlandse datum.
+        /// </summary>
+        private static string FormatDateFromJson(JsonElement item, string propertyName)
+        {
+            var value = GetString(item, propertyName);
+            if (string.IsNullOrEmpty(value)) return "";
+            if (DateTime.TryParse(value, out var date))
+                return DataFormatter.FormatDateDutchLong(date);
+            return value;
+        }
+
         private static string PrefixLidwoord(string bankNaam)
         {
             if (string.IsNullOrEmpty(bankNaam))
@@ -509,7 +535,13 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 ["BANKREKENING_TENAAMSTELLING"] = TranslateTenaamstelling(item, "tenaamstelling", "tenaamstellingAnders", data),
                 ["BANKREKENING_BANKNAAM"] = PrefixLidwoord(GetString(item, "bankNaam")),
                 ["BANKREKENING_SALDO"] = DataFormatter.FormatCurrency(GetDecimal(item, "saldo")),
-                ["BANKREKENING_STATUS"] = HumanizeSnakeCase(GetString(item, "statusVermogen"))
+                ["BANKREKENING_STATUS"] = HumanizeSnakeCase(GetString(item, "statusVermogen")),
+                // Template-vriendelijke aliases (voor artikel templates die andere namen gebruiken)
+                ["BANK_NAAM"] = GetString(item, "bankNaam"),
+                ["REKENINGNUMMER"] = FormatIBAN(GetString(item, "iban")),
+                ["SALDO"] = DataFormatter.FormatCurrency(GetDecimal(item, "saldo")),
+                ["TOEGEDEELD_AAN"] = TranslateTenaamstelling(item, "tenaamstelling", "tenaamstellingAnders", data),
+                ["PEILDATUM"] = FormatDateFromJson(item, "datumSaldo")
             };
         }
 
@@ -520,7 +552,14 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 ["BELEGGING_SOORT"] = ResolveEffectiveValue(item, "soort", "soortAnders"),
                 ["BELEGGING_INSTITUUT"] = ResolveEffectiveValue(item, "instituut", "instituutAnders"),
                 ["BELEGGING_TENAAMSTELLING"] = TranslateTenaamstelling(item, "tenaamstelling", "tenaamstellingAnders", data),
-                ["BELEGGING_STATUS"] = HumanizeSnakeCase(GetString(item, "statusVermogen"))
+                ["BELEGGING_STATUS"] = HumanizeSnakeCase(GetString(item, "statusVermogen")),
+                // Nieuwe velden
+                ["BELEGGING_NUMMER"] = GetString(item, "nummer"),
+                ["BELEGGING_WAARDE"] = DataFormatter.FormatCurrency(GetDecimal(item, "waarde")),
+                // Template-vriendelijke aliases
+                ["BELEGGING_INSTELLING"] = ResolveEffectiveValue(item, "instituut", "instituutAnders"),
+                ["TOEGEDEELD_AAN"] = TranslateTenaamstelling(item, "tenaamstelling", "tenaamstellingAnders", data),
+                ["PEILDATUM"] = FormatDateFromJson(item, "datumWaarde")
             };
         }
 

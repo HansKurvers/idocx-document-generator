@@ -235,6 +235,7 @@ namespace scheidingsdesk_document_generator.Services
                             AND pw_systeem.dossier_id IS NULL
                         WHERE pc.is_systeem = 0
                             AND pc.is_actief = 1
+                            AND ISNULL(pc.is_deleted, 0) = 0
                             AND ISNULL(pc.heeft_conditie, 0) = 0
                             AND COALESCE(
                                 pw_dossier.waarde,
@@ -259,6 +260,7 @@ namespace scheidingsdesk_document_generator.Services
                             pc.conditie_config
                         FROM dbo.placeholder_catalogus pc
                         WHERE pc.is_actief = 1
+                            AND ISNULL(pc.is_deleted, 0) = 0
                             AND pc.heeft_conditie = 1
                             AND pc.conditie_config IS NOT NULL;
                     END
@@ -1443,6 +1445,7 @@ namespace scheidingsdesk_document_generator.Services
                         AND da.dossier_id = @DossierId
                     WHERE t.document_type = @DocumentType
                         AND t.is_actief = 1
+                        AND ISNULL(t.is_deleted, 0) = 0
                         AND ISNULL(da.is_uitgesloten, 0) = 0
                         AND ISNULL(ga.is_actief, 1) = 1
                         AND (t.eigenaar_id IS NULL OR t.eigenaar_id = @GebruikerId)

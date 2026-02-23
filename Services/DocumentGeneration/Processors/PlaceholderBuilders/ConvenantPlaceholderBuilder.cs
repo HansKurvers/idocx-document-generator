@@ -327,6 +327,16 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "HUURRECHT_ANDERE_DATUM", FormatDate(info.HuurrechtAndereDatum));
             AddPlaceholder(replacements, "HUUR_VERPLICHTINGEN_OVERNAME_DATUM", FormatDate(info.HuurVerplichtingenOvernameDatum));
 
+            // Huurrecht toekomt aan — naam-resolutie (zelfde patroon als WONING_TOEGEDEELD_AAN)
+            var huurrechtToekomtAan = info.HuurrechtToekomtAan?.ToLower() switch
+            {
+                "partij1" => replacements.GetValueOrDefault("PARTIJ1_AANDUIDING", "partij 1"),
+                "partij2" => replacements.GetValueOrDefault("PARTIJ2_AANDUIDING", "partij 2"),
+                "beiden_verlaten" => "Partijen verlaten beiden de huurwoning",
+                _ => info.HuurrechtToekomtAan ?? ""
+            };
+            AddPlaceholder(replacements, "HUURRECHT_TOEKOMT_AAN", huurrechtToekomtAan);
+
             // Condition fields
             AddPlaceholder(replacements, "woning_soort", info.WoningSoort ?? "");
             AddPlaceholder(replacements, "woning_adres_keuze", info.WoningAdresKeuze ?? "");

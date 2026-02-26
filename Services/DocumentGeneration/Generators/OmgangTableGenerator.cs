@@ -120,8 +120,8 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
         private string GetPartijBenaming(int verzorgerId, List<PersonData> partijen)
         {
             // Find which party this person is
-            var partij1 = partijen.FirstOrDefault(p => p.RolId == 1);
-            var partij2 = partijen.FirstOrDefault(p => p.RolId == 2);
+            var partij1 = partijen.FirstOrDefault(p => p.PartijNummer == 1);
+            var partij2 = partijen.FirstOrDefault(p => p.PartijNummer == 2);
 
             // Use Partij1Benaming/Partij2Benaming from replacements if available
             if (Replacements != null)

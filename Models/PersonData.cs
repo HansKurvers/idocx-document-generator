@@ -23,6 +23,7 @@ namespace scheidingsdesk_document_generator.Models
         public string? Beroep { get; set; }
         public int? RolId { get; set; }
         public string? RolNaam { get; set; }
+        public int? PartijNummer { get; set; }
 
         /// <summary>
         /// Gets the full name of the person, combining all name parts

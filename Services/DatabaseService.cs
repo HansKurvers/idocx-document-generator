@@ -51,16 +51,16 @@ namespace scheidingsdesk_document_generator.Services
                     FROM dbo.dossiers
                     WHERE id = @DossierId;
 
-                    -- Result set 2: Parties (rol_id 1 and 2)
+                    -- Result set 2: Parties (partij_nummer 1 and 2)
                     SELECT p.id, p.voorletters, p.voornamen, p.roepnaam, p.geslacht,
                            p.tussenvoegsel, p.achternaam, p.adres, p.postcode, p.plaats,
                            p.geboorteplaats, p.geboorte_datum, p.nationaliteit_1, p.nationaliteit_2,
-                           p.telefoon, p.email, p.beroep, dp.rol_id, r.naam as rol_naam
+                           p.telefoon, p.email, p.beroep, dp.rol_id, r.naam as rol_naam, dp.partij_nummer
                     FROM dbo.personen p
                     INNER JOIN dbo.dossiers_partijen dp ON p.id = dp.persoon_id
                     INNER JOIN dbo.rollen r ON dp.rol_id = r.id
-                    WHERE dp.dossier_id = @DossierId AND dp.rol_id IN (1, 2)
-                    ORDER BY dp.rol_id;
+                    WHERE dp.dossier_id = @DossierId AND dp.rol_id = 1
+                    ORDER BY dp.partij_nummer;
 
                     -- Result set 3: Children
                     SELECT p.id, dk.id as dossier_kind_id, p.voorletters, p.voornamen, p.roepnaam, p.geslacht,
@@ -928,7 +928,8 @@ namespace scheidingsdesk_document_generator.Services
                 Email = reader["email"] == DBNull.Value ? null : ConvertToString(reader["email"]),
                 Beroep = reader["beroep"] == DBNull.Value ? null : ConvertToString(reader["beroep"]),
                 RolId = reader["rol_id"] == DBNull.Value ? null : (int?)reader["rol_id"],
-                RolNaam = reader["rol_naam"] == DBNull.Value ? null : ConvertToString(reader["rol_naam"])
+                RolNaam = reader["rol_naam"] == DBNull.Value ? null : ConvertToString(reader["rol_naam"]),
+                PartijNummer = reader["partij_nummer"] == DBNull.Value ? null : (int?)reader["partij_nummer"]
             };
         }
 

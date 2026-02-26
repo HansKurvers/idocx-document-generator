@@ -80,14 +80,14 @@ namespace scheidingsdesk_document_generator.Models
         public List<ConditionalPlaceholder> ConditionalPlaceholders { get; set; } = new List<ConditionalPlaceholder>();
 
         /// <summary>
-        /// Gets party 1 (rol_id = 1)
+        /// Gets party 1 (partij_nummer = 1)
         /// </summary>
-        public PersonData? Partij1 => Partijen.FirstOrDefault(p => p.RolId == 1);
+        public PersonData? Partij1 => Partijen.FirstOrDefault(p => p.PartijNummer == 1);
 
         /// <summary>
-        /// Gets party 2 (rol_id = 2)
+        /// Gets party 2 (partij_nummer = 2)
         /// </summary>
-        public PersonData? Partij2 => Partijen.FirstOrDefault(p => p.RolId == 2);
+        public PersonData? Partij2 => Partijen.FirstOrDefault(p => p.PartijNummer == 2);
     }
 
     public class OmgangData

@@ -13,8 +13,8 @@ public class LoopSectionProcessorTests
         {
             Partijen = new List<PersonData>
             {
-                new PersonData { Voornamen = "Jan", Tussenvoegsel = "de", Achternaam = "Vries", RolId = 1 },
-                new PersonData { Voornamen = "Maria", Achternaam = "Jansen", RolId = 2 }
+                new PersonData { Voornamen = "Jan", Tussenvoegsel = "de", Achternaam = "Vries", RolId = 1, PartijNummer = 1 },
+                new PersonData { Voornamen = "Maria", Achternaam = "Jansen", RolId = 2, PartijNummer = 2 }
             }
         };
     }

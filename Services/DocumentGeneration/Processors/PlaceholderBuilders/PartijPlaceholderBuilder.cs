@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using scheidingsdesk_document_generator.Models;
 using scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processors.PlaceholderBuilders
 {
@@ -34,6 +35,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             {
                 AddPersonReplacements(replacements, "Partij2", data.Partij2, data.IsAnoniem);
             }
+
+            // Partij aanduiding: altijd beschikbaar, ongeacht document type
+            BuildPartijAanduidingPlaceholders(replacements, data);
 
             _logger.LogDebug("Added partij placeholders for Partij1={P1} and Partij2={P2}",
                 data.Partij1?.VolledigeNaam ?? "null",
@@ -125,6 +129,94 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 // Not anonymous: use roepnaam
                 return person.Roepnaam ?? person.Voornamen?.Split(' ')[0] ?? "";
             }
+        }
+
+        /// <summary>
+        /// Builds partij aanduiding placeholders based on IsAnoniem setting.
+        /// For convenant/ouderschapsplan: de man/de vrouw when anonymous, roepnaam + achternaam when named.
+        /// Also creates capitalized variants for use at the start of sentences.
+        /// </summary>
+        private void BuildPartijAanduidingPlaceholders(Dictionary<string, string> replacements, DossierData data)
+        {
+            var partij1 = data.Partij1;
+            var partij2 = data.Partij2;
+            var isAnoniem = data.IsAnoniem == true;
+
+            // If both parties have the same gender, always use names to avoid ambiguity
+            // ("de man" / "de man" is not distinguishable)
+            var zelfdeGeslacht = partij1 != null && partij2 != null &&
+                NormalizeGeslacht(partij1.Geslacht) == NormalizeGeslacht(partij2.Geslacht);
+
+            // Determine aanduidingen based on anonymity
+            string partij1Aanduiding, partij2Aanduiding;
+
+            if (isAnoniem && !zelfdeGeslacht)
+            {
+                // Anonymous with different genders: use de man / de vrouw
+                partij1Aanduiding = GetGeslachtAanduiding(partij1?.Geslacht);
+                partij2Aanduiding = GetGeslachtAanduiding(partij2?.Geslacht);
+            }
+            else
+            {
+                // Named, or same gender (always use names to avoid ambiguity)
+                partij1Aanduiding = GetRoepnaamAchternaam(partij1);
+                partij2Aanduiding = GetRoepnaamAchternaam(partij2);
+            }
+
+            // Regular (lowercase for mid-sentence use)
+            AddPlaceholder(replacements, "PARTIJ1_AANDUIDING", partij1Aanduiding);
+            AddPlaceholder(replacements, "PARTIJ2_AANDUIDING", partij2Aanduiding);
+
+            // Capitalized (for start of sentence)
+            AddPlaceholder(replacements, "PARTIJ1_AANDUIDING_HOOFDLETTER", Capitalize(partij1Aanduiding));
+            AddPlaceholder(replacements, "PARTIJ2_AANDUIDING_HOOFDLETTER", Capitalize(partij2Aanduiding));
+        }
+
+        private static string NormalizeGeslacht(string? geslacht)
+        {
+            var g = geslacht?.Trim().ToLowerInvariant();
+            return g switch
+            {
+                "m" or "man" => "m",
+                "v" or "vrouw" => "v",
+                _ => "x"
+            };
+        }
+
+        private string GetGeslachtAanduiding(string? geslacht)
+        {
+            var g = geslacht?.Trim().ToLowerInvariant();
+
+            return g switch
+            {
+                "m" or "man" => "de man",
+                "v" or "vrouw" => "de vrouw",
+                _ => "de partij"
+            };
+        }
+
+        /// <summary>
+        /// Gets roepnaam + tussenvoegsel + achternaam for a person.
+        /// Example: "Jan de Vries"
+        /// </summary>
+        private string GetRoepnaamAchternaam(PersonData? person)
+        {
+            if (person == null) return "";
+
+            var parts = new List<string>();
+
+            // Use roepnaam, or fall back to first name from voornamen
+            var roepnaam = person.Roepnaam ?? person.Voornamen?.Split(' ').FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(roepnaam))
+                parts.Add(roepnaam.Trim());
+
+            if (!string.IsNullOrWhiteSpace(person.Tussenvoegsel))
+                parts.Add(person.Tussenvoegsel.Trim());
+
+            if (!string.IsNullOrWhiteSpace(person.Achternaam))
+                parts.Add(person.Achternaam.Trim());
+
+            return string.Join(" ", parts);
         }
 
         private static string FormatGeslacht(string? geslacht)

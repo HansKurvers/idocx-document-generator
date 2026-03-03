@@ -68,7 +68,8 @@ namespace scheidingsdesk_document_generator.Services
             "dossier", "templates", "convenant", "woning", "kadastraal",
             "ondertekening", "considerans", "partneralimentatie", "juridisch",
             "relatie", "zorg", "verblijf", "communicatie", "ouderschapsplan",
-            "overig", "aliassen", "grammatica"
+            "overig", "aliassen", "grammatica",
+            "hypotheek", "vermogensverdeling", "pensioen", "kwijting", "fiscaal"
         };
 
         // Patterns to exclude from being categories

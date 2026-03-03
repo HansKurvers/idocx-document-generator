@@ -712,6 +712,24 @@ Partneralimentatie:
 - [[INDEXERING_EERSTE_JAAR]] - Eerste jaar indexering
 - [[AlimentatieplichtigePAL]] - Alimentatieplichtige in partij-aanduiding stijl (de man/de vrouw)
 - [[AlimentatiegerechtigdePAL]] - Alimentatiegerechtigde in partij-aanduiding stijl (de man/de vrouw)
+- [[HijZijPALplichtige]] - Onderwerp voornaamwoord alimentatieplichtige ("hij"/"zij")
+- [[HijZijPALgerechtigde]] - Onderwerp voornaamwoord alimentatiegerechtigde ("hij"/"zij")
+- [[HemHaarPALplichtige]] - Lijdend voorwerp voornaamwoord alimentatieplichtige ("hem"/"haar")
+- [[HemHaarPALgerechtigde]] - Lijdend voorwerp voornaamwoord alimentatiegerechtigde ("hem"/"haar")
+- [[ZijnHaarPALplichtige]] - Bezittelijk voornaamwoord alimentatieplichtige ("zijn"/"haar")
+- [[ZijnHaarPALgerechtigde]] - Bezittelijk voornaamwoord alimentatiegerechtigde ("zijn"/"haar")
+- [[zijnofhaarPALgerechtigde]] - Alias voor ZijnHaarPALgerechtigde ("zijn"/"haar")
+- [[EINDE_BIJDRAGE_HYPOTHEEKRENTE]] - Einde bijdrage hypotheekrente (vertaalde waarde: "de verkoop van de woning", "de akte van verdeling" of datum)
+- [[BEPERKT_NIET_WIJZIGINGSBEDING]] - Tekst beperkt niet-wijzigingsbeding (vrij tekstveld)
+- [[BEPERKT_WIJZIGINGSBEDING]] - Tekst beperkt wijzigingsbeding (vrij tekstveld)
+- [[KORTINGSREGELING_PERCENTAGE]] - Kortingsregeling percentage (geheel getal, bijv. "50")
+- [[KORTINGSREGELING_EERST_PERCENTAGE]] - Eerste kortingspercentage (alias voor KORTINGSREGELING_PERCENTAGE)
+- [[KORTINGSREGELING_DAARNA_PERCENTAGE]] - Tweede kortingspercentage (geheel getal)
+- [[INKOMENSDREMPEL_BEDRAG]] - Inkomensdrempel bedrag (geformatteerd als Euro bedrag)
+- [[INKOMENSDREMPEL_BEDRAG_DAARNA]] - Tweede inkomensdrempel bedrag (geformatteerd als Euro bedrag)
+- [[VERMOGEN_GRENS_BEDRAG]] - Vermogensgrens bedrag (geformatteerd als Euro bedrag)
+- [[VERMOGEN_FICTIEF_RENDEMENT]] - Fictief rendement vermogen (decimaal, bijv. "4,5")
+- [[HerlevingMaanden]] - Aantal maanden herleving partneralimentatie na beëindiging samenleving (geheel getal)
 
 Woning:
 - [[WONING_ADRES]] - Woning adres
@@ -733,6 +751,8 @@ Woning:
 - [[ONTSLAG_HOOFDELIJKHEID_DATUM]] - Datum ontslag hoofdelijkheid
 - [[HUURRECHT_ANDERE_DATUM]] - Datum huurrecht
 - [[HUUR_VERPLICHTINGEN_OVERNAME_DATUM]] - Datum overname huurverplichtingen
+- [[HuurrechtToekomtAan]] - Wie het huurrecht toekomt met naam-resolutie ("de man"/"de vrouw" bij anoniem, roepnaam + achternaam bij niet-anoniem, of "Partijen verlaten beiden de huurwoning")
+- [[HuurBorgAan]] - Aan wie de huurborg toekomt met naam-resolutie ("de man"/"de vrouw" bij anoniem, roepnaam + achternaam bij niet-anoniem)
 
 Hypotheek:
 - [[HYPOTHEEK_NOTARIS_MR]] - Hypotheek notaris naam
@@ -754,6 +774,9 @@ Kadastraal:
 Vermogensverdeling:
 - [[INBOEDEL]] - Inboedel afspraken
 - [[VERMOGENSVERDELING_OPMERKINGEN]] - Opmerkingen vermogensverdeling
+- [[INBOEDEL_VERDELING_BEDRAG]] - Vergoedingsbedrag inboedelverdeling (geformatteerd als Euro bedrag)
+- [[INBOEDEL_SIERADEN_BEDRAG]] - Vergoedingsbedrag sieraden (geformatteerd als Euro bedrag)
+- [[INBOEDEL_LEVERING_DATUM]] - Leveringsdatum inboedel (d MMMM yyyy)
 
 Pensioen:
 - [[PENSIOEN_OPMERKINGEN]] - Opmerkingen pensioen
@@ -789,3 +812,17 @@ Considerans:
 - [[ERKENNINGSDATUM]] - Erkenningsdatum
 - [[MINDERJARIGE_KINDEREN_NAMEN]] - Roepnamen minderjarige kinderen
 - [[MINDERJARIGE_KINDEREN_ZIJN_IS]] - "zijn" of "is" afhankelijk van aantal
+
+Fiscaal Placeholders:
+- [[FiscaleToetsingTekst]] - Gegenereerde tekst sectie 6.1: fiscale toetsing (op basis van FiscaalAdviesKeuze: "door_adviseur", "buiten_mediation" of "geen_advies")
+- [[FiscaalPartnerschapTekst]] - Gegenereerde tekst secties 6.2.1 t/m 6.2.3: einde fiscaal partnerschap en aangifte (op basis van FiscaalPartnerschapKeuze: "zelfstandig" of "onderling_overleg")
+- [[EigenWoningTekst]] - Gegenereerde tekst sectie 6.2.4: eigen woning regeling (alleen als EigenWoningSectieOpnemen = true)
+- [[IbOndernemingTekst]] - Gegenereerde tekst sectie 6.2.5: IB-onderneming fiscaal geruisloze doorschuiving (alleen als IbOndernemingSectieOpnemen = true)
+- [[AanmerkelijkBelangTekst]] - Gegenereerde tekst sectie 6.2.6: aanmerkelijk belang (alleen als AanmerkelijkBelangOpnemen = true)
+- [[TerbeschikkingstellingTekst]] - Gegenereerde tekst sectie 6.2.7: terbeschikkingstelling vermogen (alleen als TerbeschikkingstellingOpnemen = true)
+- [[SchenkbelastingTekst]] - Gegenereerde tekst sectie 6.2.8: schenkbelasting vrijstelling (alleen als SchenkbelastingOpnemen = true)
+- [[DraagplichtHeffingenTekst]] - Gegenereerde tekst secties 6.3.1 t/m 6.3.5: draagplicht heffingen (op basis van DraagplichtHeffingenTot en DraagplichtHeffingenJaar)
+- [[VerrekeningLijfrentenTekst]] - Gegenereerde tekst sectie 6.3.6: verrekening lijfrenten en pensioen (alleen als VerrekeningLijfrentenPensioenOpnemen = true)
+- [[AfkoopVerrekeningTekst]] - Gegenereerde tekst sectie 6.3.7: afkoop alimentatie verrekening (alleen als AfkoopAlimentatieVerrekeningOpnemen = true)
+- [[OptimalisatieAangiftenTekst]] - Gegenereerde tekst: optimalisatie aangiften inkomstenbelasting (alleen als OptimalisatieAangiftenOpnemen = true)
+- [[OverigeFiscaleBepalingenTekst]] - Gegenereerde tekst secties 6.4.2 t/m 6.4.4: onvoorziene omstandigheden, discussie belastingdienst en geen bevoordelingsbedoeling (altijd gegenereerd)

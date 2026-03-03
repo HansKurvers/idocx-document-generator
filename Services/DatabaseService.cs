@@ -1057,6 +1057,7 @@ namespace scheidingsdesk_document_generator.Services
 
                 // Kadaster & Notaris
                 KoopKadastraalVermelden = SafeReadBoolean(reader, "koop_kadastraal_vermelden"),
+                KoopNotarisVermelden = SafeReadBoolean(reader, "koop_notaris_vermelden"),
                 KoopKadastraalGemeente = SafeReadString(reader, "koop_kadastraal_gemeente"),
                 KoopKadastraalGemeenteCode = SafeReadString(reader, "koop_kadastraal_gemeente_code"),
                 KoopKadastraalSectie = SafeReadString(reader, "koop_kadastraal_sectie"),

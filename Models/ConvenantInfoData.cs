@@ -116,6 +116,7 @@ namespace scheidingsdesk_document_generator.Models
 
         // Kadaster & Notaris
         public bool? KoopKadastraalVermelden { get; set; }
+        public bool? KoopNotarisVermelden { get; set; }
         public string? KoopKadastraalGemeente { get; set; }
         public string? KoopKadastraalGemeenteCode { get; set; }
         public string? KoopKadastraalSectie { get; set; }

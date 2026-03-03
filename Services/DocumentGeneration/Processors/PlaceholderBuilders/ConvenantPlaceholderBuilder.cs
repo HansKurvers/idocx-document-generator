@@ -293,6 +293,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "koop_klein_onderhoud", info.KoopKleinOnderhoud ?? "");
             AddPlaceholder(replacements, "koop_groot_onderhoud", info.KoopGrootOnderhoud ?? "");
             AddPlaceholder(replacements, "koop_kadastraal_vermelden", info.KoopKadastraalVermelden == true ? "true" : "false");
+            AddPlaceholder(replacements, "koop_notaris_vermelden", info.KoopNotarisVermelden == true ? "true" : "false");
             AddPlaceholder(replacements, "koop_notaris_hypotheek_zelfde", info.KoopNotarisHypotheekZelfde == true ? "true" : "false");
             AddPlaceholder(replacements, "koop_ontslag_hoofdelijkheid", info.KoopOntslagHoofdelijkheid == true ? "true" : "false");
             AddPlaceholder(replacements, "koop_volmacht_notaris", info.KoopVolmachtNotaris == true ? "true" : "false");

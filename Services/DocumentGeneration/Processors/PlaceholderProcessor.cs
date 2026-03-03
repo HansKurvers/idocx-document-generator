@@ -81,33 +81,65 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             // These are placeholders with heeft_conditie = 1 and a conditie_config
             if (data.ConditionalPlaceholders.Any())
             {
+                _logger.LogInformation("Processing {Count} conditional placeholders: {Keys}",
+                    data.ConditionalPlaceholders.Count,
+                    string.Join(", ", data.ConditionalPlaceholders.Select(p => p.PlaceholderKey)));
+
                 // Build evaluation context with computed fields
                 var context = _conditieEvaluator.BuildEvaluationContext(data, replacements);
 
                 foreach (var conditionalPlaceholder in data.ConditionalPlaceholders)
                 {
                     var config = conditionalPlaceholder.ConditieConfig;
-                    if (config != null)
+                    if (config == null)
                     {
-                        try
+                        _logger.LogWarning("Conditional placeholder {Key}: ConditieConfig is null (JSON parse failed or empty). Raw JSON: {Json}",
+                            conditionalPlaceholder.PlaceholderKey,
+                            conditionalPlaceholder.ConditieConfigJson ?? "(null)");
+                        continue;
+                    }
+
+                    _logger.LogInformation("Evaluating conditional placeholder {Key}: {RuleCount} rules, default='{Default}'",
+                        conditionalPlaceholder.PlaceholderKey,
+                        config.Regels.Count,
+                        config.Default);
+
+                    // Log the context values for fields referenced in the conditions
+                    foreach (var regel in config.Regels)
+                    {
+                        LogConditionFields(regel.Conditie, context, conditionalPlaceholder.PlaceholderKey);
+                    }
+
+                    try
+                    {
+                        var result = _conditieEvaluator.Evaluate(config, context);
+
+                        // Log each evaluation step
+                        foreach (var step in result.EvaluationSteps)
                         {
-                            var result = _conditieEvaluator.Evaluate(config, context);
-                            var resolvedValue = _conditieEvaluator.ResolveNestedPlaceholders(result.RawResult, replacements);
-
-                            // Conditional placeholders override any existing value
-                            replacements[conditionalPlaceholder.PlaceholderKey] = resolvedValue;
-
-                            _logger.LogDebug("Conditional placeholder {Key} evaluated to: {Value} (rule: {Rule})",
+                            _logger.LogInformation("  Conditional {Key} rule {Rule}: {Conditie} => {Result}",
                                 conditionalPlaceholder.PlaceholderKey,
-                                resolvedValue,
-                                result.MatchedRule?.ToString() ?? "default");
+                                step.Regel,
+                                step.Conditie,
+                                step.Result);
                         }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "Error evaluating conditional placeholder {Key}, using empty string",
-                                conditionalPlaceholder.PlaceholderKey);
-                            replacements[conditionalPlaceholder.PlaceholderKey] = string.Empty;
-                        }
+
+                        var resolvedValue = _conditieEvaluator.ResolveNestedPlaceholders(result.RawResult, replacements);
+
+                        // Conditional placeholders override any existing value
+                        replacements[conditionalPlaceholder.PlaceholderKey] = resolvedValue;
+
+                        _logger.LogInformation("Conditional placeholder {Key} => '{Value}' (matched rule: {Rule}, raw: '{Raw}')",
+                            conditionalPlaceholder.PlaceholderKey,
+                            resolvedValue,
+                            result.MatchedRule?.ToString() ?? "default",
+                            result.RawResult);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Error evaluating conditional placeholder {Key}, using empty string",
+                            conditionalPlaceholder.PlaceholderKey);
+                        replacements[conditionalPlaceholder.PlaceholderKey] = string.Empty;
                     }
                 }
 
@@ -171,6 +203,30 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             }
 
             _logger.LogInformation($"[{correlationId}] Processed headers and footers");
+        }
+
+        /// <summary>
+        /// Logs the context values for fields referenced in a condition (for diagnostics)
+        /// </summary>
+        private void LogConditionFields(Conditie conditie, Dictionary<string, object> context, string placeholderKey)
+        {
+            if (conditie.IsGroep && conditie.Voorwaarden != null)
+            {
+                foreach (var v in conditie.Voorwaarden)
+                {
+                    LogConditionFields(v, context, placeholderKey);
+                }
+            }
+            else if (conditie.IsVoorwaarde && !string.IsNullOrEmpty(conditie.Veld))
+            {
+                var contextKey = context.Keys.FirstOrDefault(k => k.Equals(conditie.Veld, StringComparison.OrdinalIgnoreCase));
+                var contextValue = contextKey != null ? context[contextKey] : null;
+                _logger.LogInformation("  Conditional {Key}: context field '{Veld}' (matched key: '{ContextKey}') = '{ContextValue}'",
+                    placeholderKey,
+                    conditie.Veld,
+                    contextKey ?? "(not found)",
+                    contextValue?.ToString() ?? "(null)");
+            }
         }
 
         #region Private Helper Methods

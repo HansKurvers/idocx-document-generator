@@ -49,6 +49,34 @@ Alle placeholder builders bevinden zich in:
 
 Builders worden uitgevoerd op basis van hun `Order` property (laag naar hoog).
 
+### Placeholder verwerkingsvolgorde (PlaceholderProcessor.cs)
+
+Het placeholder systeem verwerkt in 4 stappen:
+
+1. **Grammatica regels** — `[[heeft/hebben]]`, `[[zijn/is]]` etc. op basis van kinderen
+2. **Placeholder builders** — Geregistreerde builders (in `Order` volgorde) genereren systeemplaceholders uit dossierdata
+3. **Custom placeholders** — Uit de `placeholder_catalogus` tabel (dossier > gebruiker > systeem > standaard_waarde). Worden NIET overschreven als een builder ze al heeft gezet
+4. **Conditionele placeholders** — Placeholders met `heeft_conditie = 1` en een `conditie_config` JSON. Deze worden geëvalueerd door `ConditieEvaluator` en overschrijven bestaande waarden
+
+### Conditioneel placeholder systeem
+
+Conditionele placeholders worden aangemaakt via de Placeholder Catalogus UI en opgeslagen in de `placeholder_catalogus` tabel.
+
+**Belangrijke bestanden:**
+- `Models/ConditieModels.cs` — Data models (`ConditieConfig`, `ConditieRegel`, `Conditie`)
+- `Services/DocumentGeneration/Processors/ConditieEvaluator.cs` — Evaluatie logica
+- `Services/DocumentGeneration/Processors/PlaceholderProcessor.cs` — Orchestratie (stap 4)
+
+**Hoe het werkt:**
+1. De `conditie_config` JSON wordt geparsed naar een `ConditieConfig` object
+2. Een evaluatie-context wordt opgebouwd uit bestaande replacements + computed fields
+3. Context bevat zowel `snake_case` als `PascalCase` varianten (bridge via `SnakeCaseToPascalCase`)
+4. Regels worden in volgorde geëvalueerd; de eerste match bepaalt het resultaat
+5. Als geen regel matcht, wordt de default waarde gebruikt
+6. Het resultaat kan geneste placeholders bevatten (bijv. `[[PARTIJ1_AANDUIDING]]`) die worden opgelost
+
+**Vergelijking:** `AreEqual` normaliseert underscores naar spaties en is case-insensitive. Dus `"partij1"` matcht `"Partij 1"` NIET — het matcht `"Partij_1"` wel.
+
 ## CI/CD & Deployment
 
 Alle drie de repositories hebben GitHub Actions workflows voor automatische deployment.

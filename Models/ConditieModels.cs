@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -103,8 +104,10 @@ namespace scheidingsdesk_document_generator.Models
                     {
                         _conditieConfig = JsonSerializer.Deserialize<ConditieConfig>(ConditieConfigJson);
                     }
-                    catch
+                    catch (JsonException ex)
                     {
+                        Debug.WriteLine($"[ConditionalPlaceholder] Failed to parse ConditieConfig JSON for placeholder '{PlaceholderKey}': {ex.Message}");
+                        Debug.WriteLine($"[ConditionalPlaceholder] Raw JSON: {ConditieConfigJson}");
                         _conditieConfig = null;
                     }
                 }

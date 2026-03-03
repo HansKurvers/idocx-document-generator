@@ -826,3 +826,6 @@ Fiscaal Placeholders:
 - [[AfkoopVerrekeningTekst]] - Gegenereerde tekst sectie 6.3.7: afkoop alimentatie verrekening (alleen als AfkoopAlimentatieVerrekeningOpnemen = true)
 - [[OptimalisatieAangiftenTekst]] - Gegenereerde tekst: optimalisatie aangiften inkomstenbelasting (alleen als OptimalisatieAangiftenOpnemen = true)
 - [[OverigeFiscaleBepalingenTekst]] - Gegenereerde tekst secties 6.4.2 t/m 6.4.4: onvoorziene omstandigheden, discussie belastingdienst en geen bevoordelingsbedoeling (altijd gegenereerd)
+
+Conditionele Placeholders (via Placeholder Catalogus UI):
+- [[wiekrijgtborg]] - Conditionele placeholder: bepaalt tekst op basis van het veld "huur_borg_aan" (partij1/partij2/ieder_helft)

@@ -131,6 +131,23 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Generato
             if (!string.IsNullOrWhiteSpace(verwerkteTekst))
             {
                 var bodyParagraphs = CreateBodyParagraphs(verwerkteTekst);
+
+                // Genummerde artikelen: body paragraphs indenten zodat ze uitlijnen met de titel
+                if (artikel.NummeringType == "nieuw_nummer" || artikel.NummeringType == "doornummeren")
+                {
+                    foreach (var element in bodyParagraphs)
+                    {
+                        if (element is Paragraph para)
+                        {
+                            var pPr = para.ParagraphProperties;
+                            if (pPr != null && pPr.Indentation == null)
+                            {
+                                pPr.Append(new Indentation { Left = "1588" });
+                            }
+                        }
+                    }
+                }
+
                 elements.AddRange(bodyParagraphs);
             }
 

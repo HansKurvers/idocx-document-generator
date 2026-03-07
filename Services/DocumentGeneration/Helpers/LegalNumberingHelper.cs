@@ -93,7 +93,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             level0.Append(new LevelJustification { Val = LevelJustificationValues.Left });
 
             var pPr0 = new PreviousParagraphProperties();
-            pPr0.Append(new Indentation { Left = "0", Hanging = "0" });
+            pPr0.Append(new Indentation { Left = "1588", Hanging = "1588" });
             level0.Append(pPr0);
 
             // Formatting voor artikel nummer (bold)
@@ -111,7 +111,7 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Helpers
             level1.Append(new LevelJustification { Val = LevelJustificationValues.Left });
 
             var pPr1 = new PreviousParagraphProperties();
-            pPr1.Append(new Indentation { Left = "0", Hanging = "0" });
+            pPr1.Append(new Indentation { Left = "1588", Hanging = "1588" });
             level1.Append(pPr1);
 
             abstractNum.Append(level1);

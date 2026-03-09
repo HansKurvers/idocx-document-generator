@@ -148,6 +148,7 @@ namespace scheidingsdesk_document_generator.Models
         public string? KoopWozPeildatum { get; set; }
         public decimal? KoopToedelingWaarde { get; set; }
         public decimal? KoopKoopsom { get; set; }
+        public string? KoopKoopsomDatum { get; set; }
         public bool? KoopOntslagHoofdelijkheid { get; set; }
         public DateTime? KoopOntslagHoofdelijkheidDatum { get; set; }
         public string? KoopMakelaarVerkoop { get; set; }

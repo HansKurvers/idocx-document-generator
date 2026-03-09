@@ -238,6 +238,11 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "NOTARIS_STANDPLAATS", info.KoopNotarisStandplaats ?? "");
             AddPlaceholder(replacements, "NOTARIS_LEVERING_DATUM", FormatDate(info.KoopNotarisLeveringDatum));
 
+            // Koopsom en bouwjaar
+            AddPlaceholder(replacements, "KOOP_KOOPSOM", FormatCurrency(info.KoopKoopsom));
+            AddPlaceholder(replacements, "KOOP_KOOPSOM_DATUM", info.KoopKoopsomDatum ?? "");
+            AddPlaceholder(replacements, "KOOP_BOUWJAAR", info.KoopBouwjaar?.ToString() ?? "");
+
             // Makelaar
             AddPlaceholder(replacements, "MAKELAAR_VERKOOP", info.KoopMakelaarVerkoop ?? "");
 
@@ -298,6 +303,9 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "koop_ontslag_hoofdelijkheid", info.KoopOntslagHoofdelijkheid == true ? "true" : "false");
             AddPlaceholder(replacements, "koop_volmacht_notaris", info.KoopVolmachtNotaris == true ? "true" : "false");
             AddPlaceholder(replacements, "koop_medewerking_leveren", info.KoopMedewerkingLeveren == true ? "true" : "false");
+            AddPlaceholder(replacements, "koop_koopsom", info.KoopKoopsom?.ToString("0.00") ?? "");
+            AddPlaceholder(replacements, "koop_koopsom_datum", info.KoopKoopsomDatum ?? "");
+            AddPlaceholder(replacements, "koop_bouwjaar", info.KoopBouwjaar?.ToString() ?? "");
         }
 
         private string BuildVolledigWoningAdres(ConvenantInfoData info)

@@ -1088,6 +1088,8 @@ namespace scheidingsdesk_document_generator.Services
                 KoopWozWaarde = SafeReadDecimal(reader, "koop_woz_waarde"),
                 KoopWozPeildatum = SafeReadString(reader, "koop_woz_peildatum"),
                 KoopToedelingWaarde = SafeReadDecimal(reader, "koop_toedeling_waarde"),
+                KoopKoopsom = SafeReadDecimal(reader, "koop_koopsom"),
+                KoopKoopsomDatum = SafeReadString(reader, "koop_koopsom_datum"),
                 KoopOntslagHoofdelijkheid = SafeReadBoolean(reader, "koop_ontslag_hoofdelijkheid"),
                 KoopOntslagHoofdelijkheidDatum = SafeReadDateTime(reader, "koop_ontslag_hoofdelijkheid_datum"),
                 KoopMakelaarVerkoop = SafeReadString(reader, "koop_makelaar_verkoop"),

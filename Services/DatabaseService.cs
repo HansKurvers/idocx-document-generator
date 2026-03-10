@@ -1078,11 +1078,9 @@ namespace scheidingsdesk_document_generator.Services
                 KoopNotarisHypotheekDatum = SafeReadDateTime(reader, "koop_notaris_hypotheek_datum"),
 
                 // Privevermogen
-                KoopInvesteringNa2012 = SafeReadBoolean(reader, "koop_investering_na_2012"),
-                KoopPrivevermogenHoe = SafeReadString(reader, "koop_privevermogen_hoe"),
-                KoopPrivevermogenReden = SafeReadString(reader, "koop_privevermogen_reden"),
-                KoopPrivevermogenVordering = SafeReadString(reader, "koop_privevermogen_vordering"),
-                KoopPrivevermogenVorderingBedrag = SafeReadDecimal(reader, "koop_privevermogen_vordering_bedrag"),
+                KoopPriveInvesteringen = SafeReadString(reader, "koop_prive_investeringen"),
+                KoopPrivevermogenVorderingBedragPartij1 = SafeReadDecimal(reader, "koop_privevermogen_vordering_bedrag_partij1"),
+                KoopPrivevermogenVorderingBedragPartij2 = SafeReadDecimal(reader, "koop_privevermogen_vordering_bedrag_partij2"),
 
                 // Waarde
                 KoopWozWaarde = SafeReadDecimal(reader, "koop_woz_waarde"),

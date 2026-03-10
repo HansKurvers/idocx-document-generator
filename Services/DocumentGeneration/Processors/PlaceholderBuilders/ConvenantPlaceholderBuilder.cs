@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processors.PlaceholderBuilders
 {
@@ -286,9 +288,13 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "koop_toedeling", info.KoopToedeling ?? "");
             AddPlaceholder(replacements, "koop_nieuwbouw", info.KoopNieuwbouw == true ? "true" : "false");
             AddPlaceholder(replacements, "koop_privevermogen_investering", info.KoopPrivevermogenInvestering == true ? "true" : "false");
-            AddPlaceholder(replacements, "koop_investering_na_2012", info.KoopInvesteringNa2012 == true ? "true" : "false");
-            AddPlaceholder(replacements, "koop_privevermogen_hoe", info.KoopPrivevermogenHoe ?? "");
-            AddPlaceholder(replacements, "koop_privevermogen_vordering", info.KoopPrivevermogenVordering ?? "");
+
+            // Parse privé-investeringen JSON array; backwards-compat: eerste item vult oude conditie-velden
+            var investeringen = ParsePriveInvesteringen(info.KoopPriveInvesteringen);
+            var eersteInv = investeringen.Count > 0 ? investeringen[0] : null;
+            AddPlaceholder(replacements, "koop_investering_na_2012", eersteInv?.InvesteringNa2012 == true ? "true" : "false");
+            AddPlaceholder(replacements, "koop_privevermogen_hoe", eersteInv?.Hoe ?? "");
+            AddPlaceholder(replacements, "koop_privevermogen_vordering", eersteInv?.Vordering ?? "");
             AddPlaceholder(replacements, "koop_lasten_woning", info.KoopLastenWoning == true ? "true" : "false");
             AddPlaceholder(replacements, "koop_hypotheekrente", info.KoopHypotheekrente ?? "");
             AddPlaceholder(replacements, "koop_maandelijkse_aflossing", info.KoopMaandelijkseAflossing ?? "");
@@ -380,9 +386,11 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
             AddPlaceholder(replacements, "HYPOTHEEK_NOTARIS_STANDPLAATS", info.KoopNotarisHypotheekStandplaats ?? info.KoopNotarisStandplaats ?? "");
             AddPlaceholder(replacements, "HYPOTHEEK_NOTARIS_DATUM", FormatDate(info.KoopNotarisHypotheekDatum ?? info.KoopNotarisLeveringDatum));
 
-            // Privevermogen vordering
-            AddPlaceholder(replacements, "PRIVEVERMOGEN_VORDERING_BEDRAG", FormatCurrency(info.KoopPrivevermogenVorderingBedrag));
-            AddPlaceholder(replacements, "PRIVEVERMOGEN_REDEN", info.KoopPrivevermogenReden ?? "");
+            // Privevermogen vordering bedragen (plat op convenant)
+            AddPlaceholder(replacements, "PRIVEVERMOGEN_VORDERING_BEDRAG_PARTIJ1", FormatCurrency(info.KoopPrivevermogenVorderingBedragPartij1));
+            AddPlaceholder(replacements, "PRIVEVERMOGEN_VORDERING_BEDRAG_PARTIJ2", FormatCurrency(info.KoopPrivevermogenVorderingBedragPartij2));
+            // Backwards-compat: PRIVEVERMOGEN_VORDERING_BEDRAG = partij1 bedrag (of partij2 als fallback)
+            AddPlaceholder(replacements, "PRIVEVERMOGEN_VORDERING_BEDRAG", FormatCurrency(info.KoopPrivevermogenVorderingBedragPartij1 ?? info.KoopPrivevermogenVorderingBedragPartij2));
         }
 
         private void BuildVermogensverdelingPlaceholders(Dictionary<string, string> replacements, ConvenantInfoData info)
@@ -595,6 +603,45 @@ namespace scheidingsdesk_document_generator.Services.DocumentGeneration.Processo
                 return "";
 
             return amount.Value.ToString("N2", new CultureInfo("nl-NL"));
+        }
+
+        private List<PriveInvesteringItem> ParsePriveInvesteringen(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                return new List<PriveInvesteringItem>();
+
+            try
+            {
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                return JsonSerializer.Deserialize<List<PriveInvesteringItem>>(json, options)
+                    ?? new List<PriveInvesteringItem>();
+            }
+            catch
+            {
+                _logger.LogWarning("Failed to parse koop_prive_investeringen JSON");
+                return new List<PriveInvesteringItem>();
+            }
+        }
+
+        private class PriveInvesteringItem
+        {
+            [JsonPropertyName("investeringNa2012")]
+            public bool? InvesteringNa2012 { get; set; }
+
+            [JsonPropertyName("hoe")]
+            public string? Hoe { get; set; }
+
+            [JsonPropertyName("vordering")]
+            public string? Vordering { get; set; }
+
+            [JsonPropertyName("bedragPartij1")]
+            public decimal? BedragPartij1 { get; set; }
+
+            [JsonPropertyName("bedragPartij2")]
+            public decimal? BedragPartij2 { get; set; }
         }
     }
 }

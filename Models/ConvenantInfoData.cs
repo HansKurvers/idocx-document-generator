@@ -137,11 +137,9 @@ namespace scheidingsdesk_document_generator.Models
         public DateTime? KoopNotarisHypotheekDatum { get; set; }
 
         // Privevermogen
-        public bool? KoopInvesteringNa2012 { get; set; }
-        public string? KoopPrivevermogenHoe { get; set; } // inleg_aanschaf, tussentijdse_aflossing, verbouwing
-        public string? KoopPrivevermogenReden { get; set; }
-        public string? KoopPrivevermogenVordering { get; set; } // partij1_op_partij2, partij2_op_partij1
-        public decimal? KoopPrivevermogenVorderingBedrag { get; set; }
+        public string? KoopPriveInvesteringen { get; set; } // JSON array van investeringen
+        public decimal? KoopPrivevermogenVorderingBedragPartij1 { get; set; }
+        public decimal? KoopPrivevermogenVorderingBedragPartij2 { get; set; }
 
         // Waarde
         public decimal? KoopWozWaarde { get; set; }

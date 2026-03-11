@@ -273,3 +273,4 @@ Convenant/
 
 # Manual deploy scripts
 manual-deploy/
+.claude/
